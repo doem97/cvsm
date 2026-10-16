@@ -3,15 +3,21 @@ import hashlib
 import importlib.util
 import os
 import shlex
+import shutil
 import signal
 import socket
+import stat
 import subprocess
 import sys
 import time
 
+from pathlib import Path
+
 import pytest
 
-from run_record_helpers import RUN, closed_port, wait_for
+from mlflow import MlflowClient
+
+from run_record_helpers import EXPERIMENT, RUN, closed_port, local_path, wait_for
 
 _spec = importlib.util.spec_from_file_location("run_script", RUN)
 run = importlib.util.module_from_spec(_spec)
@@ -60,6 +66,44 @@ def test_experiment_from_env_is_created_and_overrides_config(repo):
     exp = repo.client.get_experiment_by_name("from-env")
     assert exp is not None and repo.runs() == []
     assert len(repo.runs([exp.experiment_id])) == 1
+    assert local_path(exp.artifact_location) == repo.tmp / "mlartifacts"  # next to the SQLite file
+
+
+def test_default_store_is_in_the_main_clone_and_outlives_worktrees(repo):
+    del repo.env["MLFLOW_TRACKING_URI"]
+    shutil.copy(repo.template, repo.root / "mlflow.db")  # pre-migrated, to keep the test fast
+    wt = repo.tmp / "worktrees" / "9-x"
+    repo.git("worktree", "add", "-q", "-b", "t/9-x", str(wt))
+    procs = [repo.start("seed=1", cwd=wt), repo.start("seed=2")]
+    assert [p.communicate(timeout=30) and p.returncode for p in procs] == [0, 0]
+    client = MlflowClient(f"sqlite:///{repo.root / 'mlflow.db'}")
+    exp = client.get_experiment_by_name(EXPERIMENT)
+    assert local_path(exp.artifact_location) == repo.root / "mlartifacts"
+    runs = {r.data.params["rh.seed"]: r for r in client.search_runs([exp.experiment_id])}
+    assert set(runs) == {"1", "2"} and not (wt / "mlflow.db").exists()
+    assert {r.data.params["rh.dirty"] for r in runs.values()} == {"false"}  # .gitignore covers them
+    assert repo.results(cwd=wt).count("| 2 | 0 |") == 1  # results.py finds both from the worktree
+    repo.git("worktree", "remove", str(wt))
+    log = local_path(runs["1"].info.artifact_uri) / "log.txt"
+    assert log.is_relative_to(repo.root / "mlartifacts") and "hello stdout" in log.read_text()
+
+
+@pytest.mark.parametrize("uri, root", [
+    ("sqlite:////data/rh/mlflow.db", "/data/rh/mlartifacts"),
+    ("postgresql://u@db/mlflow", "/clone/mlartifacts"),
+    ("postgresql+psycopg2://u@db/mlflow", "/clone/mlartifacts"),
+    ("mysql+pymysql://u@db/mlflow", "/clone/mlartifacts"),
+    ("mssql+pyodbc://u@db/mlflow", "/clone/mlartifacts"),
+    ("http://127.0.0.1:5000", None), ("https://mlflow.example.com", None),
+    ("databricks", None), ("file:///data/mlruns", None),
+])
+def test_artifact_root_for_database_stores(uri, root):
+    assert run.artifact_root(uri, Path("/clone")) == (root and Path(root))
+
+
+def test_artifact_root_for_a_relative_sqlite_path(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    assert run.artifact_root("sqlite:///sub/mlflow.db", Path("/clone")) == tmp_path / "sub" / "mlartifacts"
 
 
 def test_files_in_run_dir_become_artifacts(repo):
@@ -222,10 +266,62 @@ def test_concurrent_runs_lease_different_gpus(make_repo):
         assert repo.artifact(r, "cuda.txt").read_text() == r.data.params["rh.gpus"]
 
 
-def test_default_lock_dir_is_under_the_temp_dir(make_repo):
+def readonly_lock(lock_dir):
+    """A lock file this user cannot write, as if another user had created it. Skips on file
+    systems (NFS) where an exclusive flock needs a writable fd, so no user could share it."""
+    if os.geteuid() == 0:
+        pytest.skip("root ignores permissions")
+    lock_dir.mkdir(parents=True, exist_ok=True)
+    lock = lock_dir / "gpu0.lock"
+    lock.touch()
+    lock.chmod(0o444)
+    fd = os.open(lock, os.O_RDONLY)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        pytest.skip("this file system needs a writable fd for flock")
+    finally:
+        os.close(fd)
+    return lock
+
+
+def test_lock_files_are_created_writable_and_reused(make_repo):
+    repo = make_repo(gpus=[0])
+    assert [repo.run().returncode, repo.run().returncode] == [0, 0]
+    assert os.access(repo.locks / socket.gethostname() / "gpu0.lock", os.W_OK)
+
+
+def test_default_lock_dirs_are_sticky_and_world_writable(make_repo):
     repo = make_repo(gpus=[0], lock_dir="")
+    base = repo.tmpdir / "rh-gpu-locks"
     assert repo.run().returncode == 0
-    assert (repo.tmpdir / "rh-gpu-locks" / socket.gethostname() / "gpu0.lock").is_file()
+    for d in (base, base / socket.gethostname()):
+        assert stat.S_IMODE(d.stat().st_mode) == 0o1777
+    assert repo.only_run().data.params["rh.gpus"] == "0"
+
+
+def test_another_users_lock_file_is_used_read_only(make_repo):
+    repo = make_repo(gpus=[0], lock_dir="")
+    base = repo.tmpdir / "rh-gpu-locks"
+    readonly_lock(base / socket.gethostname())
+    os.chmod(base, 0o755)
+    os.chmod(base / socket.gethostname(), 0o755)
+    p = repo.run()
+    assert p.returncode == 0, p.stderr  # the lock file is opened read-only
+    assert repo.only_run().data.params["rh.gpus"] == "0"
+    for d in (base, base / socket.gethostname()):
+        assert stat.S_IMODE(d.stat().st_mode) == 0o1777
+
+
+def test_configured_lock_dir_keeps_its_permissions(make_repo):
+    repo = make_repo(gpus=[0])
+    host_dir = repo.locks / socket.gethostname()
+    host_dir.mkdir(parents=True)
+    os.chmod(repo.locks, 0o750)
+    os.chmod(host_dir, 0o700)
+    assert repo.run().returncode == 0
+    assert stat.S_IMODE(repo.locks.stat().st_mode) == 0o750
+    assert stat.S_IMODE(host_dir.stat().st_mode) == 0o700
 
 
 def lock_is_free(path):

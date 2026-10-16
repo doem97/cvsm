@@ -3,11 +3,13 @@
 
     python scripts/run.py [--issue N] [--gpus K] [--config scripts/run.toml] -- <cmd...>
 
-The record goes wherever MLflow's own configuration points: MLFLOW_TRACKING_URI, or MLflow's
-default when it is unset (mlflow.db and mlruns/ in the current directory; add them to
-.gitignore, or every run is recorded as dirty). The experiment is MLFLOW_EXPERIMENT_NAME, else
-`experiment` in run.toml, created if missing. The run is created before any wait for GPUs, so a
-waiting or killed run shows as RUNNING. If the backend is unreachable, nothing is launched.
+The record goes where MLFLOW_TRACKING_URI points. When it is unset, the store is
+<main clone>/mlflow.db (the main clone is the parent of git's common dir), so every worktree of
+a clone shares one store that outlives the worktrees. The experiment is MLFLOW_EXPERIMENT_NAME,
+else `experiment` in run.toml, created if missing; in a database store (no server) a new
+experiment keeps its artifacts in mlartifacts/ next to the SQLite file, or in
+<main clone>/mlartifacts for other databases. The run is created before any wait for GPUs, so
+a waiting or killed run shows as RUNNING. If the backend is unreachable, nothing is launched.
 
 Provenance is logged as rh.* params, which MLflow never lets change: rh.issue, rh.command
 (shlex-joined), rh.seed and rh.host at creation; rh.commit, rh.dirty (true or false),
@@ -29,9 +31,10 @@ otherwise (127 when it cannot start). The exit status is the command's own; sign
 128 + S, and rh.exit_code records -S.
 
 GPU locks are <lock_dir>/<host>/gpu<i>.lock and the command inherits them, so a lease lasts as
-long as the command, even if run.py itself is killed. SIGTERM is forwarded to the command.
-Ctrl-C already reaches it through the terminal, so SIGINT is not forwarded; stop a background
-run with SIGTERM.
+long as the command, even if run.py itself is killed. The default lock_dir, <tmp>/rh-gpu-locks,
+is shared by all users of the host; a configured lock_dir keeps its own permissions. SIGTERM is
+forwarded to the command. Ctrl-C already reaches it through the terminal, so SIGINT is not
+forwarded; stop a background run with SIGTERM.
 """
 import argparse
 import fcntl
@@ -49,9 +52,9 @@ import tempfile
 import time
 import tomllib
 from pathlib import Path
+from urllib.parse import unquote
 
 try:
-    import mlflow
     from mlflow import MlflowClient
     from mlflow.entities import Metric, Param, RunTag
     from mlflow.exceptions import MlflowException
@@ -73,6 +76,24 @@ def load_config(path):
     cfg = {"experiment": "Default", "env_lock": [], "data_manifest": "", "seed_key": "seed",
            "gpus": [], "lock_dir": ""}
     return cfg | tomllib.loads(Path(path).read_text())
+
+
+def main_clone():
+    return Path(git("rev-parse", "--path-format=absolute", "--git-common-dir").strip()).parent
+
+
+def tracking_uri():
+    """MLFLOW_TRACKING_URI, else a SQLite store in the main clone, shared by its worktrees."""
+    return os.environ.get("MLFLOW_TRACKING_URI") or f"sqlite:///{main_clone() / 'mlflow.db'}"
+
+
+def artifact_root(uri, clone):
+    """Where a new experiment in a database store keeps artifacts; None leaves it to MLflow,
+    whose default is relative to the cwd, i.e. inside a worktree that will be deleted."""
+    scheme = uri.split(":", 1)[0].split("+", 1)[0]
+    if scheme == "sqlite":
+        return Path(unquote(uri.split(":///", 1)[1].split("?", 1)[0])).absolute().parent / "mlartifacts"
+    return clone / "mlartifacts" if scheme in ("postgresql", "mysql", "mssql") else None
 
 
 def experiment_name(cfg):
@@ -110,22 +131,44 @@ def hash_files(paths, base):
     return (h.hexdigest() if found else None), missing
 
 
-def lease(ids, k, lock_dir):
-    """Hold k of the GPU lock files; until then release all and retry. Returns [(id, file)]."""
-    lock_dir.mkdir(parents=True, exist_ok=True)
+def lock_dir(configured):
+    """<lock_dir>/<host>; the default one under the temp dir is shared by all users."""
+    if configured:
+        path = Path(configured).expanduser() / socket.gethostname()
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+    base = Path(tempfile.gettempdir()) / "rh-gpu-locks"
+    for path in (base, base / socket.gethostname()):
+        path.mkdir(exist_ok=True)
+        if path.stat().st_uid == os.getuid():
+            path.chmod(0o1777)  # mkdir applies the umask; sticky, so no one deletes others' locks
+    return base / socket.gethostname()
+
+
+def lock_fd(path):
+    # Another user's lock file is read-only to us, and a local flock needs no write access. On
+    # NFS, though, an exclusive flock needs a writable fd, so read-only is only the fallback.
+    try:
+        return os.open(path, os.O_RDWR | os.O_CREAT, 0o666)
+    except PermissionError:
+        return os.open(path, os.O_RDONLY)
+
+
+def lease(ids, k, locks):
+    """Hold k of the GPU lock files; until then release all and retry. Returns [(id, fd)]."""
     while True:
         held = []
         for i in ids:
-            f = open(lock_dir / f"gpu{i}.lock", "a")
+            fd = lock_fd(locks / f"gpu{i}.lock")
             try:
-                fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                held.append((i, f))
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                held.append((i, fd))
             except BlockingIOError:
-                f.close()
+                os.close(fd)
             if len(held) == k:
                 return held
-        for _, f in held:
-            f.close()
+        for _, fd in held:
+            os.close(fd)
         print(f"run.py: waiting for {k} free GPU(s) of {ids}", file=sys.stderr, flush=True)
         time.sleep(RETRY_SECONDS)
 
@@ -139,12 +182,13 @@ def params(**kw):
     return [Param(f"rh.{k}", enc(v)) for k, v in kw.items()]
 
 
-def experiment_id(client, name):
+def experiment_id(client, name, uri):
     exp = client.get_experiment_by_name(name)
     if exp:
         return exp.experiment_id
+    root = artifact_root(uri, main_clone())
     try:
-        return client.create_experiment(name)
+        return client.create_experiment(name, artifact_location=root and str(root))
     except MlflowException:  # another run.py may have created it meanwhile
         if exp := client.get_experiment_by_name(name):
             return exp.experiment_id
@@ -186,12 +230,12 @@ def main(argv):
     if not 0 <= k <= len(ids):
         ap.error(f"--gpus {k}: {len(ids)} GPU(s) configured in {a.config}")
 
-    # Resolve the URI once (MLflow's default is relative to the cwd) so the command writes to
-    # the same place. It may carry credentials, so it is never printed.
-    uri, exp_name = mlflow.get_tracking_uri(), experiment_name(cfg)
+    # The command gets this URI too, so it writes to the same store. It may carry
+    # credentials, so it is never printed.
+    uri, exp_name = tracking_uri(), experiment_name(cfg)
     client = MlflowClient(uri)
     try:
-        run_id = client.create_run(experiment_id(client, exp_name)).info.run_id
+        run_id = client.create_run(experiment_id(client, exp_name, uri)).info.run_id
         client.log_batch(run_id, params=params(issue=a.issue, command=shlex.join(cmd),
                                                seed=split_seed(cmd, cfg["seed_key"])[0],
                                                host=socket.gethostname()))
@@ -202,8 +246,7 @@ def main(argv):
     # Until the command starts (a GPU wait can be long), SIGTERM and Ctrl-C mark the run KILLED.
     signal.signal(signal.SIGTERM, stop)
     try:
-        locks = Path(cfg["lock_dir"] or Path(tempfile.gettempdir()) / "rh-gpu-locks").expanduser()
-        held = lease(ids, k, locks / socket.gethostname()) if k else []
+        held = lease(ids, k, lock_dir(cfg["lock_dir"])) if k else []
         # Capture the code state right before launch, after any wait for GPUs.
         top = Path(git("rev-parse", "--show-toplevel").strip())
         commit = git("rev-parse", "HEAD").strip()
@@ -231,7 +274,7 @@ def main(argv):
     with open(run_dir / "log.txt", "wb") as log:
         try:
             child = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=env,
-                                     pass_fds=[f.fileno() for _, f in held])
+                                     pass_fds=[fd for _, fd in held])
         except OSError as e:
             log.write(f"run.py: {e}\n".encode())
             code = 127
@@ -241,8 +284,8 @@ def main(argv):
             signal.signal(signal.SIGINT, lambda *_: None)
             signal.signal(signal.SIGTERM, lambda sig, _: child.send_signal(sig))
             code = child.wait()
-    for _, f in held:
-        f.close()
+    for _, fd in held:
+        os.close(fd)
 
     upload(client, run_id, run_dir)
     try:

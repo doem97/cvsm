@@ -76,7 +76,8 @@ def closed_port():
 
 class Repo:
     """A temporary git repo with scripts/run.toml and fake.py committed, a copy of a migrated
-    SQLite backend, the test experiment (artifacts outside the repo) and a private TMPDIR."""
+    SQLite backend, the test experiment (artifacts outside the repo) and a private TMPDIR.
+    The harness's own .gitignore is committed too, so MLflow's default files keep the tree clean."""
 
     def __init__(self, tmp, template, **cfg):
         self.tmp = tmp
@@ -85,6 +86,7 @@ class Repo:
         self.tmpdir = tmp / "tmp"
         self.tmpdir.mkdir()
         self.root.mkdir()
+        self.template = template
         shutil.copy(template, tmp / "mlflow.db")
         self.uri = f"sqlite:///{tmp / 'mlflow.db'}"
         self.client = MlflowClient(self.uri)
@@ -94,6 +96,7 @@ class Repo:
                         MLFLOW_DISABLE_AGENT_HINT="1")
         self.git("init", "-q", "-b", "main")
         (self.root / "fake.py").write_text(FAKE)
+        shutil.copy(ROOT / ".gitignore", self.root / ".gitignore")
         self.configure(**cfg)
         self.commit("init")
 
@@ -115,12 +118,12 @@ class Repo:
         self.git("commit", "-q", "-m", msg)
         return self.git("rev-parse", "HEAD")
 
-    def start(self, *args, issue=5, gpus=None, cmd=None, env=None, **popen):
+    def start(self, *args, issue=5, gpus=None, cmd=None, env=None, cwd=None, **popen):
         """Launch run.py without waiting. args are the fake command's key=value args."""
         opts = ["--issue", str(issue)] if issue is not None else []
         opts += ["--gpus", str(gpus)] if gpus is not None else []
         cmd = cmd or [sys.executable, "fake.py", *args]
-        return subprocess.Popen([sys.executable, str(RUN), *opts, "--", *cmd], cwd=self.root,
+        return subprocess.Popen([sys.executable, str(RUN), *opts, "--", *cmd], cwd=cwd or self.root,
                                 env={**self.env, **(env or {})}, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, text=True, **popen)
 
@@ -156,9 +159,9 @@ class Repo:
     def artifact(self, run, name):
         return local_path(run.info.artifact_uri) / name
 
-    def results(self, *args, issue=5, env=None):
+    def results(self, *args, issue=5, env=None, cwd=None):
         out = subprocess.run([sys.executable, str(RESULTS), "--issue", str(issue), *args],
-                             cwd=self.root, capture_output=True, text=True, timeout=30,
+                             cwd=cwd or self.root, capture_output=True, text=True, timeout=30,
                              env={**self.env, **(env or {})})
         assert out.returncode == 0, out.stderr
         return out.stdout
