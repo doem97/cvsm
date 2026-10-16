@@ -1,0 +1,21 @@
+name: Run task
+description: Experiment runs whose results are posted as one comment.
+labels: [run]
+body:
+  - type: textarea
+    id: runs
+    attributes:
+      label: Runs
+      description: One command per line, including overrides and seed.
+    validations:
+      required: true
+  - type: input
+    id: budget
+    attributes:
+      label: Budget
+      description: GPU hours, for example 2.
+  - type: input
+    id: report
+    attributes:
+      label: Report
+      description: Metric names, comma-separated.

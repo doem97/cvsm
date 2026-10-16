@@ -1,0 +1,35 @@
+name: Study
+description: A research question, answered by code and run sub-issues.
+labels: [study]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: The question this study answers.
+    validations:
+      required: true
+  - type: textarea
+    id: comparison
+    attributes:
+      label: Comparison
+      description: Only the config differences between arms.
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Criteria
+      description: What result answers the question.
+    validations:
+      required: true
+  - type: input
+    id: budget
+    attributes:
+      label: Budget
+      description: GPU hours and time, for example 4 GPU hours, 1 day.
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Links to earlier studies, results comments and papers.
