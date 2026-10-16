@@ -206,6 +206,33 @@ def test_sigterm_records_negative_exit_and_releases_lease(make_repo):
     assert lock_is_free(repo.storage / "locks" / "gpu0.lock")
 
 
+SIGINT_CHILD = r"""
+import os, signal, time
+hits = []
+signal.signal(signal.SIGINT, lambda *_: hits.append(1))
+open(os.path.join(os.environ["RUN_DIR"], "started"), "w").close()
+deadline = time.time() + 20
+while not hits and time.time() < deadline:
+    time.sleep(0.02)
+time.sleep(0.5)  # a forwarded second SIGINT would land in this window
+with open(os.path.join(os.environ["RUN_DIR"], "sigints"), "w") as f:
+    f.write(str(len(hits)))
+"""
+
+
+def test_ctrl_c_reaches_the_command_once(repo):
+    (repo.root / "sigint.py").write_text(SIGINT_CHILD)
+    p = subprocess.Popen([sys.executable, str(RUN), "--issue", "5", "--", sys.executable, "sigint.py"],
+                         cwd=repo.root, start_new_session=True,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    wait_for(repo.storage / "runs")
+    d = repo.run_dirs()[0]
+    wait_for(d / "started")
+    os.killpg(p.pid, signal.SIGINT)  # what the terminal does on Ctrl-C
+    p.communicate(timeout=30)
+    assert (d / "sigints").read_text() == "1"
+    assert repo.record(d)["exit_code"] == 0
+
 def test_sigkill_leaves_start_json_without_run_json(repo):
     p = repo.start("hold=" + str(repo.root.parent / "never"))
     wait_for(repo.storage / "runs")

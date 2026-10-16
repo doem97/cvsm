@@ -152,8 +152,10 @@ def main(argv):
             log.write(f"run.py: {e}\n".encode())
             code = 127
         else:
-            for s in (signal.SIGTERM, signal.SIGINT):
-                signal.signal(s, lambda sig, _: child.send_signal(sig))
+            # Ctrl-C reaches the command directly through the terminal's process group;
+            # forwarding SIGINT as well would interrupt its cleanup a second time.
+            signal.signal(signal.SIGINT, lambda *_: None)
+            signal.signal(signal.SIGTERM, lambda sig, _: child.send_signal(sig))
             code = child.wait()
     for _, f in held:
         f.close()

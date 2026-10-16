@@ -94,7 +94,7 @@ def main():
     if dirty:
         flags.append(f"- dirty runs ({len(dirty)}, see diff.patch): {', '.join(dirty)}")
     if incomplete:
-        flags.append(f"- incomplete runs ({len(incomplete)}, no run.json): {', '.join(incomplete)}")
+        flags.append(f"- incomplete runs ({len(incomplete)}, no run.json: still running or killed): {', '.join(incomplete)}")
     print("\n".join(out + ["", "Flags:", *(flags or ["- none"])]))
 
 
