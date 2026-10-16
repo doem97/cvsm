@@ -1,0 +1,5 @@
+storage = "../storage"     # relative to the repo root
+env_lock = ["uv.lock"]     # hashed into env_lock_sha; missing files listed in env_lock_missing
+data_manifest = ""         # hashed into data_manifest_sha; empty means none
+seed_key = "seed"          # matches seed=N or --seed N in the command
+gpus = []                  # GPU ids to lease from; empty disables leasing
