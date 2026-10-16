@@ -55,7 +55,7 @@
 - Protected: AGENTS.md, .agents/, .codex/, .claude/, .github/ and the eval/data paths in Project; change them only when a Scope entry names them explicitly.
 - A method task changes only its own module, configs and tests; a shared-code change is a separate task.
 - docs/ belongs to the human; edit it only when your Scope names it.
-- Never modify a run record after it is written.
+- Never edit or delete a run record (an MLflow run), and never run `mlflow gc`.
 
 ## Context
 - Before acting, read your issue, the code in its Scope and the interfaces that code uses; your skill lists the rest.
@@ -77,4 +77,4 @@
 - Language: write PR bodies, issue and PR comments, and reports in Chinese; keep PR titles, format keywords and repo files in English.
 - Protected eval/data paths: none.
 - Run: `python scripts/run.py --issue N -- <cmd>`; results comment: `python scripts/results.py --issue N`.
-- Storage: `../storage`, relative to the main clone; run records go to `<storage>/runs/<run_id>/`.
+- Run records: MLflow runs in the backend that `MLFLOW_TRACKING_URI` names (MLflow's default if unset); the experiment is set in `scripts/run.toml`.
