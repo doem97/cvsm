@@ -4,7 +4,8 @@
 - Set parents and dependencies with `gh issue create --parent P --blocked-by M`; never write them into the body.
 - Write issue bodies with the `### ` sections of the matching form in `.github/ISSUE_TEMPLATE/`.
 - Waiting: blocked by an issue that is still open. Ready: open, not blocked, no linked branch.
-- In progress: has a linked branch; claim with `gh issue develop`. Never claim an issue that already has one; continue it only if the instruction names it or this session claimed it.
+- In progress: has a linked branch. Claim a ready issue with `gh issue develop`, then run `gh issue develop --list N`; if another branch is linked too, delete yours and pick other work.
+- Continue an in-progress issue only if the instruction names it or this session claimed it.
 - Needs decision: label `needs-decision` plus a blocker comment; remove the label once the human has answered.
 - In review: PR open, checks or review not finished. Merge-ready: `guard` and `test` green, no blocking review finding.
 - Done: a `code` issue closes when the human merges its PR (`Closes #N`); close a `run` issue yourself with its results comment.
@@ -17,7 +18,7 @@
 - Stop only at the target, at a gate, or at a blocker; otherwise keep going.
 - Stop at these four gates even when everything works:
   1. New or changed approved work: publishing a plan; changing a task's Goal, Scope or Acceptance; changing a protected path.
-  2. Merging. Only the human merges.
+  2. Merging. Only the human merges; the merge-ready PR is the request, so add no label or blocker comment.
   3. Exceeding a budget: tokens, time or GPU hours.
   4. Concluding and closing a study.
 - An explicit instruction from the user approves what it names; do not ask again.
@@ -42,7 +43,7 @@
   - `Next: <what comes next>`
 
 ## Git
-- One task = one issue = one branch `t/<N>-<slug>` = one worktree `../worktrees/<N>-<slug>` = one PR.
+- One task = one issue = one branch `t/<N>-<slug>` = one worktree `../worktrees/<N>-<slug>` (relative to the main clone) = one PR.
 - PR title: `<type>(#N): <summary>`, type one of feat, fix, refactor, test, exp, docs, chore; N is the issue the PR closes.
 - PR body: `.github/pull_request_template.md`; first line `Closes #N`, `## Changes` (at most 5 items), `## Acceptance` (commands and results), `## Out of scope` (new issues, or none); at most 40 lines.
 - Never run `gh pr merge`, push to main, force-push, create tags, or touch another task's branch.
@@ -61,7 +62,7 @@
 - Before acting, read your issue, the code in its Scope and the interfaces that code uses; your skill lists the rest.
 - Write only to GitHub (issues, comments, PRs), to files in Scope and to run records; keep no memory, notes, docs or discussion.
 - Record decisions and conclusions on GitHub.
-- Review in a fresh session that gets the issue as its brief, never in the implementer's session.
+- Get each review from a fresh session (`codex exec review --base main` with the issue as its brief, or a fresh subagent), never from the implementer's session.
 
 ## Skills
 - Skills live in `.agents/skills/<name>/SKILL.md`; follow the one for your role.
@@ -76,4 +77,4 @@
 - Test: `python -m pytest -q`
 - Protected eval/data paths: none.
 - Run: `python scripts/run.py --issue N -- <cmd>`; results comment: `python scripts/results.py --issue N`.
-- Storage: `../storage`; run records go to `../storage/runs/<run_id>/`.
+- Storage: `../storage`, relative to the main clone; run records go to `<storage>/runs/<run_id>/`.

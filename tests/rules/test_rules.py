@@ -57,10 +57,10 @@ def test_agents_agrees_with_guard_toml():
     assert str(cfg["max_body_lines"]) in git
 
 
-def test_agents_project_values():
-    text = section("Project")
-    for v in ("`python -m pytest -q`", "`python scripts/run.py --issue N -- <cmd>`", "`../storage`"):
-        assert v in text, v
+def test_agents_project_fields():
+    text = section("Project")  # adopters replace the values, not the fields
+    for field in ("Layout:", "Test:", "Protected eval/data paths:", "Run:", "Storage:"):
+        assert f"- {field}" in text, field
 
 
 def test_claude_md_imports_agents():
