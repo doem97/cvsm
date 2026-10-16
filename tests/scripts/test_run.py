@@ -88,6 +88,19 @@ def test_default_store_is_in_the_main_clone_and_outlives_worktrees(repo):
     assert log.is_relative_to(repo.root / "mlartifacts") and "hello stdout" in log.read_text()
 
 
+def test_concurrent_runs_on_a_fresh_store(repo):
+    uri = f"sqlite:///{repo.tmp / 'fresh' / 'mlflow.db'}"
+    (repo.tmp / "fresh").mkdir()
+    procs = [repo.start(f"seed={s}", env={"MLFLOW_TRACKING_URI": uri}) for s in range(4)]
+    for p in procs:
+        _, err = p.communicate(timeout=30)
+        assert p.returncode == 0, err
+        assert "mlflow.agent.hint" not in err
+    client = MlflowClient(uri)
+    runs = client.search_runs([client.get_experiment_by_name(EXPERIMENT).experiment_id])
+    assert sorted(r.data.params["rh.seed"] for r in runs) == ["0", "1", "2", "3"]
+
+
 @pytest.mark.parametrize("uri, root", [
     ("sqlite:////data/rh/mlflow.db", "/data/rh/mlartifacts"),
     ("postgresql://u@db/mlflow", "/clone/mlartifacts"),

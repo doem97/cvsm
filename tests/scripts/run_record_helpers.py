@@ -92,8 +92,7 @@ class Repo:
         self.client = MlflowClient(self.uri)
         self.exp_id = self.client.create_experiment(EXPERIMENT, artifact_location=str(tmp / "artifacts"))
         self.env = {k: v for k, v in os.environ.items() if not k.startswith("MLFLOW_")}
-        self.env.update(GIT_ENV, MLFLOW_TRACKING_URI=self.uri, TMPDIR=str(self.tmpdir),
-                        MLFLOW_DISABLE_AGENT_HINT="1")
+        self.env.update(GIT_ENV, MLFLOW_TRACKING_URI=self.uri, TMPDIR=str(self.tmpdir))
         self.git("init", "-q", "-b", "main")
         (self.root / "fake.py").write_text(FAKE)
         shutil.copy(ROOT / ".gitignore", self.root / ".gitignore")
@@ -164,4 +163,5 @@ class Repo:
                              cwd=cwd or self.root, capture_output=True, text=True, timeout=30,
                              env={**self.env, **(env or {})})
         assert out.returncode == 0, out.stderr
+        assert "mlflow.agent.hint" not in out.stderr
         return out.stdout

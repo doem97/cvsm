@@ -2,6 +2,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
-mlflow.db
+mlflow.db*
 mlartifacts/
 mlruns/

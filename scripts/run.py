@@ -51,9 +51,11 @@ import sys
 import tempfile
 import time
 import tomllib
+from contextlib import contextmanager
 from pathlib import Path
 from urllib.parse import unquote
 
+os.environ.setdefault("MLFLOW_DISABLE_AGENT_HINT", "1")  # MLflow 3.17 logs a hint on every import
 try:
     from mlflow import MlflowClient
     from mlflow.entities import Metric, Param, RunTag
@@ -87,13 +89,34 @@ def tracking_uri():
     return os.environ.get("MLFLOW_TRACKING_URI") or f"sqlite:///{main_clone() / 'mlflow.db'}"
 
 
+def sqlite_path(uri):
+    if uri.startswith("sqlite:") and ":///" in uri:
+        return Path(unquote(uri.split(":///", 1)[1].split("?", 1)[0])).absolute()
+    return None
+
+
 def artifact_root(uri, clone):
     """Where a new experiment in a database store keeps artifacts; None leaves it to MLflow,
     whose default is relative to the cwd, i.e. inside a worktree that will be deleted."""
+    if db := sqlite_path(uri):
+        return db.parent / "mlartifacts"
     scheme = uri.split(":", 1)[0].split("+", 1)[0]
-    if scheme == "sqlite":
-        return Path(unquote(uri.split(":///", 1)[1].split("?", 1)[0])).absolute().parent / "mlartifacts"
     return clone / "mlartifacts" if scheme in ("postgresql", "mysql", "mssql") else None
+
+
+@contextmanager
+def store_setup(uri):
+    """Hold <db>.lock for a SQLite store: MLflow's first-time migration of a new database
+    fails when several processes run it at once. Other stores need no lock."""
+    if not (db := sqlite_path(uri)):
+        yield
+        return
+    fd = os.open(f"{db}.lock", os.O_RDWR | os.O_CREAT, 0o666)  # writable, for flock on NFS
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        os.close(fd)
 
 
 def experiment_name(cfg):
@@ -233,9 +256,11 @@ def main(argv):
     # The command gets this URI too, so it writes to the same store. It may carry
     # credentials, so it is never printed.
     uri, exp_name = tracking_uri(), experiment_name(cfg)
-    client = MlflowClient(uri)
     try:
-        run_id = client.create_run(experiment_id(client, exp_name, uri)).info.run_id
+        with store_setup(uri):
+            client = MlflowClient(uri)
+            exp_id = experiment_id(client, exp_name, uri)
+        run_id = client.create_run(exp_id).info.run_id
         client.log_batch(run_id, params=params(issue=a.issue, command=shlex.join(cmd),
                                                seed=split_seed(cmd, cfg["seed_key"])[0],
                                                host=socket.gethostname()))

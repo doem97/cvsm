@@ -13,11 +13,13 @@ metrics, incomplete runs (still RUNNING) and deleted runs are flagged; whether r
 comparable is for the reader to decide.
 """
 import argparse
+import os
 import shlex
 import statistics
 import subprocess
 
-from run import MlflowClient, experiment_name, load_config, num, split_seed, tracking_uri
+os.environ.setdefault("MLFLOW_DISABLE_AGENT_HINT", "1")  # MLflow 3.17 logs a hint on every import
+from run import MlflowClient, experiment_name, load_config, num, split_seed, store_setup, tracking_uri
 from mlflow.entities import ViewType
 
 
@@ -51,8 +53,10 @@ def main():
     a = ap.parse_args()
     cfg = load_config(a.config)
 
-    client = MlflowClient(tracking_uri())
-    exp = client.get_experiment_by_name(experiment_name(cfg))
+    uri = tracking_uri()
+    with store_setup(uri):
+        client = MlflowClient(uri)
+        exp = client.get_experiment_by_name(experiment_name(cfg))
     found = sorted(fetch(client, exp.experiment_id, a.issue) if exp else [], key=lambda r: r.info.start_time)
     # One dict per run: the rh.* params without the prefix, plus status, deletion and metrics.
     runs = [{k[3:]: v for k, v in r.data.params.items() if k.startswith("rh.")}
