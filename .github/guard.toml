@@ -1,0 +1,9 @@
+# Read by .github/scripts/guard.py. Globs: `**` crosses `/`, `*` and `?` do not.
+layout = ["README.md", "AGENTS.md", "CLAUDE.md", ".gitignore", ".agents/**", ".claude/**", ".codex/**", ".github/**", "docs/**", "scripts/**", "tests/**"]
+markdown = ["README.md", "AGENTS.md", "CLAUDE.md", "docs/**", ".agents/skills/**", ".github/**"]
+forbidden_names = ["TODO", "NOTES", "PLAN", "PROGRESS"]
+protected = ["AGENTS.md", "CLAUDE.md", ".agents/**", ".codex/**", ".claude/**", ".github/**"]
+types = ["feat", "fix", "refactor", "test", "exp", "docs", "chore"]
+max_body_lines = 40
+test_paths = ["tests/**"]
+# max_diff_lines = 400   # optional; counts additions+deletions outside test_paths

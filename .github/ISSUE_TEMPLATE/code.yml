@@ -1,0 +1,30 @@
+name: Code task
+description: A change to code or files, limited to a fixed Scope.
+labels: [code]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: At most 3 sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Path globs, one per line, no leading wildcard.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance
+      description: Commands, one per line.
+    validations:
+      required: true
+  - type: input
+    id: budget
+    attributes:
+      label: Budget
+      description: Time budget, for example 2h.
