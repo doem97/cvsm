@@ -1,11 +1,10 @@
-import json
 import os
 import shlex
 import signal
+import subprocess
 import sys
-import time
 
-from run_record_helpers import Repo
+from run_record_helpers import RESULTS, wait_for
 
 
 def table(out):
@@ -24,9 +23,7 @@ def group(*args):
 
 
 def test_groups_by_command_without_seed(repo):
-    for method in "ab":
-        for seed in (1, 2, 3):
-            assert repo.run(f"method={method}", f"seed={seed}").returncode == 0
+    assert repo.run_many(*([f"method={m}", f"seed={s}"] for m in "ab" for s in (1, 2, 3))) == [0] * 6
     out = repo.results()
     rows = table(out)
     assert set(rows) == {group("method=a"), group("method=b")}
@@ -34,15 +31,13 @@ def test_groups_by_command_without_seed(repo):
     assert (a["n"], a["n_failed"], a["acc mean"], a["acc std"]) == ("3", "0", "2", "1")
     assert (b["n"], b["acc mean"], b["acc std"]) == ("3", "20", "10")
     assert a["loss mean"] == "0.5" and a["loss std"] == "0"
-    head = repo.git("rev-parse", "HEAD")
-    assert a["commit"] == head[:7]
+    assert a["commit"] == repo.git("rev-parse", "HEAD")[:7]
     assert "commits differ" not in out and "env differs" not in out
 
 
 def test_metric_selection(repo):
     repo.run("seed=1")
-    out = repo.results("--metric", "acc")
-    row = table(out)[group()]
+    row = table(repo.results("--metric", "acc"))[group()]
     assert "acc mean" in row and "loss mean" not in row
 
 
@@ -52,57 +47,66 @@ def test_single_seed_shows_dash_for_std(repo):
     assert (row["n"], row["acc mean"], row["acc std"]) == ("1", "4", "—")
 
 
+def finished(repo, start, **rh):
+    """A successful run of `python t.py` recorded directly; rh overrides its rh.* params."""
+    params = {"issue": "5", "command": "python t.py", "seed": str(start), "host": "h", "commit": "0" * 40,
+              "dirty": "false", "env_lock_sha": "e" * 64, "env_lock_missing": "",
+              "data_manifest_sha": "", "gpus": "", "exit_code": "0"}
+    return repo.record(start, metrics={"acc": 1.0}, **(params | rh))
+
+
 def test_different_commits_are_flagged_with_diff_stat(repo):
     first = repo.git("rev-parse", "HEAD")
-    repo.run("seed=1")
     (repo.root / "shared.py").write_text("def f():\n    return 1\n")
     second = repo.commit("change shared code")
-    repo.run("seed=2")
+    finished(repo, 2000, commit=second)
+    finished(repo, 1000, commit=first)
     out = repo.results()
-    row = table(out)[group()]
-    assert row["commit"] == f"{first[:7]}, {second[:7]}"  # ordered by run start
+    assert table(out)["python t.py"]["commit"] == f"{first[:7]}, {second[:7]}"  # ordered by run start
     assert "commits differ" in out
     assert f"git diff --stat {first[:7]} {second[:7]}" in out
     assert "shared.py" in out and "1 file changed" in out
 
 
-def test_different_env_is_flagged(make_repo):
-    repo = make_repo()
-    (repo.root / "uv.lock").write_text("v1\n")
-    repo.commit("lock v1")
-    repo.run("seed=1")
-    (repo.root / "uv.lock").write_text("v2\n")
-    repo.commit("lock v2")
-    repo.run("seed=2")
+def test_different_env_and_data_are_flagged(repo):
+    finished(repo, 1000, env_lock_sha="a" * 64, data_manifest_sha="c" * 64)
+    finished(repo, 2000, env_lock_sha="b" * 64, data_manifest_sha="c" * 64)
     out = repo.results()
-    assert "env differs" in out
-    assert "data differs" not in out
+    assert "env differs: aaaaaaaa, bbbbbbbb" in out and "data differs" not in out
+    finished(repo, 3000, env_lock_sha="b" * 64, data_manifest_sha="d" * 64)
+    assert "data differs: cccccccc, dddddddd" in repo.results()
 
 
 def test_failed_and_incomplete_runs_are_counted(repo):
-    repo.run("seed=1", "fail_seed=2")
-    repo.run("seed=2", "fail_seed=2")
-    # An interrupted run (SIGKILL): start.json without run.json.
-    d = repo.storage / "runs" / "20260101-000000-abcdef"
-    d.mkdir(parents=True)
-    (d / "start.json").write_text(json.dumps({"run_id": d.name, "issue": 5, "command": ["x"],
-                                              "start": "2026-01-01T00:00:00+00:00"}))
+    assert sorted(repo.run_many(["seed=1", "fail_seed=2"], ["seed=2", "fail_seed=2"])) == [0, 1]
+    # A run whose run.py was killed while it waited for GPUs: params from creation only.
+    stuck = repo.record(3000, status="RUNNING", issue="5", command="python other.py", seed="", host="h")
     out = repo.results()
     row = table(out)[group("fail_seed=2")]
     assert (row["n"], row["n_failed"], row["acc mean"]) == ("1", "1", "1")
-    assert "incomplete runs (1" in out and d.name in out
+    assert "incomplete runs (1" in out and stuck in out
+    other = table(out)["python other.py"]
+    assert (other["n"], other["n_failed"], other["commit"]) == ("0", "0", "none")
 
 
 def test_sigkilled_run_is_incomplete(repo):
-    p = repo.start("hold=" + str(repo.root.parent / "never"))
-    while not any((d / "started").exists() for d in repo.run_dirs()):
-        time.sleep(0.02)
+    hold = repo.tmp / "never"
+    p = repo.start("hold=" + str(hold))
+    wait_for(hold.with_suffix(".pid"))
     p.kill()
     p.communicate(timeout=30)
-    d = repo.run_dirs()[0]
-    os.kill(int((d / "started").read_text()), signal.SIGKILL)
+    os.kill(int(hold.with_suffix(".pid").read_text()), signal.SIGKILL)
     out = repo.results()
-    assert "incomplete runs (1" in out and d.name in out
+    assert "incomplete runs (1" in out and repo.only_run().info.run_id in out
+
+
+def test_deleted_runs_are_flagged(repo):
+    assert repo.run_many(["seed=1"], ["seed=2"]) == [0, 0]
+    gone = repo.runs()[0].info.run_id
+    repo.client.delete_run(gone)
+    out = repo.results()
+    assert table(out)[group()]["n"] == "2"
+    assert "deleted runs (1" in out and gone in out
 
 
 def test_missing_env_lock_is_flagged(repo):
@@ -114,37 +118,32 @@ def test_missing_env_lock_is_flagged(repo):
 def test_dirty_runs_are_flagged(repo):
     (repo.root / "scratch.py").write_text("1\n")
     repo.run()
-    run_id = repo.run_dirs()[0].name
     out = repo.results()
-    assert "dirty runs (1" in out and run_id in out
+    assert "dirty runs (1" in out and repo.only_run().info.run_id in out
+
+
+def test_bad_metrics_file_is_flagged_not_fatal(repo):
+    repo.run("metrics=list")
+    out = repo.results()
+    assert "no metrics (1 run(s)" in out and repo.only_run().info.run_id in out
 
 
 def test_other_issues_are_ignored(repo):
-    repo.run("seed=1", issue=5)
-    repo.run("method=b", "seed=1", issue=6)
-    repo.run("method=b", "seed=1", issue=None)
+    procs = [repo.start("seed=1"), repo.start("method=b", "seed=1", issue=15),
+             repo.start("method=b", "seed=2", issue=None)]
+    assert [p.communicate(timeout=30) and p.returncode for p in procs] == [0, 0, 0]
     assert set(table(repo.results(issue=5))) == {group()}
-    assert set(table(repo.results(issue=6))) == {group("method=b")}
+    assert set(table(repo.results(issue=15))) == {group("method=b")}
 
 
 def test_no_runs_still_prints_a_table(repo):
     out = repo.results(issue=99)
     assert "| command |" in out and table(out) == {}
+    out = repo.results(env={"MLFLOW_EXPERIMENT_NAME": "no-such-experiment"})
+    assert "| command |" in out and table(out) == {}
 
 
-def test_results_from_a_worktree_read_the_shared_storage(tmp_path):
-    repo = Repo(tmp_path, storage="../storage")
-    wt = tmp_path / "worktrees" / "9-x"
-    repo.git("worktree", "add", "-q", "-b", "t/9-x", str(wt))
-    repo.run("seed=1")
-    repo.run("seed=2", cwd=wt)
-    for cwd in (repo.root, wt):
-        assert table(repo.results(cwd=cwd))[group()]["n"] == "2"
-
-
-def test_bad_metrics_file_is_flagged_not_fatal(repo):
-    repo.run("seed=1")
-    d = repo.run_dirs()[0]
-    (d / "metrics.json").write_text("[1, 2]")
-    out = repo.results()
-    assert "no metrics (1 run(s)" in out and d.name in out
+def test_missing_mlflow_is_a_clear_error(repo):
+    p = subprocess.run([sys.executable, "-S", str(RESULTS), "--issue", "5"], cwd=repo.root,
+                       capture_output=True, text=True, env=repo.env, timeout=30)
+    assert p.returncode != 0 and "mlflow is not installed" in p.stderr

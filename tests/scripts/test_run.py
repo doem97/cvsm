@@ -1,97 +1,123 @@
 import fcntl
 import hashlib
 import importlib.util
-import json
 import os
-import re
+import shlex
 import signal
 import socket
-import stat
 import subprocess
 import sys
 import time
 
 import pytest
 
-from run_record_helpers import RUN, Repo
+from run_record_helpers import RUN, closed_port, wait_for
 
 _spec = importlib.util.spec_from_file_location("run_script", RUN)
 run = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(run)
 
-FIELDS = {"run_id", "issue", "commit", "dirty", "untracked", "command", "seed", "config",
-          "env_lock_sha", "env_lock_missing", "data_manifest_sha", "host", "gpus", "start",
-          "end", "exit_code"}
+PARAMS = {"rh.issue", "rh.command", "rh.seed", "rh.host", "rh.commit", "rh.dirty", "rh.env_lock_sha",
+          "rh.env_lock_missing", "rh.data_manifest_sha", "rh.gpus", "rh.exit_code"}
 
 
-def wait_for(path, timeout=10):
-    deadline = time.time() + timeout
-    while not path.exists():
-        assert time.time() < deadline, f"timed out waiting for {path}"
-        time.sleep(0.02)
+def rh(run_):
+    return {k: v for k, v in run_.data.params.items() if k.startswith("rh.")}
 
 
-def only_run(repo):
-    dirs = repo.run_dirs()
-    assert len(dirs) == 1, dirs
-    return dirs[0]
-
-
-def test_record_has_every_field_and_is_read_only(repo):
+def test_record_has_every_param_and_the_commit_tag(repo):
     head = repo.git("rev-parse", "HEAD")
     p = repo.run("method=a", "seed=2")
     assert p.returncode == 0, p.stderr
-    d = only_run(repo)
-    rec = repo.record(d)
-    assert set(rec) == FIELDS
-    assert rec["commit"] == head
-    assert rec["run_id"] == d.name
-    assert rec["issue"] == 5
-    assert rec["dirty"] is False and rec["untracked"] == []
-    assert rec["command"][-2:] == ["method=a", "seed=2"]
-    assert rec["exit_code"] == 0 and rec["gpus"] == [] and rec["config"] is None
-    assert rec["start"] <= rec["end"]
-    assert stat.S_IMODE((d / "run.json").stat().st_mode) == 0o444
-    assert not (d / "diff.patch").exists()
-    log = (d / "log.txt").read_text()
+    r = repo.only_run()
+    params = rh(r)
+    assert set(params) == PARAMS
+    assert params["rh.commit"] == head
+    assert r.data.tags["mlflow.source.git.commit"] == head
+    assert params["rh.issue"] == "5" and params["rh.seed"] == "2" and params["rh.dirty"] == "false"
+    assert shlex.split(params["rh.command"])[-3:] == ["fake.py", "method=a", "seed=2"]
+    assert params["rh.host"] == socket.gethostname()
+    assert params["rh.gpus"] == "" and params["rh.exit_code"] == "0"
+    assert r.info.status == "FINISHED"
+    assert r.info.experiment_id == repo.exp_id
+    log = repo.artifact(r, "log.txt").read_text()
     assert "hello stdout" in log and "hello stderr" in log
-    assert (d / "cuda.txt").read_text() == "<unset>"  # leasing off: CUDA_VISIBLE_DEVICES untouched
-    start = json.loads((d / "start.json").read_text())
-    assert start == {"run_id": d.name, "issue": 5, "command": rec["command"], "start": rec["start"]}
-    assert (d / "run.json").read_text().endswith("\n")
-    assert json.loads((d / "run.json").read_text()) == rec
+    assert repo.artifact(r, "cuda.txt").read_text() == "<unset>"  # leasing off: untouched
+    assert not repo.artifact(r, "diff.patch").exists()
+    assert list(repo.tmpdir.iterdir()) == []  # RUN_DIR removed after the upload
 
 
-def test_run_id_format(repo):
+def test_params_are_immutable(repo):
     repo.run()
-    assert re.fullmatch(r"\d{8}-\d{6}-[0-9a-f]{6}", only_run(repo).name)
+    r = repo.only_run()
+    with pytest.raises(Exception, match="(?i)chang"):
+        repo.client.log_param(r.info.run_id, "rh.commit", "0" * 40)
 
 
-def test_config_written_by_command_is_recorded(repo):
+def test_experiment_from_env_is_created_and_overrides_config(repo):
+    p = repo.run(env={"MLFLOW_EXPERIMENT_NAME": "from-env"})
+    assert p.returncode == 0, p.stderr
+    exp = repo.client.get_experiment_by_name("from-env")
+    assert exp is not None and repo.runs() == []
+    assert len(repo.runs([exp.experiment_id])) == 1
+
+
+def test_files_in_run_dir_become_artifacts(repo):
     repo.run("config=1")
-    d = only_run(repo)
-    cfg = repo.record(d)["config"]
-    assert cfg == {"path": "config.json",
-                   "sha256": hashlib.sha256((d / "config.json").read_bytes()).hexdigest()}
+    r = repo.only_run()
+    assert repo.artifact(r, "config.json").is_file()
+    assert repo.artifact(r, "metrics.json").is_file()
+    assert r.data.metrics == {"acc": 1, "loss": 0.5}  # the metrics.json fallback
+
+
+def test_command_attaching_with_mlflow_logs_into_the_same_run(repo):
+    p = repo.run("attach=1", "exit=2")
+    assert p.returncode == 2
+    r = repo.only_run()
+    assert r.data.metrics["attached"] == 7.0 and r.data.params["lr"] == "0.1"
+    # The command's own end_run() said FINISHED; run.py sets the final status last.
+    assert r.info.status == "FAILED"
+
+
+def test_bad_metrics_file_is_not_fatal(repo):
+    assert repo.run("metrics=list").returncode == 0
+    r = repo.only_run()
+    assert r.info.status == "FINISHED" and r.data.metrics == {}
+    assert repo.artifact(r, "metrics.json").read_text() == "[1, 2]"
+
+
+def test_failed_upload_keeps_run_dir(repo):
+    if os.geteuid() == 0:
+        pytest.skip("root ignores permissions")
+    (repo.tmp / "artifacts").mkdir()
+    (repo.tmp / "artifacts").chmod(0o500)
+    try:
+        p = repo.run()
+    finally:
+        (repo.tmp / "artifacts").chmod(0o700)
+    assert p.returncode == 0
+    [kept] = list(repo.tmpdir.iterdir())
+    assert str(kept) in p.stderr and (kept / "log.txt").is_file()
+    assert repo.only_run().info.status == "FINISHED"
 
 
 def test_dirty_tree_with_untracked_file(repo):
     (repo.root / "fake.py").write_text((repo.root / "fake.py").read_text() + "\n# local edit\n")
     (repo.root / "new_module.py").write_text("x = 1\n")
     repo.run()
-    d = only_run(repo)
-    rec = repo.record(d)
-    assert rec["dirty"] is True
-    assert rec["untracked"] == ["new_module.py"]
-    assert "# local edit" in (d / "diff.patch").read_text()
+    r = repo.only_run()
+    assert r.data.params["rh.dirty"] == "true"
+    assert "# local edit" in repo.artifact(r, "diff.patch").read_text()
+    assert repo.artifact(r, "untracked.txt").read_text().split() == ["new_module.py"]
 
 
 def test_untracked_only_is_dirty(repo):
     (repo.root / "data").mkdir()
     (repo.root / "data" / "x.csv").write_text("1\n")
     repo.run()
-    rec = repo.record(only_run(repo))
-    assert rec["dirty"] is True and rec["untracked"] == ["data/x.csv"]
+    r = repo.only_run()
+    assert r.data.params["rh.dirty"] == "true"
+    assert repo.artifact(r, "untracked.txt").read_text().split() == ["data/x.csv"]
 
 
 @pytest.mark.parametrize("cmd, seed, rest", [
@@ -108,24 +134,41 @@ def test_split_seed_custom_key():
     assert run.split_seed(["t.py", "train.seed=7", "seed=1"], "train.seed") == (7, ["t.py", "seed=1"])
 
 
-@pytest.mark.parametrize("args, seed", [(["seed=3"], 3), (["--seed", "3"], 3), ([], None)])
+@pytest.mark.parametrize("args, seed", [(["seed=3"], "3"), (["--seed", "3"], "3"), (["--seed=3"], "3"), ([], "")])
 def test_seed_recorded(repo, args, seed):
     repo.run(*args)
-    assert repo.record(only_run(repo))["seed"] == seed
+    assert repo.only_run().data.params["rh.seed"] == seed
 
 
-def test_nonzero_exit_is_recorded_and_returned(repo):
+def test_nonzero_exit_is_failed_and_returned(repo):
     p = repo.run("exit=3")
     assert p.returncode == 3
-    assert repo.record(only_run(repo))["exit_code"] == 3
+    r = repo.only_run()
+    assert r.info.status == "FAILED" and r.data.params["rh.exit_code"] == "3"
 
 
 def test_missing_command_is_a_failed_run(repo):
-    p = subprocess.run([sys.executable, str(RUN), "--", "no-such-binary-xyz"],
-                       cwd=repo.root, capture_output=True, text=True, timeout=30)
+    p = repo.run(issue=None, cmd=["no-such-binary-xyz"])
     assert p.returncode == 127
-    rec = repo.record(only_run(repo))
-    assert rec["exit_code"] == 127 and rec["issue"] is None
+    r = repo.only_run()
+    assert r.info.status == "FAILED"
+    assert r.data.params["rh.exit_code"] == "127" and r.data.params["rh.issue"] == ""
+    assert "no-such-binary-xyz" in repo.artifact(r, "log.txt").read_text()
+
+
+def test_unreachable_backend_fails_before_the_command(repo):
+    marker = repo.tmp / "ran"
+    p = repo.run(cmd=["touch", str(marker)], env={
+        "MLFLOW_TRACKING_URI": f"http://127.0.0.1:{closed_port()}",
+        "MLFLOW_HTTP_REQUEST_MAX_RETRIES": "0", "MLFLOW_HTTP_REQUEST_TIMEOUT": "2"})
+    assert p.returncode != 0 and "run.py:" in p.stderr
+    assert not marker.exists()
+
+
+def test_missing_mlflow_is_a_clear_error(repo):
+    p = subprocess.run([sys.executable, "-S", str(RUN), "--", "true"], cwd=repo.root,
+                       capture_output=True, text=True, env=repo.env, timeout=30)
+    assert p.returncode != 0 and "mlflow is not installed" in p.stderr
 
 
 def test_env_lock_and_data_manifest_hashes(make_repo):
@@ -134,52 +177,55 @@ def test_env_lock_and_data_manifest_hashes(make_repo):
     (repo.root / "data.sha256").write_text("abc  train.bin\n")
     repo.commit("add lock and manifest")
     repo.run()
-    rec = repo.record(only_run(repo))
-    assert rec["env_lock_sha"] == hashlib.sha256(b"lock v1\n").hexdigest()  # same as sha256sum uv.lock
-    assert rec["env_lock_missing"] == ["requirements.txt"]
-    assert rec["data_manifest_sha"] == hashlib.sha256(b"abc  train.bin\n").hexdigest()
+    params = repo.only_run().data.params
+    assert params["rh.env_lock_sha"] == hashlib.sha256(b"lock v1\n").hexdigest()  # = sha256sum uv.lock
+    assert params["rh.env_lock_missing"] == "requirements.txt"
+    assert params["rh.data_manifest_sha"] == hashlib.sha256(b"abc  train.bin\n").hexdigest()
 
 
 def test_missing_env_lock_is_recorded(repo):
     repo.run()
-    rec = repo.record(only_run(repo))
-    assert rec["env_lock_sha"] is None and rec["env_lock_missing"] == ["uv.lock"]
-    assert rec["data_manifest_sha"] is None
+    params = repo.only_run().data.params
+    assert params["rh.env_lock_sha"] == "" and params["rh.env_lock_missing"] == "uv.lock"
+    assert params["rh.data_manifest_sha"] == ""
 
 
 def test_more_gpus_than_configured_is_an_immediate_error(make_repo):
     repo = make_repo(gpus=[0, 1])
     p = repo.run(gpus=3)
     assert p.returncode != 0 and "--gpus" in p.stderr
-    assert repo.run_dirs() == []
+    assert repo.runs() == []
     assert repo.run().returncode == 0  # without --gpus, one GPU is leased
-    assert repo.record(repo.run_dirs()[0])["gpus"] == [0]
+    assert repo.only_run().data.params["rh.gpus"] == "0"
 
 
 def test_gpus_with_leasing_off_is_an_error(repo):
     p = repo.run(gpus=1)
-    assert p.returncode != 0 and repo.run_dirs() == []
+    assert p.returncode != 0 and repo.runs() == []
 
 
 def test_concurrent_runs_lease_different_gpus(make_repo):
     repo = make_repo(gpus=[0, 1])
-    release = repo.root.parent / "release"
-    first = repo.start("hold=" + str(release), gpus=1)
+    hold = repo.tmp / "release"
+    first = repo.start("hold=" + str(hold), gpus=1)
     try:
-        wait_for(repo.storage / "runs")
-        d1 = repo.run_dirs()[0]
-        wait_for(d1 / "started")
+        wait_for(hold.with_suffix(".pid"))
         second = repo.run(gpus=1)
         assert second.returncode == 0, second.stderr
     finally:
-        release.write_text("go")
+        hold.write_text("go")
         first.communicate(timeout=30)
-    d2 = [d for d in repo.run_dirs() if d != d1][0]
-    r1, r2 = repo.record(d1), repo.record(d2)
-    assert len(r1["gpus"]) == len(r2["gpus"]) == 1
-    assert r1["gpus"] != r2["gpus"]
-    assert (d1 / "cuda.txt").read_text() == str(r1["gpus"][0])
-    assert (d2 / "cuda.txt").read_text() == str(r2["gpus"][0])
+    runs = [repo.client.get_run(r.info.run_id) for r in repo.runs()]
+    gpus = sorted(r.data.params["rh.gpus"] for r in runs)
+    assert gpus == ["0", "1"]
+    for r in runs:
+        assert repo.artifact(r, "cuda.txt").read_text() == r.data.params["rh.gpus"]
+
+
+def test_default_lock_dir_is_under_the_temp_dir(make_repo):
+    repo = make_repo(gpus=[0], lock_dir="")
+    assert repo.run().returncode == 0
+    assert (repo.tmpdir / "rh-gpu-locks" / socket.gethostname() / "gpu0.lock").is_file()
 
 
 def lock_is_free(path):
@@ -191,27 +237,43 @@ def lock_is_free(path):
             return False
 
 
-def test_sigterm_records_negative_exit_and_releases_lease(make_repo):
+def test_sigterm_is_killed_and_releases_lease(make_repo):
     repo = make_repo(gpus=[0])
-    p = repo.start("hold=" + str(repo.root.parent / "never"))
-    wait_for(repo.storage / "runs")
-    d = repo.run_dirs()[0]
-    wait_for(d / "started")
-    assert not lock_is_free(repo.storage / "locks" / socket.gethostname() / "gpu0.lock")
+    hold = repo.tmp / "never"
+    p = repo.start("hold=" + str(hold))
+    wait_for(hold.with_suffix(".pid"))
+    lock = repo.locks / socket.gethostname() / "gpu0.lock"
+    assert not lock_is_free(lock)
     p.send_signal(signal.SIGTERM)
     p.communicate(timeout=30)
-    rec = repo.record(d)
-    assert rec["exit_code"] == -signal.SIGTERM
     assert p.returncode == 128 + signal.SIGTERM
-    assert rec["gpus"] == [0]
-    assert lock_is_free(repo.storage / "locks" / socket.gethostname() / "gpu0.lock")
+    r = repo.only_run()
+    assert r.info.status == "KILLED"
+    assert r.data.params["rh.exit_code"] == str(-signal.SIGTERM) and r.data.params["rh.gpus"] == "0"
+    assert lock_is_free(lock)
+
+
+def test_sigterm_while_waiting_for_gpus_is_killed_without_running(make_repo):
+    repo = make_repo(gpus=[0])
+    lock = repo.locks / socket.gethostname() / "gpu0.lock"
+    lock.parent.mkdir(parents=True)
+    with open(lock, "a") as held:
+        fcntl.flock(held, fcntl.LOCK_EX)
+        p = repo.start(cmd=["touch", str(repo.tmp / "ran")])
+        while "waiting" not in (line := p.stderr.readline()):
+            assert line, "run.py exited before waiting for the GPU"
+        p.send_signal(signal.SIGTERM)
+        p.communicate(timeout=30)
+    assert p.returncode == 128 + signal.SIGTERM
+    assert repo.only_run().info.status == "KILLED"
+    assert not (repo.tmp / "ran").exists()
 
 
 SIGINT_CHILD = r"""
-import os, signal, time
+import os, signal, sys, time
 hits = []
 signal.signal(signal.SIGINT, lambda *_: hits.append(1))
-open(os.path.join(os.environ["RUN_DIR"], "started"), "w").close()
+open(sys.argv[1], "w").close()
 deadline = time.time() + 20
 while not hits and time.time() < deadline:
     time.sleep(0.02)
@@ -223,53 +285,42 @@ with open(os.path.join(os.environ["RUN_DIR"], "sigints"), "w") as f:
 
 def test_ctrl_c_reaches_the_command_once(repo):
     (repo.root / "sigint.py").write_text(SIGINT_CHILD)
-    p = subprocess.Popen([sys.executable, str(RUN), "--issue", "5", "--", sys.executable, "sigint.py"],
-                         cwd=repo.root, start_new_session=True,
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    wait_for(repo.storage / "runs")
-    d = repo.run_dirs()[0]
-    wait_for(d / "started")
+    started = repo.tmp / "started"
+    p = repo.start(cmd=[sys.executable, "sigint.py", str(started)], start_new_session=True)
+    wait_for(started)
     os.killpg(p.pid, signal.SIGINT)  # what the terminal does on Ctrl-C
     p.communicate(timeout=30)
-    assert (d / "sigints").read_text() == "1"
-    assert repo.record(d)["exit_code"] == 0
+    r = repo.only_run()
+    assert repo.artifact(r, "sigints").read_text() == "1"
+    assert r.data.params["rh.exit_code"] == "0" and r.info.status == "FINISHED"
 
-def test_sigkill_leaves_start_json_without_run_json(repo):
-    p = repo.start("hold=" + str(repo.root.parent / "never"))
-    wait_for(repo.storage / "runs")
-    d = repo.run_dirs()[0]
-    wait_for(d / "started")
+
+def kill_run_py(repo, p, hold):
+    """SIGKILL run.py once its command runs; return the orphaned command's pid."""
+    wait_for(hold.with_suffix(".pid"))
     p.kill()
     p.communicate(timeout=30)
-    os.kill(int((d / "started").read_text()), signal.SIGKILL)  # the orphaned child
-    assert (d / "start.json").exists() and not (d / "run.json").exists()
+    return int(hold.with_suffix(".pid").read_text())
+
+
+def test_sigkill_leaves_the_run_running(repo):
+    hold = repo.tmp / "never"
+    child = kill_run_py(repo, repo.start("hold=" + str(hold)), hold)
+    os.kill(child, signal.SIGKILL)
+    r = repo.only_run()
+    assert r.info.status == "RUNNING" and "rh.exit_code" not in r.data.params
+    assert r.data.params["rh.commit"] == repo.git("rev-parse", "HEAD")
 
 
 def test_lease_outlives_a_killed_run_py(make_repo):
     repo = make_repo(gpus=[0])
-    p = repo.start("hold=" + str(repo.root.parent / "never"))
-    wait_for(repo.storage / "runs")
-    d = repo.run_dirs()[0]
-    wait_for(d / "started")
-    lock = repo.storage / "locks" / socket.gethostname() / "gpu0.lock"
-    p.kill()
-    p.communicate(timeout=30)
+    hold = repo.tmp / "never"
+    child = kill_run_py(repo, repo.start("hold=" + str(hold)), hold)
+    lock = repo.locks / socket.gethostname() / "gpu0.lock"
     assert not lock_is_free(lock)  # the orphaned command still holds its GPU
-    os.kill(int((d / "started").read_text()), signal.SIGKILL)
+    os.kill(child, signal.SIGKILL)
     deadline = time.time() + 10
     while not lock_is_free(lock):
         assert time.time() < deadline, "lease not released after the command died"
         time.sleep(0.02)
 
-
-def test_linked_worktree_shares_main_checkout_storage(tmp_path):
-    repo = Repo(tmp_path, storage="../storage")
-    wt = tmp_path / "worktrees" / "9-x"
-    repo.git("worktree", "add", "-q", "-b", "t/9-x", str(wt))
-    assert repo.run(cwd=repo.root).returncode == 0
-    p = repo.run(cwd=wt)
-    assert p.returncode == 0, p.stderr
-    dirs = repo.run_dirs()
-    assert len(dirs) == 2  # both under tmp/storage, the sibling of the main checkout
-    assert not (tmp_path / "worktrees" / "storage").exists()
-    assert {repo.record(d)["commit"] for d in dirs} == {repo.git("rev-parse", "HEAD")}
