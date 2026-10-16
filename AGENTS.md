@@ -1,6 +1,6 @@
 ## State
 - Start every instruction by reading state from GitHub, never from chat memory: open `study`/`plan` issues with their sub-issue summaries, open PRs with their checks, and issues labelled `needs-decision`.
-- A parent issue (`study` for research, `plan` for development) has sub-issues labelled `code` or `run`; it awaits analysis once all of them are closed.
+- A parent issue (`study` for research, `plan` for development) has sub-issues labelled `code` or `run`; it awaits analysis once all of them are closed. Use no label other than these and `needs-decision`.
 - Set parents and dependencies with `gh issue create --parent P --blocked-by M`; never write them into the body.
 - Write issue bodies with the `### ` sections of the matching form in `.github/ISSUE_TEMPLATE/`.
 - Waiting: blocked by an issue that is still open. Ready: open, not blocked, no linked branch.
@@ -10,7 +10,6 @@
 - In review: PR open, checks or review not finished. Merge-ready: `guard` and `test` green, no blocking review finding.
 - Done: a `code` issue closes when the human merges its PR (`Closes #N`); close a `run` issue yourself with its results comment.
 - Only the human abandons a task (closes it as not planned) and closes a parent (as completed with the conclusion, or as not planned).
-- Use only the labels `study`, `plan`, `code`, `run`, `needs-decision`.
 - Write every state change to GitHub or git as it happens; the session can end at any moment.
 
 ## Gates
@@ -75,6 +74,7 @@
 <!-- Adopters replace this section with their own project's values. -->
 - Layout: this repo is the template itself; there is no src/, and scripts/ holds the reference run and results scripts.
 - Test: `python -m pytest -q`
+- Language: write PR bodies, issue and PR comments, and reports in Chinese; keep PR titles, format keywords and repo files in English.
 - Protected eval/data paths: none.
 - Run: `python scripts/run.py --issue N -- <cmd>`; results comment: `python scripts/results.py --issue N`.
 - Storage: `../storage`, relative to the main clone; run records go to `<storage>/runs/<run_id>/`.

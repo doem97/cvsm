@@ -59,7 +59,7 @@ def test_agents_agrees_with_guard_toml():
 
 def test_agents_project_fields():
     text = section("Project")  # adopters replace the values, not the fields
-    for field in ("Layout:", "Test:", "Protected eval/data paths:", "Run:", "Storage:"):
+    for field in ("Layout:", "Test:", "Language:", "Protected eval/data paths:", "Run:", "Storage:"):
         assert f"- {field}" in text, field
 
 
