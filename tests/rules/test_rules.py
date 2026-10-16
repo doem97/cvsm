@@ -63,8 +63,10 @@ def test_agents_project_fields():
         assert f"- {field}" in text, field
 
 
-def test_claude_md_imports_agents():
-    assert (ROOT / "CLAUDE.md").read_text() == "@AGENTS.md\n"
+def test_claude_md_absent_or_imports_agents():
+    # Claude Code loads AGENTS.md only when the project has no CLAUDE.md of its own.
+    p = ROOT / "CLAUDE.md"
+    assert not p.exists() or "@AGENTS.md" in p.read_text()
 
 
 def test_claude_settings_deny_merge():
