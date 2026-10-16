@@ -5,9 +5,9 @@
 
 Runs are grouped by command with the seed tokens removed. Per group: n (runs that exited
 0, which the statistics use), n_failed, and the mean and sample std of each metric from
-metrics.json. Provenance differences (commit, env lock, data manifest), dirty trees and
-incomplete runs (start.json without run.json) are flagged; whether runs are comparable
-is for the reader to decide.
+metrics.json. Provenance differences (commit, env lock, data manifest), dirty trees,
+successful runs without metrics and incomplete runs (start.json without run.json) are
+flagged; whether runs are comparable is for the reader to decide.
 """
 import argparse
 import json
@@ -53,7 +53,8 @@ def main():
             if (load(d / "start.json") or {}).get("issue") == a.issue:
                 incomplete.append(d.name)
         elif rec.get("issue") == a.issue:
-            rec["metrics"] = load(d / "metrics.json") or {}
+            m = load(d / "metrics.json")
+            rec["metrics"] = m if isinstance(m, dict) else {}
             runs.append(rec)
     runs.sort(key=lambda r: datetime.fromisoformat(r["start"]))
     groups = {}
@@ -93,6 +94,10 @@ def main():
     dirty = [r["run_id"] for r in runs if r["dirty"]]
     if dirty:
         flags.append(f"- dirty runs ({len(dirty)}, see diff.patch): {', '.join(dirty)}")
+    nometrics = [r["run_id"] for r in runs if r["exit_code"] == 0 and not r["metrics"]]
+    if nometrics:
+        flags.append(f"- no metrics ({len(nometrics)} run(s) exited 0 without a metrics.json object): "
+                     f"{', '.join(nometrics)}")
     if incomplete:
         flags.append(f"- incomplete runs ({len(incomplete)}, no run.json: still running or killed): {', '.join(incomplete)}")
     print("\n".join(out + ["", "Flags:", *(flags or ["- none"])]))

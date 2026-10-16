@@ -140,3 +140,11 @@ def test_results_from_a_worktree_read_the_shared_storage(tmp_path):
     repo.run("seed=2", cwd=wt)
     for cwd in (repo.root, wt):
         assert table(repo.results(cwd=cwd))[group()]["n"] == "2"
+
+
+def test_bad_metrics_file_is_flagged_not_fatal(repo):
+    repo.run("seed=1")
+    d = repo.run_dirs()[0]
+    (d / "metrics.json").write_text("[1, 2]")
+    out = repo.results()
+    assert "no metrics (1 run(s)" in out and d.name in out

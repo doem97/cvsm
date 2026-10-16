@@ -5,6 +5,7 @@ import json
 import os
 import re
 import signal
+import socket
 import stat
 import subprocess
 import sys
@@ -196,14 +197,14 @@ def test_sigterm_records_negative_exit_and_releases_lease(make_repo):
     wait_for(repo.storage / "runs")
     d = repo.run_dirs()[0]
     wait_for(d / "started")
-    assert not lock_is_free(repo.storage / "locks" / "gpu0.lock")
+    assert not lock_is_free(repo.storage / "locks" / socket.gethostname() / "gpu0.lock")
     p.send_signal(signal.SIGTERM)
     p.communicate(timeout=30)
     rec = repo.record(d)
     assert rec["exit_code"] == -signal.SIGTERM
     assert p.returncode == 128 + signal.SIGTERM
     assert rec["gpus"] == [0]
-    assert lock_is_free(repo.storage / "locks" / "gpu0.lock")
+    assert lock_is_free(repo.storage / "locks" / socket.gethostname() / "gpu0.lock")
 
 
 SIGINT_CHILD = r"""
@@ -242,6 +243,23 @@ def test_sigkill_leaves_start_json_without_run_json(repo):
     p.communicate(timeout=30)
     os.kill(int((d / "started").read_text()), signal.SIGKILL)  # the orphaned child
     assert (d / "start.json").exists() and not (d / "run.json").exists()
+
+
+def test_lease_outlives_a_killed_run_py(make_repo):
+    repo = make_repo(gpus=[0])
+    p = repo.start("hold=" + str(repo.root.parent / "never"))
+    wait_for(repo.storage / "runs")
+    d = repo.run_dirs()[0]
+    wait_for(d / "started")
+    lock = repo.storage / "locks" / socket.gethostname() / "gpu0.lock"
+    p.kill()
+    p.communicate(timeout=30)
+    assert not lock_is_free(lock)  # the orphaned command still holds its GPU
+    os.kill(int((d / "started").read_text()), signal.SIGKILL)
+    deadline = time.time() + 10
+    while not lock_is_free(lock):
+        assert time.time() < deadline, "lease not released after the command died"
+        time.sleep(0.02)
 
 
 def test_linked_worktree_shares_main_checkout_storage(tmp_path):

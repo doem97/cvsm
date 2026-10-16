@@ -12,6 +12,11 @@ A relative `storage` resolves against the main checkout (the parent of git's com
 so runs from linked worktrees land in the same place. env_lock and data_manifest paths
 resolve against the current checkout. The exit status is the command's own; a command
 killed by signal S gives 128 + S, and run.json records -S.
+
+GPU locks are <storage>/locks/<host>/gpu<i>.lock and the command inherits them, so a
+lease lasts as long as the command, even if run.py itself is killed. SIGTERM is
+forwarded to the command. Ctrl-C already reaches it through the terminal, so SIGINT is
+not forwarded; stop a background run with SIGTERM.
 """
 import argparse
 import fcntl
@@ -130,7 +135,7 @@ def main(argv):
     run_dir.mkdir(parents=True)
     write_once(run_dir / "start.json", {"run_id": run_id, "issue": a.issue, "command": cmd, "start": start})
     print(f"run.py: {run_dir}", file=sys.stderr, flush=True)
-    held = lease(ids, k, storage / "locks") if k else []
+    held = lease(ids, k, storage / "locks" / socket.gethostname()) if k else []
 
     # Capture the code state right before launch, after any wait for GPUs.
     top = Path(git("rev-parse", "--show-toplevel").strip())
@@ -147,7 +152,8 @@ def main(argv):
         env["CUDA_VISIBLE_DEVICES"] = ",".join(str(i) for i, _ in held)
     with open(run_dir / "log.txt", "wb") as log:
         try:
-            child = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=env)
+            child = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=env,
+                                     pass_fds=[f.fileno() for _, f in held])
         except OSError as e:
             log.write(f"run.py: {e}\n".encode())
             code = 127
