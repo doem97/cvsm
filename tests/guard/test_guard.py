@@ -61,8 +61,11 @@ def f(name, status="modified", prev=None, add=1, dele=0):
     return d
 
 
+REPO = "doem97/research-harness"
+
+
 def run(files=None, title="feat(#12): add the thing", body=GOOD_BODY, issue="default", c=None):
-    pr = {"number": 7, "title": title, "body": body}
+    pr = {"number": 7, "title": title, "body": body, "repo": REPO}
     if files is None:
         files = [f("src/pkg/methods/a.py"), f("tests/test_a.py")]
     return guard.check(pr, files, mk_issue() if issue == "default" else issue, c or cfg())
@@ -82,8 +85,13 @@ def run(files=None, title="feat(#12): add the thing", body=GOOD_BODY, issue="def
     ("a/x/y/b.py", "a/**/b.py", True),
     ("a/b", "a?b", False),
     ("a.b", "a?b", True),
-    ("src/a.py", "src/[ab].py", True),
-    ("src/c.py", "src/[ab].py", False),
+    ("src/[ab].py", "src/[ab].py", True),
+    ("src/a.py", "src/[ab].py", False),
+    ("a/[!x]/b", "a/[!x]/b", True),
+    ("a/c/b", "a/[!x]/b", False),
+    ("a/x/y", "a[!b]x/y", False),
+    ("src/[x.py", "src/[*.py", True),
+    ("src/]x.py", "src/]*", True),
     ("any/deep/path", "**", True),
 ])
 def test_glob_match(path, pattern, ok):
@@ -91,7 +99,7 @@ def test_glob_match(path, pattern, ok):
 
 
 @pytest.mark.parametrize("pattern,prefix", [
-    (".github/**", ".github/"), ("AGENTS.md", "AGENTS.md"), ("src/[ab]/x", "src/"),
+    (".github/**", ".github/"), ("AGENTS.md", "AGENTS.md"), ("src/[ab]/x", "src/[ab]/x"), ("[a-z]**", "[a-z]"),
     ("src/pkg/eval/**", "src/pkg/eval/"), ("a?b", "a"), ("**", ""),
 ])
 def test_literal_prefix(pattern, prefix):
@@ -115,6 +123,25 @@ def test_literal_prefix(pattern, prefix):
 ])
 def test_closing_refs(body, refs):
     assert guard.closing_refs(body) == refs
+
+
+@pytest.mark.parametrize("body,refs", [
+    ("Closes doem97/research-harness#5", [5]),
+    ("Closes DOEM97/Research-Harness#5", [5]),
+    ("Closes other/repo#5", []),
+    ("Closes #2 and fixes doem97/research-harness#3", [2, 3]),
+    ("Closes https://github.com/doem97/research-harness/issues/5", [5]),
+    ("Closes https://github.com/other/repo/issues/5", []),
+    ("Closes #5, closes doem97/research-harness#5", [5]),
+])
+def test_closing_refs_same_repo(body, refs):
+    assert guard.closing_refs(body, REPO) == refs
+
+
+def test_glob_brackets_never_raise():
+    for pattern in ["[", "]", "a[", "[]", "[!", "a[b", "[a-", "x[^]y", "[\\]"]:
+        assert guard.glob_match(pattern, pattern) is True
+        assert guard.glob_match("a", pattern) is False
 
 
 # --- parse_sections / parse_scope
@@ -195,6 +222,15 @@ def test_fail_no_ref():
     one(run(body=GOOD_BODY.replace("Closes #12", "Part of #12"), issue=None), "exactly one")
 
 
+def test_fail_same_repo_second_ref():
+    body = GOOD_BODY.replace("Closes #12", "Closes #12 and fixes doem97/research-harness#3")
+    one(run(body=body), "exactly one", "found 2")
+
+
+def test_pass_full_same_repo_ref():
+    assert run(body=GOOD_BODY.replace("Closes #12", "Closes doem97/research-harness#12")) == []
+
+
 def test_fail_two_refs():
     one(run(body=GOOD_BODY.replace("Closes #12", "Closes #12, fixes #13")), "exactly one")
 
@@ -213,6 +249,15 @@ def test_fail_missing_code_label():
 
 def test_fail_empty_scope():
     one(run(issue=mk_issue(scope=["_No response_"])), "Scope", "empty")
+
+
+@pytest.mark.parametrize("entry", ["*", "*.py", "?**", "?", "[a-z]**"])
+def test_fail_scope_without_literal_prefix(entry):
+    msg = run(issue=mk_issue(scope=["src/**", "tests/**", entry]))
+    if entry.startswith("["):  # `[` is literal now, so this entry is merely unused
+        assert msg == []
+    else:
+        one(msg, entry, "wildcard")
 
 
 def test_fail_wildcard_scope():
@@ -384,6 +429,8 @@ data = json.load(open(os.environ["FAKE_GH_DATA"]))
 args = sys.argv[1:]
 assert args[0] == "api", args
 path = args[1]
+if path.endswith("/files"):
+    assert "--paginate" in args and "--slurp" in args, args
 if path not in data:
     print(json.dumps({"message": "Not Found", "status": "404"}))
     sys.stderr.write("gh: Not Found (HTTP 404)\n")

@@ -11,30 +11,27 @@ import sys
 import tomllib
 
 SECTIONS = ("## Changes", "## Acceptance", "## Out of scope")
-GLOB_TOKENS = re.compile(r"\*\*/|\*\*|\*|\?|\[[^\]/]+\]|.", re.S)
+GLOB_TOKENS = re.compile(r"\*\*/|\*\*|\*|\?|.", re.S)
 GLOB_REGEX = {"**/": "(?:.*/)?", "**": ".*", "*": "[^/]*", "?": "[^/]"}
-CLOSING = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+#(\d+)\b", re.IGNORECASE)
+REF_REPO = r"([\w.-]+/[\w.-]+)"
+CLOSING = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+"
+                     rf"(?:https://github\.com/{REF_REPO}/issues/|{REF_REPO}#|#)(\d+)\b", re.IGNORECASE)
 
 
 def glob_match(path: str, pattern: str) -> bool:
-    regex = ""
-    for tok in GLOB_TOKENS.findall(pattern):
-        if tok in GLOB_REGEX:
-            regex += GLOB_REGEX[tok]
-        elif tok[0] == "[" and len(tok) > 2:  # character class; [!x] negates
-            regex += "[" + ("^" + tok[2:] if tok[1] == "!" else tok[1:])
-        else:
-            regex += re.escape(tok)
+    # Only `**`, `*` and `?` are wildcards; everything else, `[` included, is literal.
+    regex = "".join(GLOB_REGEX.get(tok) or re.escape(tok) for tok in GLOB_TOKENS.findall(pattern))
     return re.fullmatch(regex, path) is not None
 
 
 def literal_prefix(pattern: str) -> str:
-    return re.split(r"[*?\[]", pattern, maxsplit=1)[0]
+    return re.split(r"[*?]", pattern, maxsplit=1)[0]
 
 
-def closing_refs(body: str) -> list[int]:
-    # `#` must follow the keyword and whitespace directly, so `owner/repo#N` never counts.
-    refs = [int(n) for n in CLOSING.findall(body or "")]
+def closing_refs(body: str, repo: str | None = None) -> list[int]:
+    # `owner/repo#N` and issue URLs count only when they name this repo; other repos are ignored.
+    refs = [int(n) for url, short, n in CLOSING.findall(body or "")
+            if not (url or short) or (url or short).lower() == (repo or "").lower()]
     return list(dict.fromkeys(refs))
 
 
@@ -91,7 +88,7 @@ def check_file(f: dict, scope: list[str] | None, cfg: dict) -> list[str]:
 
 def check(pr: dict, files: list[dict], issue: dict | None, cfg: dict) -> list[str]:
     fails, body = [], (pr.get("body") or "").replace("\r\n", "\n")
-    refs = closing_refs(body)
+    refs = closing_refs(body, pr.get("repo"))
     n = refs[0] if len(refs) == 1 else None
     if n is None:
         fails.append(f"PR body must close exactly one issue with `Closes #N` (found {len(refs)})")
@@ -105,11 +102,11 @@ def check(pr: dict, files: list[dict], issue: dict | None, cfg: dict) -> list[st
         if "code" not in issue["labels"]:
             fails.append(f"issue #{n} does not have the `code` label")
         entries = parse_scope(issue["body"])
-        wild = [s for s in entries if s.startswith("*")]
+        wild = [s for s in entries if not literal_prefix(s)]
         if not entries:
             fails.append(f"issue #{n} has an empty Scope")
         elif wild:
-            fails.append(f"issue #{n} Scope entries must not start with a wildcard: {', '.join(wild)}")
+            fails.append(f"issue #{n} Scope entries must start with a literal path, not a wildcard: {', '.join(wild)}")
         else:
             scope = entries
 
@@ -154,14 +151,14 @@ def main() -> int:
         print(f"guard: cannot read PR #{number} through the API")
         return 1
     files = [f for page in pages for f in page]
-    refs = closing_refs(pr.get("body") or "")
+    refs = closing_refs(pr.get("body") or "", repo)
     issue = None
     if len(refs) == 1:
         raw = gh_api(f"repos/{repo}/issues/{refs[0]}")
         if raw is not None:
             issue = {"number": raw["number"], "state": raw["state"], "body": raw.get("body") or "",
                      "labels": [label["name"] for label in raw.get("labels", [])]}
-    fails = check({"number": pr["number"], "title": pr["title"], "body": pr.get("body") or ""},
+    fails = check({"number": pr["number"], "title": pr["title"], "body": pr.get("body") or "", "repo": repo},
                   files, issue, cfg)
     for msg in fails:
         print(f"guard: {msg}")
