@@ -49,10 +49,10 @@
 
 ## Files
 - Add files only where `layout` in `.github/guard.toml` allows.
-- Put `.md` files only in README.md, AGENTS.md, CLAUDE.md, docs/, .agents/skills/ and .github/.
+- Put `.md` files only in README.md, AGENTS.md, docs/, .agents/skills/ and .github/; AGENTS.md is the only instruction file, so never add CLAUDE.md.
 - Never create files named TODO, NOTES, PLAN or PROGRESS (any case, any extension).
 - Change only paths that your issue's Scope matches.
-- Protected: AGENTS.md, CLAUDE.md, .agents/, .codex/, .claude/, .github/ and the eval/data paths in Project; change them only when a Scope entry names them explicitly.
+- Protected: AGENTS.md, .agents/, .codex/, .claude/, .github/ and the eval/data paths in Project; change them only when a Scope entry names them explicitly.
 - A method task changes only its own module, configs and tests; a shared-code change is a separate task.
 - docs/ belongs to the human; edit it only when your Scope names it.
 - Never modify a run record after it is written.
