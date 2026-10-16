@@ -77,4 +77,4 @@
 - Language: write PR bodies, issue and PR comments, and reports in Chinese; keep PR titles, format keywords and repo files in English.
 - Protected eval/data paths: none.
 - Run: `python scripts/run.py --issue N -- <cmd>`; results comment: `python scripts/results.py --issue N`.
-- Run records: MLflow runs in the backend that `MLFLOW_TRACKING_URI` names (MLflow's default if unset); the experiment is set in `scripts/run.toml`.
+- Run records: MLflow runs in the backend that `MLFLOW_TRACKING_URI` names; if unset, `mlflow.db` at the main clone root. The experiment is set in `scripts/run.toml`.
