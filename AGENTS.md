@@ -4,7 +4,7 @@
 - Set parents and dependencies with `gh issue create --parent P --blocked-by M`; never write them into the body.
 - Write issue bodies with the `### ` sections of the matching form in `.github/ISSUE_TEMPLATE/`.
 - Waiting: blocked by an issue that is still open. Ready: open, not blocked, no linked branch.
-- In progress: has a linked branch; claim with `gh issue develop`. Never touch an issue that already has a linked branch.
+- In progress: has a linked branch; claim with `gh issue develop`. Never claim an issue that already has one; continue it only if the instruction names it or this session claimed it.
 - Needs decision: label `needs-decision` plus a blocker comment; remove the label once the human has answered.
 - In review: PR open, checks or review not finished. Merge-ready: `guard` and `test` green, no blocking review finding.
 - Done: a `code` issue closes when the human merges its PR (`Closes #N`); close a `run` issue yourself with its results comment.

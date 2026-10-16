@@ -47,7 +47,7 @@ def test_agents_state_starts_with_read_rule():
 
 def test_agents_agrees_with_guard_toml():
     cfg = tomllib.loads((ROOT / ".github" / "guard.toml").read_text())
-    text = section("Files")
+    text = agents()  # adopters list their eval/data paths under Project
     for p in cfg["protected"] + cfg["markdown"]:
         assert p.removesuffix("**") in text, p
     for name in cfg["forbidden_names"]:
