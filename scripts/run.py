@@ -32,9 +32,11 @@ otherwise (127 when it cannot start). The exit status is the command's own; sign
 
 GPU locks are <lock_dir>/<host>/gpu<i>.lock and the command inherits them, so a lease lasts as
 long as the command, even if run.py itself is killed. The default lock_dir, <tmp>/rh-gpu-locks,
-is shared by all users of the host; a configured lock_dir keeps its own permissions. SIGTERM is
-forwarded to the command. Ctrl-C already reaches it through the terminal, so SIGINT is not
-forwarded; stop a background run with SIGTERM.
+is shared by all users of the host; a configured lock_dir keeps its own permissions. SIGTERM,
+and SIGHUP unless it is ignored (nohup), are forwarded to the command. Ctrl-C already reaches
+it through the terminal, so SIGINT is not forwarded; stop a background run with SIGTERM. Any of
+the three before launch, including during the GPU wait, ends the run as KILLED without
+launching.
 """
 import argparse
 import fcntl
@@ -67,11 +69,12 @@ except ImportError:
 RETRY_SECONDS = 30
 
 
-def git(*args):
-    p = subprocess.run(["git", *args], capture_output=True, text=True)
+def git(*args, raw=False):
+    """Output as bytes (raw) or decoded like file names: undecodable bytes survive as surrogates."""
+    p = subprocess.run(["git", *args], capture_output=True)
     if p.returncode:
-        sys.exit(f"git {' '.join(args)}: {p.stderr.strip()}")
-    return p.stdout
+        sys.exit(f"git {' '.join(args)}: {p.stderr.decode(errors='replace').strip()}")
+    return p.stdout if raw else os.fsdecode(p.stdout)
 
 
 def load_config(path):
@@ -157,6 +160,7 @@ def hash_files(paths, base):
 def lock_dir(configured):
     """<lock_dir>/<host>; the default one under the temp dir is shared by all users."""
     if configured:
+        # Per host, as a configured lock_dir may be on storage that several machines share.
         path = Path(configured).expanduser() / socket.gethostname()
         path.mkdir(parents=True, exist_ok=True)
         return path
@@ -177,8 +181,9 @@ def lock_fd(path):
         return os.open(path, os.O_RDONLY)
 
 
-def lease(ids, k, locks):
-    """Hold k of the GPU lock files; until then release all and retry. Returns [(id, fd)]."""
+def lease(ids, k, locks, stopped):
+    """Hold k of the GPU lock files; until then release all and retry. Returns [(id, fd)], or
+    None once stopped() is true."""
     while True:
         held = []
         for i in ids:
@@ -193,7 +198,11 @@ def lease(ids, k, locks):
         for _, fd in held:
             os.close(fd)
         print(f"run.py: waiting for {k} free GPU(s) of {ids}", file=sys.stderr, flush=True)
-        time.sleep(RETRY_SECONDS)
+        deadline = time.monotonic() + RETRY_SECONDS
+        while time.monotonic() < deadline:  # in slices: a stop signal does not interrupt sleep
+            if stopped():
+                return None
+            time.sleep(min(0.1, RETRY_SECONDS))
 
 
 def params(**kw):
@@ -234,10 +243,6 @@ def upload(client, run_id, run_dir):
         print(f"run.py: upload failed, kept {run_dir}: {e}", file=sys.stderr)
 
 
-def stop(sig, _):
-    raise KeyboardInterrupt(sig)
-
-
 def main(argv):
     cut = argv.index("--") if "--" in argv else len(argv)
     ap = argparse.ArgumentParser(prog="run.py", usage="%(prog)s [options] -- <cmd...>")
@@ -252,6 +257,24 @@ def main(argv):
     k = a.gpus if a.gpus is not None else min(1, len(ids))
     if not 0 <= k <= len(ids):
         ap.error(f"--gpus {k}: {len(ids)} GPU(s) configured in {a.config}")
+
+    # Stop signals before launch are kept in pending (the run then ends KILLED without
+    # launching); afterwards SIGTERM and SIGHUP are forwarded to the command. Ctrl-C reaches
+    # the command directly through the terminal's process group, so forwarding SIGINT would
+    # interrupt its cleanup a second time. SIGHUP stays ignored under nohup.
+    child, pending = None, []
+
+    def on_stop(sig, _):
+        if child is None:
+            pending.append(sig)
+        elif sig != signal.SIGINT:
+            child.send_signal(sig)
+
+    stops = [signal.SIGINT, signal.SIGTERM]
+    if signal.getsignal(signal.SIGHUP) is not signal.SIG_IGN:
+        stops.append(signal.SIGHUP)
+    for sig in stops:
+        signal.signal(sig, on_stop)
 
     # The command gets this URI too, so it writes to the same store. It may carry
     # credentials, so it is never printed.
@@ -268,30 +291,35 @@ def main(argv):
         sys.exit(f"run.py: cannot record the run, nothing was launched: {e}")
     print(f"run.py: MLflow run {run_id} in experiment {exp_name}", file=sys.stderr, flush=True)
 
-    # Until the command starts (a GPU wait can be long), SIGTERM and Ctrl-C mark the run KILLED.
-    signal.signal(signal.SIGTERM, stop)
     try:
-        held = lease(ids, k, lock_dir(cfg["lock_dir"])) if k else []
-        # Capture the code state right before launch, after any wait for GPUs.
-        top = Path(git("rev-parse", "--show-toplevel").strip())
-        commit = git("rev-parse", "HEAD").strip()
-        status = git("status", "--porcelain", "-z", "--untracked-files=all")
-        env_sha, env_missing = hash_files(cfg["env_lock"], top)
-        data_sha = hash_files([cfg["data_manifest"]], top)[0] if cfg["data_manifest"] else None
-        client.log_batch(run_id, params=params(
-            commit=commit, dirty=bool(status), env_lock_sha=env_sha, env_lock_missing=env_missing,
-            data_manifest_sha=data_sha, gpus=[i for i, _ in held]),
-            tags=[RunTag("mlflow.source.git.commit", commit)])
-        if status:
-            untracked = [e[3:] for e in status.split("\0") if e.startswith("?? ")]
-            client.log_text(run_id, git("diff", "HEAD"), "diff.patch")
-            client.log_text(run_id, "".join(f"{p}\n" for p in untracked), "untracked.txt")
-        run_dir = Path(tempfile.mkdtemp(prefix="rh-run-"))
-    except BaseException as e:
-        client.set_terminated(run_id, "KILLED" if isinstance(e, KeyboardInterrupt) else "FAILED")
-        if isinstance(e, KeyboardInterrupt):
-            return 128 + (e.args[0] if e.args else signal.SIGINT)
+        held = lease(ids, k, lock_dir(cfg["lock_dir"]), lambda: pending) if k else []
+        if held is not None:
+            # Capture the code state right before launch, after any wait for GPUs.
+            top = Path(git("rev-parse", "--show-toplevel").strip())
+            commit = git("rev-parse", "HEAD").strip()
+            status = git("status", "--porcelain", "-z", "--untracked-files=all")
+            env_sha, env_missing = hash_files(cfg["env_lock"], top)
+            data_sha = hash_files([cfg["data_manifest"]], top)[0] if cfg["data_manifest"] else None
+            client.log_batch(run_id, params=params(
+                commit=commit, dirty=bool(status), env_lock_sha=env_sha, env_lock_missing=env_missing,
+                data_manifest_sha=data_sha, gpus=[i for i, _ in held]),
+                tags=[RunTag("mlflow.source.git.commit", commit)])
+            if status:  # as bytes: a diff of non-UTF-8 files must stay byte-exact
+                untracked = [e[3:] for e in status.split("\0") if e.startswith("?? ")]
+                with tempfile.TemporaryDirectory() as d:
+                    Path(d, "diff.patch").write_bytes(git("diff", "HEAD", raw=True))
+                    paths = b"".join(os.fsencode(p) + b"\n" for p in untracked)
+                    Path(d, "untracked.txt").write_bytes(paths)
+                    client.log_artifacts(run_id, d)
+            run_dir = Path(tempfile.mkdtemp(prefix="rh-run-"))
+    except BaseException:
+        client.set_terminated(run_id, "FAILED")
         raise
+    if pending:  # a stop signal came before launch, possibly during the GPU wait
+        if held is not None:
+            os.rmdir(run_dir)
+        client.set_terminated(run_id, "KILLED")
+        return 128 + pending[0]
 
     env = dict(os.environ, MLFLOW_RUN_ID=run_id, MLFLOW_TRACKING_URI=uri, RUN_DIR=str(run_dir))
     if ids:
@@ -304,10 +332,9 @@ def main(argv):
             log.write(f"run.py: {e}\n".encode())
             code = 127
         else:
-            # Ctrl-C reaches the command directly through the terminal's process group;
-            # forwarding SIGINT as well would interrupt its cleanup a second time.
-            signal.signal(signal.SIGINT, lambda *_: None)
-            signal.signal(signal.SIGTERM, lambda sig, _: child.send_signal(sig))
+            for sig in pending:  # arrived while Popen ran, before the handler could see child
+                if sig != signal.SIGINT:
+                    child.send_signal(sig)
             code = child.wait()
     for _, fd in held:
         os.close(fd)

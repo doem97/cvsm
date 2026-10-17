@@ -13,12 +13,10 @@ metrics, incomplete runs (still RUNNING) and deleted runs are flagged; whether r
 comparable is for the reader to decide.
 """
 import argparse
-import os
 import shlex
 import statistics
 import subprocess
 
-os.environ.setdefault("MLFLOW_DISABLE_AGENT_HINT", "1")  # MLflow 3.17 logs a hint on every import
 from run import MlflowClient, experiment_name, load_config, num, split_seed, store_setup, tracking_uri
 from mlflow.entities import ViewType
 
@@ -89,7 +87,8 @@ def main():
     commits = list(dict.fromkeys(r["commit"] for r in runs if r.get("commit")))  # by run start
     if len(commits) > 1:
         first, last = commits[0], commits[-1]
-        p = subprocess.run(["git", "diff", "--stat", first, last], capture_output=True, text=True)
+        p = subprocess.run(["git", "diff", "--stat", first, last], capture_output=True, text=True,
+                           errors="replace")
         flags += [f"- commits differ: {short(commits, 7)}; `git diff --stat {first[:7]} {last[:7]}`:",
                   "", "```", (p.stdout or p.stderr).rstrip(), "```"]
     for key, name in (("env_lock_sha", "env"), ("data_manifest_sha", "data")):

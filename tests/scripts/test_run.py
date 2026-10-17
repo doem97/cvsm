@@ -2,6 +2,7 @@ import fcntl
 import hashlib
 import importlib.util
 import os
+import select
 import shlex
 import shutil
 import signal
@@ -9,6 +10,7 @@ import socket
 import stat
 import subprocess
 import sys
+import threading
 import time
 
 from pathlib import Path
@@ -166,6 +168,22 @@ def test_dirty_tree_with_untracked_file(repo):
     assert r.data.params["rh.dirty"] == "true"
     assert "# local edit" in repo.artifact(r, "diff.patch").read_text()
     assert repo.artifact(r, "untracked.txt").read_text().split() == ["new_module.py"]
+
+
+def test_non_utf8_changes_are_recorded_byte_exact(repo):
+    (repo.root / "notes.txt").write_bytes("café\n".encode("latin-1"))
+    repo.commit("latin-1 file")
+    (repo.root / "notes.txt").write_bytes("café crème 中文\n".encode("gbk", errors="ignore")
+                                         + "naïve\n".encode("latin-1"))
+    name = os.fsencode("données_\udce9.csv")  # a file name that is not valid UTF-8
+    (repo.root / os.fsdecode(name)).write_bytes(b"1\n")
+    p = repo.run()
+    assert p.returncode == 0, p.stderr
+    r = repo.only_run()
+    assert r.info.status == "FINISHED" and r.data.params["rh.dirty"] == "true"
+    diff = repo.artifact(r, "diff.patch").read_bytes()
+    assert "naïve".encode("latin-1") in diff and "中文".encode("gbk") in diff
+    assert name + b"\n" in repo.artifact(r, "untracked.txt").read_bytes()
 
 
 def test_untracked_only_is_dirty(repo):
@@ -362,6 +380,42 @@ def test_sigterm_is_killed_and_releases_lease(make_repo):
     assert lock_is_free(lock)
 
 
+def wait_for_line(p, text, timeout=10):
+    deadline = time.time() + timeout
+    while True:
+        assert select.select([p.stderr], [], [], max(0, deadline - time.time()))[0], f"no {text!r}"
+        line = p.stderr.readline()
+        assert line, f"run.py exited before printing {text!r}"
+        if text in line:
+            return
+
+
+def test_partial_lease_is_released_and_retried(tmp_path, monkeypatch):
+    monkeypatch.setattr(run, "RETRY_SECONDS", 0.005)
+    out = {}
+    with open(tmp_path / "gpu1.lock", "a") as busy:
+        fcntl.flock(busy, fcntl.LOCK_EX)
+        t = threading.Thread(target=lambda: out.update(held=run.lease([0, 1], 2, tmp_path, lambda: False)))
+        t.start()
+        deadline = time.time() + 5
+        while not lock_is_free(tmp_path / "gpu0.lock"):  # gpu0 is let go while gpu1 is busy
+            assert time.time() < deadline, "lease kept gpu0 while waiting for gpu1"
+            time.sleep(0.001)
+    t.join(timeout=5)
+    assert [i for i, _ in out["held"]] == [0, 1]
+    for _, fd in out["held"]:
+        os.close(fd)
+
+
+def test_lease_stops_waiting_when_stopped(tmp_path, monkeypatch):
+    monkeypatch.setattr(run, "RETRY_SECONDS", 60)
+    with open(tmp_path / "gpu0.lock", "a") as busy:
+        fcntl.flock(busy, fcntl.LOCK_EX)
+        start = time.time()
+        assert run.lease([0], 1, tmp_path, lambda: time.time() > start + 0.2) is None
+    assert time.time() - start < 2
+
+
 def test_sigterm_while_waiting_for_gpus_is_killed_without_running(make_repo):
     repo = make_repo(gpus=[0])
     lock = repo.locks / socket.gethostname() / "gpu0.lock"
@@ -369,8 +423,7 @@ def test_sigterm_while_waiting_for_gpus_is_killed_without_running(make_repo):
     with open(lock, "a") as held:
         fcntl.flock(held, fcntl.LOCK_EX)
         p = repo.start(cmd=["touch", str(repo.tmp / "ran")])
-        while "waiting" not in (line := p.stderr.readline()):
-            assert line, "run.py exited before waiting for the GPU"
+        wait_for_line(p, "waiting")
         p.send_signal(signal.SIGTERM)
         p.communicate(timeout=30)
     assert p.returncode == 128 + signal.SIGTERM
@@ -402,6 +455,31 @@ def test_ctrl_c_reaches_the_command_once(repo):
     r = repo.only_run()
     assert repo.artifact(r, "sigints").read_text() == "1"
     assert r.data.params["rh.exit_code"] == "0" and r.info.status == "FINISHED"
+
+
+def test_sighup_is_killed_and_uploads_logs(repo):
+    hold = repo.tmp / "never"
+    p = repo.start("hold=" + str(hold))
+    wait_for(hold.with_suffix(".pid"))
+    p.send_signal(signal.SIGHUP)
+    p.communicate(timeout=30)
+    assert p.returncode == 128 + signal.SIGHUP
+    r = repo.only_run()
+    assert r.info.status == "KILLED" and r.data.params["rh.exit_code"] == str(-signal.SIGHUP)
+    assert "hello stderr" in repo.artifact(r, "log.txt").read_text()  # stdout died in its buffer
+
+
+def test_sighup_stays_ignored_under_nohup(repo):
+    hold = repo.tmp / "release"
+    p = repo.start("hold=" + str(hold), preexec_fn=lambda: signal.signal(signal.SIGHUP, signal.SIG_IGN))
+    wait_for(hold.with_suffix(".pid"))
+    p.send_signal(signal.SIGHUP)
+    os.kill(int(hold.with_suffix(".pid").read_text()), signal.SIGHUP)  # the terminal hangs up on both
+    time.sleep(0.2)
+    hold.write_text("go")
+    p.communicate(timeout=30)
+    assert p.returncode == 0
+    assert repo.only_run().info.status == "FINISHED"
 
 
 def kill_run_py(repo, p, hold):
