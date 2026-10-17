@@ -59,7 +59,7 @@ carries options of the Run command such as `--gpus 4`; pass those through before
 - The Run command records every run as an MLflow run (AGENTS.md Project, Run records) and
   waits for the GPUs it needs (this repo's Run command leases them from `scripts/run.toml`),
   so several lines may be launched at once. Use your tool's background execution for long
-  runs; stop one with SIGTERM.
+  runs; stop one the way the Run command provides (this repo's: SIGTERM).
 - GPU hours used = the sum over this issue's runs, failed ones included, of wall time times
   the number of GPUs. Estimate a run from the first finished one.
 - Before launching a run that would take the total past Budget, stop at gate 3: report the
