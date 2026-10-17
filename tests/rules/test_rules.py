@@ -65,7 +65,8 @@ def test_agents_project_fields():
 
 def test_agents_tiered_merge():
     text = agents()
-    assert "python .github/scripts/merge.py <PR>" in section("Gates") and "Merge: agent" in section("Gates")
+    assert "python .github/scripts/merge.py <PR>" in section("Gates")
+    assert "python .github/scripts/merge.py <PR> --human" in section("Gates") and "Merge: agent" in section("Gates")
     assert ".github/scripts/merge.py" in section("Git") and "gh pr merge" in section("Git")
     review = next(l for l in section("Skills").splitlines() if l.startswith("- `review`"))
     assert "Verdict: pass @ <head SHA>" in review and "Verdict: changes @ <head SHA>" in review
@@ -135,3 +136,4 @@ def test_codex_forbids_merge():
     assert codex_check("gh", "pr", "view", "12")["matchedRules"] == []
     assert codex_check("gh", "pr", "create")["matchedRules"] == []
     assert codex_check("python", ".github/scripts/merge.py", "12")["matchedRules"] == []
+    assert codex_check("python", ".github/scripts/merge.py", "12", "--human")["matchedRules"] == []

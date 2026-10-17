@@ -3,5 +3,5 @@ prefix_rule(
     decision = "forbidden",
     justification = "Merge only through .github/scripts/merge.py; otherwise stop at merge-ready and report.",
     match = ["gh pr merge 12", "gh pr merge --squash 3"],
-    not_match = ["gh pr view 12", "gh pr create", "python .github/scripts/merge.py 12"],
+    not_match = ["gh pr view 12", "gh pr create", "python .github/scripts/merge.py 12", "python .github/scripts/merge.py 12 --human"],
 )

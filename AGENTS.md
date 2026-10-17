@@ -9,7 +9,7 @@
 - Needs decision: label `needs-decision` plus a blocker comment; remove the label once the human has answered.
 - In review: PR open, checks or review not finished. Merge-ready: `guard` and `test` green, and the latest review is `Verdict: pass @ <head SHA>` for the current head.
 - Done: a `code` issue closes when its PR merges (`Closes #N`); close a `run` issue yourself with its results comment.
-- Only the human abandons a task (closes it as not planned) and closes a parent (as completed with the conclusion, or as not planned).
+- Abandon a task (close it as not planned) or close a parent (as completed with the conclusion, or as not planned) only on the human's explicit instruction.
 - Write every state change to GitHub or git as it happens; the session can end at any moment.
 
 ## Gates
@@ -17,7 +17,7 @@
 - Stop only at the target, at a gate, or at a blocker; otherwise keep going.
 - Stop at these four gates even when everything works:
   1. New or changed approved work: publishing a plan; changing a task's Goal, Scope, Acceptance or Merge; changing a protected path.
-  2. Merging, unless the task says `Merge: agent`. Then merge once merge-ready with `python .github/scripts/merge.py <PR>`, which refuses protected paths and unreviewed heads. Otherwise, or if it refuses, the merge-ready PR is the request: add no label or blocker comment.
+  2. Merging, unless the task says `Merge: agent`. Then merge once merge-ready with `python .github/scripts/merge.py <PR>`, which refuses protected paths and unreviewed heads. Otherwise, or if it refuses, the merge-ready PR is the request: add no label or blocker comment. Merge it only when the human explicitly tells you to, with `python .github/scripts/merge.py <PR> --human`.
   3. Exceeding a budget: tokens, time or GPU hours.
   4. Concluding and closing a study.
 - An explicit instruction from the user approves what it names; do not ask again.
