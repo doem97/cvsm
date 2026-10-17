@@ -7,7 +7,7 @@
 - In progress: has a linked branch. Claim a ready issue with `gh issue develop`, then run `gh issue develop --list N`; if another branch is linked too, delete yours and pick other work.
 - Continue an in-progress issue only if the instruction names it or this session claimed it.
 - Needs decision: label `needs-decision` plus a blocker comment; remove the label once the human has answered.
-- In review: PR open, checks or review not finished. Merge-ready: `guard` and `test` green, no blocking review finding.
+- In review: PR open, checks or review not finished. Merge-ready: `guard` and `test` green, and the latest review is `Verdict: pass @ <head SHA>` for the current head.
 - Done: a `code` issue closes when its PR merges (`Closes #N`); close a `run` issue yourself with its results comment.
 - Only the human abandons a task (closes it as not planned) and closes a parent (as completed with the conclusion, or as not planned).
 - Write every state change to GitHub or git as it happens; the session can end at any moment.
@@ -25,7 +25,7 @@
 
 ## Blockers
 - Stop and ask when a gate is reached, the same failure happens 3 times in a row, or an ambiguity would change the deliverable.
-- Handle without asking: test or CI failures, review findings, merge conflicts, infra retries, bugs inside Scope.
+- Handle without asking: test or CI failures, merge conflicts, infra retries, bugs inside Scope, and review findings: fix them, then get a fresh review of the new head, until it passes.
 - For a bug outside Scope, open a new issue and keep working; keep the fix out of the current PR.
 - Ask once per blocker, with evidence, at most 3 options and a recommendation.
 - If the user is in the session, ask there. Otherwise add `needs-decision`, post the blocker comment, and move on to other ready work.
