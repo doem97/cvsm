@@ -98,7 +98,7 @@ bash scripts/setup.sh owner/repo
 它建五个 label（`study`、`plan`、`code`、`run`、`needs-decision`），只允许 squash 合并（PR 标题作提交标题，正文留空），合并后自动删分支；给 main 加分支保护：必须走 PR，`guard` 和 `test` 必过，0 个批准，管理员也不能绕过，禁止强推和删除。可以重复运行，不会删除已有的其他 label；但分支保护是整体覆盖的，项目后来自己加的保护设置（例如要求批准）重跑时会被还原。私有仓库的分支保护需要 GitHub 付费套餐（例如 Pro 或 Team），公开仓库不需要。
 
 **5. 确认两种 agent 都读到了规则。**
-- Codex：读 `AGENTS.md`，从 `.agents/skills` 读 skill，从 `.codex/rules` 读规则。可以用 `codex execpolicy check --rules .codex/rules/harness.rules gh pr merge 1` 确认结果是 `forbidden`。
+- Codex：读 `AGENTS.md`，从 `.agents/skills` 读 skill，从 `.codex/rules` 读规则；项目要先被 Codex 信任，它才会读项目里的 `.codex/`。`codex execpolicy check --rules .codex/rules/harness.rules gh pr merge 1` 只检查规则文件本身，结果应为 `forbidden`；要确认会话真的加载了规则，就在仓库里开一个 Codex 会话，让它运行 `gh pr merge --help`，应该被规则拦下（这条命令即使放行也不会合并任何东西），并确认四个 skill 都列出来了。
 - Claude Code：读 `AGENTS.md`，通过 `.claude/skills` 软链读 skill，`.claude/settings.json` 禁止 `gh pr merge`。在仓库里开一个会话，确认四个 skill 都列出来了。
 
 **可选：给 agent 一个机器账号。** 想在 GitHub 上分清人和 agent 的操作时，可以让所有 agent 共用一个机器账号：
@@ -135,7 +135,7 @@ skill、guard、merge.py 和结果评论都依赖下面这些接口。适配时�
 **merge.py 的行为**：
 - `python .github/scripts/merge.py <PR>`：只有三项都满足才合并：PR 关闭的 issue 写了 `Merge: agent`；改动（含重命名前的路径）不碰 PR 目标分支上 guard.toml 列出的受保护路径；最新一条 `Verdict:` 评论是对当前 head 的 pass（SHA 至少 7 位前缀）。否则拒绝，等人合并。
 - `python .github/scripts/merge.py <PR> --human`：人已经决定，跳过这三项检查。
-- 两种方式都用 `gh pr merge --squash --match-head-commit <SHA>` 合并当前 head，提交标题是 `<PR 标题> (#N)`，正文为空；分支保护照常要求检查通过。
+- 两种方式都用 `gh pr merge --squash --match-head-commit <SHA>` 合并当前 head，提交标题是 `<PR 标题> (#<PR>)`，正文为空；分支保护照常要求检查通过。
 
 其他的都由你的项目自己决定，并通过自己的 issue 去改：调度器（例如让 Run 命令把任务提交到 SLURM，同时照样写运行记录）、集群和 GPU 分配、数据和产物的存储位置、跟踪后端（例如把 `MLFLOW_TRACKING_URI` 指向团队的 MLflow 服务器）、`guard.toml` 的白名单和受保护路径、CI 的依赖。
 
