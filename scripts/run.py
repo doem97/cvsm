@@ -33,7 +33,7 @@ otherwise (127 when it cannot start). The exit status is the command's own; sign
 GPU locks are <lock_dir>/<host>/gpu<i>.lock and the command inherits them, so a lease lasts as
 long as the command, even if run.py itself is killed. The default lock_dir, <tmp>/rh-gpu-locks,
 is shared by all users of the host only if they share the temp dir (TMPDIR). When several users
-share a machine and TMPDIR is per-user, set lock_dir in run.toml to a local directory they can
+share a machine and TMPDIR is per-user, set lock_dir in run.toml to a directory they can
 all write to; run.py makes the per-host subdirectory it creates there shareable (sticky,
 world-writable). Directories that already exist keep their permissions.
 

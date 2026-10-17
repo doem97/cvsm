@@ -398,7 +398,7 @@ def test_test_workflow():
     install line freely, so dependencies and their versions are not checked."""
     wf = load_yaml(".github/workflows/test.yml")
     on = triggers(wf)
-    assert set(on) == {"pull_request", "push"}
+    assert {"pull_request", "push"} <= set(on)  # projects may add more triggers
     assert on["push"]["branches"] == ["main"]
     assert set(wf["permissions"].values()) == {"read"}
     runs = [s["run"].strip() for s in wf["jobs"]["test"]["steps"] if "run" in s]
