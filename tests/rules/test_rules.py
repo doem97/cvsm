@@ -110,6 +110,7 @@ def test_run_form():
     assert list(fields) == ["Runs", "Budget", "Report"]
     assert fields["Runs"]["type"] == "textarea" and required(fields["Runs"])
     assert "seed" in fields["Runs"]["attributes"]["description"]
+    assert "<options> -- <cmd>" in fields["Runs"]["attributes"]["description"]
     assert "GPU 小时" in fields["Budget"]["attributes"]["description"]
     assert "指标名" in fields["Report"]["attributes"]["description"]
 

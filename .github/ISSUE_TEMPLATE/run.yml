@@ -6,7 +6,7 @@ body:
     id: runs
     attributes:
       label: Runs
-      description: 每行一条命令，包含配置覆盖和 seed。
+      description: 每行一条命令，包含配置覆盖和 seed；带 Run 命令的选项时写成 `<options> -- <cmd>`，例如 `--gpus 4 -- python train.py seed=1`。
     validations:
       required: true
   - type: input
