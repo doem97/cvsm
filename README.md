@@ -141,7 +141,7 @@ skill、guard、merge.py 和结果评论都依赖下面这些接口。适配时�
 - 后端由 `MLFLOW_TRACKING_URI` 决定；不设时用主 clone 根目录下的 `mlflow.db`，产物放在旁边的 `mlartifacts/`。实验名取 `MLFLOW_EXPERIMENT_NAME`，否则取 `scripts/run.toml` 的 `experiment`。
 - 记录不改不删，不运行 `mlflow gc`。
 
-**结果评论**：run issue 结束时贴一条评论：一段说明加结果命令生成的输出，原样粘贴。表按去掉 seed 的命令分组，给出 n、失败数、每个指标的均值和标准差，以及 commit、环境锁和数据的指纹，给了规格时还有每组所属的 arm；组间 commit、环境或数据不同要标出来，commit 不同时附 `git diff --stat`；成功但没有指标、未完成和已删除的 run 也列出来。之后是 `规格核对` 一节，按规格的原话列出所选 run（含还在跑的）的事实：Controlled 不成立或没记录该键（`未记录`）的 run；不属于任何 arm 或属于多个 arm 的 run；缺 `in` 行某些取值的 arm；不在任何一节、取值却不同的键（`未声明的差异`）；没有 run 的 arm；读不懂的规格行；以及各 Adaptable 键在每个 arm 的取值。没给规格或没有偏差时，也会写明。
+**结果评论**：run issue 结束时贴一条评论：一段说明加结果命令生成的输出，原样粘贴。表按去掉 seed 的命令分组，给出 n、失败数、每个指标的均值和标准差，以及 commit、环境锁和数据的指纹，给了规格时还有每组所属的 arm；组间 commit、环境或数据不同要标出来，commit 不同时附 `git diff --stat`；成功但没有指标、未完成和已删除的 run 也列出来。之后是 `规格核对` 一节，按规格的原话列出所选 run（含还在跑的）的事实：Controlled 不成立或没记录该键（`未记录`）的 run；不属于任何 arm 或属于多个 arm 的 run；缺 `in` 行某些取值的 arm（只算还在跑或成功退出、没删除的 run）；不在任何一节、取值却不同的键（`未声明的差异`）；没有 run 的 arm；读不懂的规格行；以及各 Adaptable 键在每个 arm 的取值。没给规格或没有偏差时，也会写明。
 
 **issue 表单的各节**：guard、merge.py 和 skill 按 `### ` 标题读正文，标题名不能改：
 - `study`：Question、Arms、Controlled、Adaptable、Criteria、Budget、Context。结果命令按行读规格三节，每行一项，行尾可加 `  # <注释>`：Arms 每行 `<arm>: <键>=<值> ...`；Controlled 每行 `<键>=<值>  # <理由>` 或 `<键> in <值1>,<值2>,...  # <理由>`，理由必填；Adaptable 每行 `<键>  # <规则>`，可以留空。值能解析成 JSON 时按 JSON 比较，否则按字符串比较；

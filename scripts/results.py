@@ -21,7 +21,7 @@ config.json. It reads the lines of ### Arms (`<arm>: <key>=<value> ...`), ### Co
 Controlled lines without a reason, a missing Arms or Controlled section, keys in several
 sections); runs where a Controlled line
 does not hold or whose config lacks its key (未记录); runs matching no arm or several; arms
-missing values of an `in` line; keys in no section whose values differ across the runs that
+missing values of an `in` line among their running or successful runs; keys in no section whose values differ across the runs that
 recorded a config; arms with no run; and the values each Adaptable key took per arm. Values
 compare as JSON when they parse as JSON (numbers by value), else as strings. With a spec, the
 table gains each group's arms.
@@ -152,7 +152,8 @@ def check(spec, runs):
     member = {arm: [r for r in runs if arm in r["arms"]] for arm in arms}
     for item, key, values in spec["controlled"]:
         for arm, rs in member.items():
-            took = {norm(r["cfg"][key]) for r in rs if key in r["cfg"]}
+            took = {norm(r["cfg"][key]) for r in rs if key in r["cfg"] and not r["deleted"]
+                    and (r["ok"] or r["status"] == "RUNNING")}  # failed runs cover nothing
             if len(values) > 1 and rs and (lack := [v for v in values if norm(v) not in took]):
                 out.append(f"- arm {arm} 缺 `{item}` 的取值：{', '.join(lack)}")
     recorded = [r for r in runs if r["cfg"]]

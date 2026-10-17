@@ -1,4 +1,5 @@
 import os
+import re
 import shlex
 import signal
 import subprocess
@@ -49,13 +50,13 @@ def test_single_seed_shows_dash_for_std(repo):
     assert (row["n"], row["acc 均值"], row["acc 标准差"]) == ("1", "4", "—")
 
 
-def finished(repo, start, cfg=None, **rh):
+def finished(repo, start, cfg=None, status="FINISHED", **rh):
     """A successful run of `python t.py` recorded directly; rh overrides its rh.* params and cfg
     gives its cfg.* params."""
     params = {"issue": "5", "command": "python t.py", "seed": str(start), "host": "h", "commit": "0" * 40,
               "dirty": "false", "env_lock_sha": "e" * 64, "env_lock_missing": "",
               "data_manifest_sha": "", "gpus": "", "exit_code": "0"}
-    return repo.record(start, metrics={"acc": 1.0}, cfg=cfg, **(params | rh))
+    return repo.record(start, status, metrics={"acc": 1.0}, cfg=cfg, **(params | rh))
 
 
 def spec_check(out):
@@ -101,6 +102,7 @@ def test_spec_check_lists_each_deviation(repo, tmp_path):
     r4 = finished(repo, 4000, cfg=common | {"method": "b", "depth": "2", "seed": "1", "warmup": "200"})
     r5 = finished(repo, 5000, cfg={"method": "d", "lr": "0.1", "seed": "3", "batch": "16", "warmup": "100",
                                    "wd": "1", "optim.betas": "[0.9, 0.999]"})
+    r6 = finished(repo, 6000, cfg=common | {"method": "b", "seed": "2"}, status="FAILED", exit_code="1")
     (tmp_path / "spec.md").write_text(SPEC)
     out = repo.results("--spec", str(tmp_path / "spec.md"))
     assert table(out)["python t.py"]["arm"] == "base、ours、deep、无"
@@ -118,11 +120,11 @@ def test_spec_check_lists_each_deviation(repo, tmp_path):
 - arm deep 缺 `seed in 1,2` 的取值：2
 - arm ours 缺 `optim.betas in [0.9,0.999],[0.9,0.95]` 的取值：[0.9,0.999]
 - arm deep 缺 `optim.betas in [0.9,0.999],[0.9,0.95]` 的取值：[0.9,0.999]
-- 未声明的差异 `warmup`：100（4 个 run）、200（1 个 run）
+- 未声明的差异 `warmup`：100（5 个 run）、200（1 个 run）
 - 没有 run 的 arm：c
-- Adaptable `batch`：base 取 32（1 个 run）、64（1 个 run）；ours 取 32（2 个 run）；deep 取 32（1 个 run）
+- Adaptable `batch`：base 取 32（1 个 run）、64（1 个 run）；ours 取 32（3 个 run）；deep 取 32（1 个 run）
 """
-    assert r1 not in spec_check(out) and r2 not in spec_check(out)
+    assert not {r1, r2, r6} & set(re.findall(r"[0-9a-f]{32}", spec_check(out)))  # r6 failed: seed 2 stays missing
 
 
 def test_spec_from_stdin_without_deviations(repo):
