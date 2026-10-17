@@ -98,6 +98,13 @@ def test_review_verdict_line():
     assert "sha=$(git rev-parse HEAD)" in text
     assert "printf 'Verdict: %s @ %s\\n\\n' \"<pass|changes>\" \"$sha\"" in text
     assert "$out" not in text
+    # Posting the verdict and removing the review file run only when the PR head is $sha.
+    block = re.search(r"^sha=\$\(git rev-parse HEAD\)\n(.*?)^```", text, re.M | re.S).group(1)
+    assert block.startswith(
+        'test "$(gh pr view <PR> --json headRefOid -q .headRefOid)" = "$sha" &&'
+    )
+    assert re.search(r"\| *\n? *gh pr comment <PR> --body-file - && rm ../codex-review-<PR>\.md\n$",
+                     block)
 
 
 @pytest.mark.parametrize("name", ["implement", "review", "run"])
