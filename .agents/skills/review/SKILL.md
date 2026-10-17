@@ -78,20 +78,22 @@ A PR review gets only the PR number. `codex exec` is sandboxed without network b
 
 ```
 git fetch origin
-out=$(codex exec review "Review the changes of this branch against origin/main \
+codex exec review "Review the changes of this branch against origin/main \
 (git diff origin/main...HEAD). Issue #N: <issue body>. Decisions on #N and its parent #P: \
-<their Decision: comments>. Checklist: <section 2>.")
+<their Decision: comments>. Checklist: <section 2>." > ../codex-review-<PR>.md
 ```
 
-  Its stdout is the review: a summary and findings tagged `[P0]`–`[P3]`. Any `[P0]` or `[P1]`
+  Its stdout, saved in that file, is the review: a summary and findings tagged `[P0]`–`[P3]`. Any `[P0]` or `[P1]`
   finding means `changes`, otherwise `pass`. In the checkout Codex reviewed, compare its SHA
   with the PR head; if they differ, review the current head instead. The session that ran it
-  posts `$out` verbatim under the Verdict line, with the reviewed SHA:
+  posts the file verbatim under the Verdict line, with the reviewed SHA, in one shell call
+  (agent shells may not keep variables between calls):
 
 ```
 sha=$(git rev-parse HEAD)
 gh pr view <PR> --json headRefOid -q .headRefOid   # must equal $sha
-gh pr comment <PR> --body "$(printf 'Verdict: %s @ %s\n\n%s\n' "<pass|changes>" "$sha" "$out")"
+{ printf 'Verdict: %s @ %s\n\n' "<pass|changes>" "$sha"; cat ../codex-review-<PR>.md; } | gh pr comment <PR> --body-file -
+rm ../codex-review-<PR>.md
 ```
 
 A pre-PR review in the implementer's inner loop gets only the issue number and the diff, uses

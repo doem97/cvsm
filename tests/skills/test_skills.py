@@ -93,7 +93,11 @@ def test_review_verdict_line():
     assert "`Verdict: pass @ <full head SHA>`" in text
     assert "`Verdict: changes @ <full head SHA>`" in text
     assert "patch is correct" not in text  # Codex's built-in review maps by [P0]/[P1] findings
-    assert "sha=$(git rev-parse HEAD)" in text  # the Codex path binds the Verdict to the reviewed commit
+    # The Codex path binds the Verdict to the reviewed commit, and keeps the review in a file
+    # because agent shells may not keep variables between calls.
+    assert "sha=$(git rev-parse HEAD)" in text
+    assert "printf 'Verdict: %s @ %s\\n\\n' \"<pass|changes>\" \"$sha\"" in text
+    assert "$out" not in text
 
 
 @pytest.mark.parametrize("name", ["implement", "review", "run"])
