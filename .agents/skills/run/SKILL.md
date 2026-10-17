@@ -34,10 +34,11 @@ to the branch; a run issue has no PR.
 ## 2. Read
 
 ```
-gh issue view N --comments                       # Runs, Budget (GPU hours), Report, Decisions
-gh issue view N --json parent -q .parent.number  # parent P
-gh issue view P --comments                       # the study and its Decisions
-python scripts/results.py --issue N              # runs already recorded for N, if any
+gh issue view N                 # body: Runs, Budget (GPU hours), Report; parent P
+gh issue view N --comments      # Decisions
+gh issue view P                 # the study
+gh issue view P --comments      # its Decisions
+python scripts/results.py --issue N   # runs already recorded for N, if any
 ```
 
 Runs already recorded for N count: launch only the lines that have no record yet, unless an
@@ -45,10 +46,12 @@ earlier attempt ended in an infra failure (section 4).
 
 ## 3. Launch within Budget
 
-For each Runs line `<cmd>`, from the worktree root:
+For each Runs line, from the worktree root. A line is `<cmd>`, or `<options> -- <cmd>` when it
+carries options of the Run command such as `--gpus 4`; pass those through before `--`:
 
 ```
 python scripts/run.py --issue N -- <cmd>
+python scripts/run.py --issue N --gpus 4 -- <cmd>   # for the line `--gpus 4 -- <cmd>`
 ```
 
 - `scripts/run.py` records every run as an MLflow run (AGENTS.md Project, Run records), leases
@@ -62,7 +65,6 @@ python scripts/run.py --issue N -- <cmd>
 
 ## 4. Failures
 
-- Never edit or delete a run record, and never run `mlflow gc` (AGENTS.md Files).
 - A failed run stays and is counted (`n_failed` in the results table).
 - Rerun a line only after an infra failure: node or GPU lost, preemption, a full disk,
   a lost connection to the tracking backend. Never rerun because a result looks wrong.

@@ -14,20 +14,18 @@ implementer's session or summaries. Change no code; the only write is one PR com
 ```
 gh pr view <PR> --json title,body,headRefOid,headRefName,files
 gh pr diff <PR>
-gh issue view N --comments                       # N from `Closes #N` in the PR body
-gh issue view N --json parent -q .parent.number  # parent P
-gh issue view P --comments                       # its Decision: comments
+gh issue view N             # N from `Closes #N`: Goal, Scope, Acceptance, Merge; parent P
+gh issue view N --comments  # its Decisions
+gh issue view P --comments  # the parent's Decision: comments
 ```
 
 Read AGENTS.md, the spec (the design doc in `docs/`, if the project has one), and the code
-around the diff. To run the
-Acceptance commands or probe behavior, check out the head in a scratch worktree from the
-main clone, and remove it afterwards:
+around the diff. To run the Acceptance commands or probe behavior, check out the head in a
+scratch worktree from the main clone:
 
 ```
 git fetch origin pull/<PR>/head
 git worktree add --detach ../worktrees/review-<PR> FETCH_HEAD
-git worktree remove --force ../worktrees/review-<PR>
 ```
 
 ## 2. Checklist (high-intelligence mode)
@@ -66,30 +64,26 @@ EOF
 - Below it, the findings in the reviewing tool's own format and language, unedited and
   untranslated. Point each at a file and line, with the reason and, when clear, the fix.
 - Post one comment per review. Do not approve, label, push or edit anything.
+- Remove the scratch worktree, if you made one: `git worktree remove --force ../worktrees/review-<PR>`.
 
-## 4. Per tool
+## 4. Starting a review (for the implementer)
 
-The implementer starts the review. A reviewing session posts its own comment; output of the
-built-in Codex review is posted by the session that ran it.
-
-- Claude Code: a fresh subagent gets the prompt
-  "Follow `.agents/skills/review/SKILL.md` for PR #<PR>." and posts its own comment.
-- Codex, own session: a fresh
-  `codex exec -s danger-full-access "Follow .agents/skills/review/SKILL.md for PR #<PR>."`
-  posts its own comment (`codex exec` is sandboxed without network by default; `gh` needs it).
-- Codex, built-in review: run it in a checkout of the PR head (the implementer's worktree, or
-  the scratch worktree above). `--base` cannot be combined with instructions, so the
-  instructions name the base:
+A PR review gets only the PR number. `codex exec` is sandboxed without network by default and
+`gh` needs it, hence `-s danger-full-access`.
+- Claude Code: a fresh subagent with the prompt "Follow `.agents/skills/review/SKILL.md` for PR #<PR>."
+- Codex: `codex exec -s danger-full-access "Follow .agents/skills/review/SKILL.md for PR #<PR>."`
+- Codex built-in review, in a checkout of the PR head. In Codex 0.163 `--base` cannot be
+  combined with instructions, so the instructions name the base. Pass the issue body, the
+  issue's Decisions and its parent's `Decision:` comments, and the checklist above:
 
 ```
+git fetch origin
 out=$(codex exec review "Review the changes of this branch against origin/main \
-(git diff origin/main...HEAD). Issue #N: <issue body and its Decisions>. \
-Checklist: <section 2 above>.")
+(git diff origin/main...HEAD). Issue #N: <issue body>. Decisions on #N and its parent #P: \
+<their Decision: comments>. Checklist: <section 2>.")
 ```
 
-  Its stdout is the review: a summary and `[P0]`–`[P3]` findings, ending with an overall
-  correctness verdict when the tool prints one. Map `patch is correct` to `pass` and
-  `patch is incorrect` to `changes`; with no such verdict in the output, any `[P0]` or `[P1]`
+  Its stdout is the review: a summary and findings tagged `[P0]`–`[P3]`. Any `[P0]` or `[P1]`
   finding means `changes`, otherwise `pass`. The session that ran it posts `$out` verbatim
   under the Verdict line:
 
@@ -97,6 +91,11 @@ Checklist: <section 2 above>.")
 gh pr comment <PR> --body "$(printf 'Verdict: %s @ %s\n\n%s\n' "<pass|changes>" "<full head SHA>" "$out")"
 ```
 
-## 5. Finish
+A pre-PR review in the implementer's inner loop gets only the issue number and the diff, uses
+the checklist above and posts nothing. Give a fresh subagent, or
+`codex exec -s danger-full-access "<prompt>"` in the worktree, this prompt:
+"Review `git diff origin/main...HEAD` in <worktree> against issue #N (`gh issue view N`, then
+`gh issue view N --comments`) with the checklist in `.agents/skills/review/SKILL.md`.
+Report blocking and minor findings here; post nothing to GitHub."
 
-Report to the session that asked for the review: the comment link and the verdict, in Chinese.
+A reviewer reports the comment link and the verdict, in Chinese, to the session that asked.

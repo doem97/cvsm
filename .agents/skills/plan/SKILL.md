@@ -18,7 +18,8 @@ gh issue list --state open --label study
 gh issue list --state open --label plan
 gh issue list --state open --label needs-decision
 gh pr list --state open
-gh issue view <N> --comments            # earlier studies, their results comments and Decisions
+gh issue view <N>                       # an earlier study or task: body, parent, sub-issues
+gh issue view <N> --comments            # its comments: results comments and Decisions
 python scripts/results.py --issue <N>   # run records of an earlier run issue
 ```
 
@@ -48,7 +49,8 @@ Sub-issues, with the exact `### ` sections of their forms:
     no path in `protected` of `.github/guard.toml`.
 - `run` (`.github/ISSUE_TEMPLATE/run.yml`):
   - `### Runs`: one command per line with its config overrides and seed; each line is the
-    `<cmd>` that the Run command in AGENTS.md Project wraps.
+    `<cmd>` that the Run command in AGENTS.md Project wraps. A line may start with options of
+    that command before `--`, e.g. `--gpus 4 -- python train.py seed=1`.
   - `### Budget`: GPU hours.
   - `### Report`: metric names, space-separated.
 
@@ -94,7 +96,6 @@ url=$(gh issue create --label run --title "<title>" --parent "$P" --blocked-by "
 ```
 
 - Use `--label plan` for a development parent. Omit `--blocked-by` in wave 1.
-- Never write parents or dependencies into a body (AGENTS.md State).
 - Check the result: `gh issue view "$P"` lists every sub-issue, and `gh issue view <N>` shows
   each blocked-by.
 

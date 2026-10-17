@@ -34,7 +34,7 @@ def test_skill_frontmatter(name):
 
 @pytest.mark.parametrize("name", NAMES)
 def test_skill_length(name):
-    assert len(skill_text(name).splitlines()) <= 150
+    assert len(skill_text(name).splitlines()) <= 120  # the spec says about 100
 
 
 def test_claude_skills_symlink():
@@ -75,3 +75,27 @@ def test_backtick_paths_detects_paths():
     text = "Run `python scripts/run.py --issue N -- <cmd>` then\n```\npython .github/scripts/merge.py <PR>\n```\n" \
            "`git diff origin/main...HEAD` `../worktrees/N-<slug>` `src/pkg/**`"
     assert list(backtick_paths(text)) == [".github/scripts/merge.py", "scripts/run.py"]
+
+
+@pytest.mark.parametrize("name", NAMES)
+def test_no_direct_merge(name):
+    assert not re.search(r"(^|[`$(;&|]\s*)gh pr merge", skill_text(name), re.M)  # merge only via merge.py
+
+
+def test_implement_merges_through_merge_py():
+    text = skill_text("implement")
+    assert "python .github/scripts/merge.py <PR>`" in text
+    assert "python .github/scripts/merge.py <PR> --human" in text
+
+
+def test_review_verdict_line():
+    text = skill_text("review")
+    assert "`Verdict: pass @ <full head SHA>`" in text
+    assert "`Verdict: changes @ <full head SHA>`" in text
+    assert "patch is correct" not in text  # Codex's built-in review maps by [P0]/[P1] findings
+
+
+@pytest.mark.parametrize("name", ["implement", "review", "run"])
+def test_issue_body_is_read(name):
+    # Without a TTY, `gh issue view N --comments` prints only the comments, not the body.
+    assert re.search(r"gh issue view N(?! --comments)\b", skill_text(name))
