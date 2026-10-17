@@ -65,7 +65,7 @@ Sub-issues, with the exact `### ` sections of their forms:
   - `### Runs`: one command per line with its config overrides and seed; each line is the
     `<cmd>` that the Run command in AGENTS.md Project wraps. A line may start with options of
     that command before `--`, e.g. `--gpus 4 -- python train.py seed=1`. Each line runs
-    one arm, each arm an issue runs gets every `in` value; the study's run issues run every arm.
+    one arm. Each arm an issue runs gets every `in` value. The study's run issues run every arm.
   - `### Budget`: GPU hours.
   - `### Report`: metric names, space-separated.
 
