@@ -61,7 +61,7 @@ harness 刻意不做的事：
 | `.github/scripts/guard.py` | 检查 PR：关闭恰好一个任务 issue、文件位置、不超出 Scope、标题和正文格式 |
 | `.github/scripts/merge.py` | agent 唯一的合并入口（规则见下文） |
 | `.github/workflows/guard.yml` | 用 `pull_request_target` 跑 guard，代码取自 main，不执行 PR 里的代码 |
-| `.github/workflows/test.yml` | 用 `pull_request` 跑项目测试 |
+| `.github/workflows/test.yml` | 在 PR 和推到 main 时跑项目测试 |
 | `scripts/run.py` | Run 命令的参考实现：跑一条命令，记成一个 MLflow run，可选按 GPU 排队 |
 | `scripts/results.py` | 从一个 issue 的运行记录生成结果表 |
 | `scripts/run.toml` | run.py 的配置：MLflow 实验名、环境锁、数据清单、seed 参数名、GPU 列表 |
@@ -74,21 +74,29 @@ harness 刻意不做的事：
 
 下面的事都可以交给会话里的 agent 去做，人只需要拍板和提供管理员账号。
 
-**1. 复制模板文件。** 把 `AGENTS.md`、`.agents/`、`.claude/`、`.codex/`、`.github/`、`scripts/` 下的四个文件复制到你的仓库根目录，再把 `.gitignore` 的几行并进去；需要的话也复制 `tests/` 里对应的测试。复制时保留软链，例如 `cp -a`。
-- 改 `.github/guard.toml`：`layout` 加上你的目录（如 `src/**`、`configs/**`），`protected` 加上评测和数据路径，`markdown` 按需调整。
+**1. 复制模板文件。** 只复制被跟踪的文件，这样模板 clone 里未跟踪的本地文件（工具配置、`__pycache__`）不会带过去，`.claude/skills` 软链也会保留：
+
+```
+git -C <rh clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts tests | tar -x -C <你的仓库>
+```
+
+再把 `.gitignore` 的几行并进去；`tests/` 里用不上的测试可以删掉。记下复制自 rh 的哪个 commit（`git -C <rh clone> rev-parse HEAD`），写进接入提交的信息，以后好对照 rh 的改进同步。
+- 改 `.github/guard.toml`：`layout` 加上你的目录（如 `src/**`、`configs/**`）和项目会改的根目录文件（如 `pyproject.toml`、`uv.lock` 等锁文件、`.python-version`），漏了的话改依赖的 PR 会被 guard 拒收；`protected` 加上评测和数据路径，`markdown` 按需调整。
+- 改 `scripts/run.toml`：`experiment`、`env_lock`（你的锁文件）、`gpus`。数据目录通常被 git 忽略，数据指纹因此来自一个被跟踪的数据清单：记着各数据文件校验和的文件（例如 `sha256sum` 的输出存成 `data.sha256`）。把它相对仓库根目录的路径写进 `data_manifest`，并加进 guard.toml 的 `layout` 和 `protected`。
+- 几个用户共用一台机器、`TMPDIR` 又按用户区分时，默认的 GPU 锁目录各在各的 `TMPDIR` 下，互相看不见；把 run.toml 的 `lock_dir` 设成他们都能写的同一个本机目录（权限要求见 `scripts/run.py` 开头的说明）。
 - 已有的 CLAUDE.md 并进 AGENTS.md 后删掉：harness 只认 AGENTS.md，guard 会拒收别处的 `.md`。
 
-**2. 填写 AGENTS.md 的 Project 一节。** 其他各节不用改。逐行填：
+**2. 填写 AGENTS.md 的 Project 一节。** 其他各节不用改。AGENTS.md 最多 80 行（有测试检查），每个字段只写一行：
 - `Layout`：代码目录怎么分，共享代码和方法模块各在哪里；
 - `Test`：测试命令，和 CI 里跑的一致；
 - `Language`：面向人的文字用什么语言（见下文"语言"）；
 - `Protected eval/data paths`：不许 agent 随意改的评测和数据路径，与 guard.toml 的 `protected` 一致；
-- `Run`：Run 命令和结果评论命令；
+- `Run`：Run 命令和结果评论命令。run 在新建的 worktree（`../worktrees/N-<slug>`）里启动，那里没有被忽略的 `.venv` 和数据目录，所以命令要在新 worktree 里直接能用，环境里既有项目依赖又有 MLflow。用 uv 时，把 `mlflow-skinny`、`sqlalchemy`、`alembic` 放进 dev 依赖组（`uv add --dev`；`uv run` 默认带上 dev 组），写成 `uv run python scripts/run.py --issue N -- <cmd>`。数据用绝对路径、环境变量或被跟踪的软链找到；
 - `Run records`：运行记录写到哪个 MLflow 后端。
 
-**3. 安装 CI 依赖。** 改 `.github/workflows/test.yml` 里的 `pip install` 一行，装上你项目的依赖和测试工具，测试命令与 AGENTS.md 的 `Test` 一致。如果保留 `scripts/run.py` 的测试，还要装 MLflow（模板里装的是 `mlflow-skinny`，加上 SQLite 需要的 `sqlalchemy` 和 `alembic`）。job 名 `guard` 和 `test` 不要改，分支保护按这两个名字认检查。本机跑实验的环境同样需要 MLflow。
+**3. 安装 CI 依赖。** 改 `.github/workflows/test.yml` 里的 `pip install` 一行，装上你项目的依赖和测试工具，测试命令与 AGENTS.md 的 `Test` 一致；项目用 uv 时，CI 也可以用 pip 装依赖、跑同一套测试。复制来的规则、skill 和 guard 测试需要 `pyyaml`；如果保留 `scripts/run.py` 的测试，还要装 MLflow（模板里装的是 `mlflow-skinny`，加上 SQLite 需要的 `sqlalchemy` 和 `alembic`）。CI 的 runner 没有 GPU：锁文件里是 CUDA 版 torch 时，CI 里改装 CPU 版（`pip install torch --index-url https://download.pytorch.org/whl/cpu`）。job 名 `guard` 和 `test` 不要改，分支保护按这两个名字认检查。
 
-**4. 以管理员身份运行 `scripts/setup.sh`。** 默认分支需要叫 `main`（老仓库是 `master` 的，先在 GitHub 上改名），setup.sh、guard 和各个 skill 都按 main 写。先把以上改动合进 main：guard 用 `pull_request_target`，跑的是 main 上的版本；main 上还没有 `guard` 和 `test` 两个 workflow 时，必过检查会卡住所有 PR。然后在仓库根目录、用有管理员权限的 gh 登录运行：
+**4. 推到 main，再以管理员身份运行 `scripts/setup.sh`。** 默认分支需要叫 `main`（老仓库是 `master` 的，先在 GitHub 上改名），setup.sh、guard 和各个 skill 都按 main 写。先把以上改动作为一个接入提交直接推到 main：guard 用 `pull_request_target`，跑的是 main 上的版本；main 上还没有 `guard` 和 `test` 两个 workflow 时，必过检查会卡住所有 PR。这是 AGENTS.md 里"never push to main"唯一的例外，只在加保护之前做这一次。推上去后 `test` workflow 会在 main 上跑一次，到 Actions 页面确认 CI 通过。然后在仓库根目录、用人的管理员账号（不是机器账号）的 gh 登录运行：
 
 ```
 bash scripts/setup.sh            # 默认是当前目录所在的仓库
@@ -98,13 +106,22 @@ bash scripts/setup.sh owner/repo
 它建五个 label（`study`、`plan`、`code`、`run`、`needs-decision`），只允许 squash 合并（PR 标题作提交标题，正文留空），合并后自动删分支；给 main 加分支保护：必须走 PR，`guard` 和 `test` 必过，0 个批准，管理员也不能绕过，禁止强推和删除。可以重复运行，不会删除已有的其他 label；但分支保护是整体覆盖的，项目后来自己加的保护设置（例如要求批准）重跑时会被还原。私有仓库的分支保护需要 GitHub 付费套餐（例如 Pro 或 Team），公开仓库不需要。
 
 **5. 确认两种 agent 都读到了规则。**
-- Codex：读 `AGENTS.md`，从 `.agents/skills` 读 skill，从 `.codex/rules` 读规则；项目要先被 Codex 信任，它才会读项目里的 `.codex/`。`codex execpolicy check --rules .codex/rules/harness.rules gh pr merge 1` 只检查规则文件本身，结果应为 `forbidden`；要确认会话真的加载了规则，就在仓库里开一个 Codex 会话，让它运行 `gh pr merge --help`，应该被规则拦下（这条命令即使放行也不会合并任何东西），并确认四个 skill 都列出来了。
+- Codex：读 `AGENTS.md`，从 `.agents/skills` 读 skill，从 `.codex/rules` 读规则；项目要先被 Codex 信任，它才会读项目里的 `.codex/`：在仓库根目录交互式运行一次 `codex`，接受信任提示（`codex exec -s danger-full-access` 不提示就会把项目记为信任）。`codex execpolicy check --rules .codex/rules/harness.rules gh pr merge 1` 只检查规则文件本身，结果应为 `forbidden`；要确认会话真的加载了规则，就在仓库里开一个 Codex 会话，让它运行 `gh pr merge --help`，应该被规则拦下（这条命令即使放行也不会合并任何东西），并确认四个 skill 都列出来了。
 - Claude Code：读 `AGENTS.md`，通过 `.claude/skills` 软链读 skill，`.claude/settings.json` 禁止 `gh pr merge`。在仓库里开一个会话，确认四个 skill 都列出来了。
 
 **可选：给 agent 一个机器账号。** 想在 GitHub 上分清人和 agent 的操作时，可以让所有 agent 共用一个机器账号：
 - 把它加为仓库协作者，给写权限，不给管理员权限；
 - 给它建一个 classic token，勾选 `repo`、`workflow` 和 `read:org`（fine-grained token 不能以协作者身份操作别人名下的仓库）；
-- 只在研究工作区里用它，例如在本地、不进仓库的工具配置里用 `GH_CONFIG_DIR` 指向机器账号的 gh 登录目录；
+- 用 `GH_CONFIG_DIR=<dir> gh auth login` 把它登录到单独的目录 `<dir>`，只在这个仓库里让 agent 用它：下面两个本地文件都把 `GH_CONFIG_DIR` 指向 `<dir>`，两个路径都写进 `.git/info/exclude`，不进仓库；
+  - `.claude/settings.local.json`：`{"env": {"GH_CONFIG_DIR": "<dir>"}}`
+  - `.codex/config.toml`：
+
+    ```toml
+    [shell_environment_policy]
+    set = { GH_CONFIG_DIR = "<dir>" }
+    ```
+- 提交也用它的身份：在仓库里运行 `git config user.name <账号>` 和 `git config user.email <id>+<账号>@users.noreply.github.com`（`<id>` 用 `gh api users/<账号> -q .id` 查）；remote 用 HTTPS 地址，并运行一次 `gh auth setup-git`，让 push 走 gh 的登录；
+- agent 在另一台机器上跑时，那台机器也要用这个 token 登录；
 - 管理员的事（运行 setup.sh、改分支保护）仍然用人的账号。
 
 ## 适配自己的环境时保持不变的接口
