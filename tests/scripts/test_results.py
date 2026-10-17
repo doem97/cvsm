@@ -80,6 +80,7 @@ lr=0.1  # paper X, table 3
 seed in 1,2  # two seeds, as in #12
 optim.name="adamw"  # a JSON string equals the plain value
 wd=0
+optim.betas in [0.9,0.999],[0.9,0.95]  # both used in the literature
 
 ### Adaptable
 
@@ -92,13 +93,14 @@ b > a by 1 point
 
 
 def test_spec_check_lists_each_deviation(repo, tmp_path):
-    common = {"lr": "0.1", "optim.name": "adamw", "batch": "32", "warmup": "100", "wd": "0"}
-    r1 = finished(repo, 1000, cfg=common | {"method": "a", "seed": "1"})
+    common = {"lr": "0.1", "optim.name": "adamw", "batch": "32", "warmup": "100", "wd": "0",
+              "optim.betas": "[0.9, 0.95]"}
+    r1 = finished(repo, 1000, cfg=common | {"method": "a", "seed": "1", "optim.betas": "[0.9,0.999]"})
     r2 = finished(repo, 2000, cfg=common | {"method": "a", "seed": "2.0", "lr": "0.10", "batch": "64"})
-    r3 = finished(repo, 3000, cfg=common | {"method": "b", "seed": "1", "lr": "0.2"})
+    r3 = finished(repo, 3000, cfg=common | {"method": "b", "seed": "1", "lr": "0.2", "optim.betas": "[0.5, 0.5]"})
     r4 = finished(repo, 4000, cfg=common | {"method": "b", "depth": "2", "seed": "1", "warmup": "200"})
     r5 = finished(repo, 5000, cfg={"method": "d", "lr": "0.1", "seed": "3", "batch": "16", "warmup": "100",
-                                   "wd": "1"})
+                                   "wd": "1", "optim.betas": "[0.9, 0.999]"})
     (tmp_path / "spec.md").write_text(SPEC)
     out = repo.results("--spec", str(tmp_path / "spec.md"))
     assert table(out)["python t.py"]["arm"] == "base、ours、deep、无"
@@ -109,10 +111,13 @@ def test_spec_check_lists_each_deviation(repo, tmp_path):
 - `seed in 1,2` 不成立：1 个 run，{r5}（3）
 - `optim.name="adamw"`：1 个 run 未记录 `optim.name`：{r5}
 - `wd=0` 不成立：1 个 run，{r5}（1）
+- `optim.betas in [0.9,0.999],[0.9,0.95]` 不成立：1 个 run，{r3}（[0.5, 0.5]）
 - 1 个 run 不属于任何 arm：{r5}
 - 1 个 run 属于多个 arm：{r4}（ours、deep）
 - arm ours 缺 `seed in 1,2` 的取值：2
 - arm deep 缺 `seed in 1,2` 的取值：2
+- arm ours 缺 `optim.betas in [0.9,0.999],[0.9,0.95]` 的取值：[0.9,0.999]
+- arm deep 缺 `optim.betas in [0.9,0.999],[0.9,0.95]` 的取值：[0.9,0.999]
 - 未声明的差异 `warmup`：100（4 个 run）、200（1 个 run）
 - 没有 run 的 arm：c
 - Adaptable `batch`：base 取 32（1 个 run）、64（1 个 run）；ours 取 32（2 个 run）；deep 取 32（1 个 run）
@@ -122,6 +127,7 @@ def test_spec_check_lists_each_deviation(repo, tmp_path):
 
 def test_spec_from_stdin_without_deviations(repo):
     spec = SPEC.replace("deep: method=b depth=2\nc: method=c\nbroken line\n", "").replace("wd=0\n", "")
+    spec = spec.replace("optim.betas in [0.9,0.999],[0.9,0.95]  # both used in the literature\n", "")
     spec = spec.replace("batch  # per-device; the effective batch is fixed", "_No response_")
     for start, (method, seed) in enumerate([("a", 1), ("a", 2), ("b", 1), ("b", 2)]):
         finished(repo, start, cfg={"method": method, "seed": str(seed), "lr": "0.1", "optim.name": "adamw"})

@@ -70,6 +70,17 @@ def norm(value):
     return v if isinstance(v, str) else json.dumps(v, sort_keys=True)
 
 
+def top_level_items(text):
+    """The comma-separated items of text, splitting only outside brackets and braces (JSON lists)."""
+    items, depth, start = [], 0, 0
+    for i, c in enumerate(text):
+        depth += (c in "[{") - (c in "]}")
+        if c == "," and not depth:
+            items.append(text[start:i])
+            start = i + 1
+    return [item.strip() for item in items + [text[start:]]]
+
+
 def read_spec(text):
     """Arms {arm: {key: value}}, Controlled [(line, key, values)], Adaptable [key], the declared
     keys and the spec's own problems, from a study body; `  # ...` ends a line's item."""
@@ -92,7 +103,7 @@ def read_spec(text):
         elif section == "Controlled":
             m = re.fullmatch(r"([^\s=]+)\s+in\s+(.+)|([^\s=]+)\s*=(.*)", item)
             if m:
-                values = [v.strip() for v in m[2].split(",")] if m[1] else [m[4].strip()]
+                values = top_level_items(m[2]) if m[1] else [m[4].strip()]
                 spec["controlled"].append((item, m[1] or m[3], values))
                 if not (note and note[0].strip()):
                     spec["problems"].append(f"Controlled 行没有写理由：{line.strip()}")
