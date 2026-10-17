@@ -149,6 +149,28 @@ def test_config_is_logged_as_cfg_params(repo):
     assert len(json.loads(repo.artifact(r, "config.json").read_text())["path"]) == 7000
 
 
+def test_config_keys_mlflow_refuses_are_skipped(repo):
+    config = {"lr": 0.1, "seed": 1, "class_weights": {"cat (x)": 2.0}, "k" * 300: 1, "k" * 301: 2}
+    write = f"import json, os; json.dump({config!r}, open(os.environ['RUN_DIR'] + '/config.json', 'w'))"
+    p = repo.run(cmd=[sys.executable, "-c", write])
+    assert p.returncode == 0
+    r = repo.only_run()
+    long = ("cfg." + "k" * 300)[:run.MAX_ENTITY_KEY_LENGTH]
+    assert {k: v for k, v in r.data.params.items() if k.startswith("cfg.")} == {
+        "cfg.lr": "0.1", "cfg.seed": "1", long: "1"}  # the first of the keys equal after truncation
+    assert f"cfg.class_weights.cat (x), {long}" in p.stderr
+
+
+def test_failed_config_log_is_reported(tmp_path, capsys):
+    class Down:
+        def log_batch(self, *args, **kw):
+            raise RuntimeError("backend down")
+    assert run.log_config(Down(), "r1", tmp_path) is None  # no config.json yet
+    (tmp_path / "config.json").write_text('{"a": 1}')
+    assert run.log_config(Down(), "r1", tmp_path) is False
+    assert "cannot log config.json of run r1: backend down" in capsys.readouterr().err
+
+
 def test_config_that_is_not_an_object_is_only_kept_as_a_file(repo):
     write = "import os; open(os.environ['RUN_DIR'] + '/config.json', 'w').write('[1, 2]')"
     assert repo.run(cmd=[sys.executable, "-c", write]).returncode == 0

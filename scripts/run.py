@@ -33,8 +33,10 @@ object, so a running run can already be checked against its study's spec; a file
 appears by the end is logged then, before the upload. Its settings become params
 cfg.<dotted key>: nested objects flatten to dotted keys (an empty one is the value {}), strings
 are logged as they are and other values as JSON. Keys and values longer than MLflow's limits
-(250 and 6000 characters in MLflow 3) are truncated to them, as MLflow's autologging does; the
-file itself is uploaded with the other RUN_DIR files.
+(250 and 6000 characters in MLflow 3) are truncated to them, as MLflow's autologging does. Keys
+MLflow refuses as param names (only alphanumerics, `_ - . / :` and spaces are allowed), and keys
+repeated after truncation, are skipped and printed to stderr. If logging fails, it is tried once
+more at the end. The file itself is uploaded with the other RUN_DIR files.
 
 The final status is FINISHED for exit 0, KILLED when a signal stopped the command, and FAILED
 otherwise (127 when it cannot start). The exit status is the command's own; signal S gives
@@ -77,7 +79,7 @@ try:
     from mlflow.entities import Metric, Param, RunTag
     from mlflow.exceptions import MlflowException
     from mlflow.utils.validation import (MAX_ENTITY_KEY_LENGTH, MAX_PARAM_VAL_LENGTH,
-                                         MAX_PARAMS_TAGS_PER_BATCH)
+                                         MAX_PARAMS_TAGS_PER_BATCH, _validate_param_name)
 except ImportError:
     sys.exit(f"{Path(sys.argv[0]).name}: mlflow is not installed "
              "(pip install mlflow, or mlflow-skinny with sqlalchemy and alembic)")
@@ -258,21 +260,41 @@ def flatten(cfg, prefix="cfg."):
             yield prefix + k, v if isinstance(v, str) else json.dumps(v, ensure_ascii=False)
 
 
+def valid_name(key):
+    try:
+        _validate_param_name(key)
+        return True
+    except MlflowException:
+        return False
+
+
 def log_config(client, run_id, run_dir):
-    """Log $RUN_DIR/config.json as cfg.* params once it is a JSON object; True once done."""
+    """Log $RUN_DIR/config.json as cfg.* params: None while it is not a JSON object, else
+    whether logging succeeded. MLflow rejects a whole batch for one bad key, so those go first."""
     try:
         cfg = json.loads((run_dir / "config.json").read_bytes())
     except (OSError, ValueError):
-        return False
+        return None
     if not isinstance(cfg, dict):
-        return False
-    ps = [Param(k[:MAX_ENTITY_KEY_LENGTH], v[:MAX_PARAM_VAL_LENGTH]) for k, v in flatten(cfg)]
+        return None
+    ps, skipped = {}, []
+    for k, v in flatten(cfg):
+        k = k[:MAX_ENTITY_KEY_LENGTH]
+        if k in ps or not valid_name(k):
+            skipped.append(k)
+        else:
+            ps[k] = Param(k, v[:MAX_PARAM_VAL_LENGTH])
+    if skipped:
+        print(f"run.py: config.json keys not logged as params (refused by MLflow or repeated after "
+              f"truncation; see the config.json artifact): {', '.join(skipped)}", file=sys.stderr)
+    ps = list(ps.values())
     try:
         for i in range(0, len(ps), MAX_PARAMS_TAGS_PER_BATCH):
             client.log_batch(run_id, params=ps[i:i + MAX_PARAMS_TAGS_PER_BATCH])
+        return True
     except Exception as e:
         print(f"run.py: cannot log config.json of run {run_id}: {e}", file=sys.stderr)
-    return True
+        return False
 
 
 def upload(client, run_id, run_dir):
@@ -370,7 +392,7 @@ def main(argv):
     env = dict(os.environ, MLFLOW_RUN_ID=run_id, MLFLOW_TRACKING_URI=uri, RUN_DIR=str(run_dir))
     if ids:
         env["CUDA_VISIBLE_DEVICES"] = ",".join(str(i) for i, _ in held)
-    logged = False  # config.json
+    logged = None  # config.json: None until it is a JSON object, then whether logging it succeeded
     with open(run_dir / "log.txt", "wb") as log:
         try:
             child = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=env,
@@ -382,16 +404,18 @@ def main(argv):
             for sig in pending:  # arrived while Popen ran, before the handler could see child
                 if sig != signal.SIGINT:
                     child.send_signal(sig)
-            while True:
+            while logged is None:  # then stop polling, whether logging succeeded or not
                 try:
                     code = child.wait(POLL_SECONDS)
                     break
                 except subprocess.TimeoutExpired:
-                    logged = logged or log_config(client, run_id, run_dir)
+                    logged = log_config(client, run_id, run_dir)
+            else:
+                code = child.wait()
     for _, fd in held:
         os.close(fd)
 
-    if not logged:
+    if not logged:  # not yet written, or failed once: one more try
         log_config(client, run_id, run_dir)
     upload(client, run_id, run_dir)
     try:

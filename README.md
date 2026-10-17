@@ -134,6 +134,7 @@ skill、guard、merge.py 和结果评论都依赖下面这些接口。适配时�
 **运行记录**：每次运行是一个 MLflow run（字段以 `scripts/run.py` 开头的说明为准）：
 - `rh.*` 参数（写入后不能改）：创建时写 `rh.issue`、`rh.command`、`rh.seed`、`rh.host`；启动前写 `rh.commit`、`rh.dirty`、`rh.env_lock_sha`、`rh.env_lock_missing`、`rh.data_manifest_sha`、`rh.gpus`；结束时写 `rh.exit_code`。没有的值写空字符串，列表用逗号连接。
 - `cfg.*` 参数：命令写的 `$RUN_DIR/config.json` 一能解析成 JSON 对象就记一次，命令还在跑时就记，所以运行中的 run 也能核对；文件到结束时才出现的，在结束时记。嵌套对象展开成点号键 `cfg.<键>`，字符串原样记，其他值记成 JSON；超过 MLflow 长度上限的键和值截断到上限，完整内容看产物 `config.json`。
+- `cfg.*` 的键只能由字母、数字、`_ - . / :` 和空格组成（MLflow 对参数名的要求）：含其他字符的键（例如 `label2id` 里的 `tench, Tinca tinca`）和截断后重复的键不记成参数，run.py 在 stderr 列出它们；研究规格里用到的键要在这个范围内。
 - tag `mlflow.source.git.commit`。
 - 产物：工作区不干净时有 `diff.patch`（`git diff HEAD`）和 `untracked.txt`；命令的输出 `log.txt`；命令写进 `$RUN_DIR` 的所有文件，包括 `config.json`。`$RUN_DIR/metrics.json`（扁平的 `{名字: 数值}`）记成指标；训练代码也可以用 MLflow 的标准 API 记指标，`MLFLOW_RUN_ID` 让它接到同一个 run。
 - 最终状态：退出码 0 为 `FINISHED`，被信号停止为 `KILLED`，其他为 `FAILED`。

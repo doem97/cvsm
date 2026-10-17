@@ -17,7 +17,9 @@ The section 规格核对 checks every selected run, running ones included, again
 in FILE (a study issue's body; - reads stdin), using the cfg.* params run.py logs from
 config.json. It reads the lines of ### Arms (`<arm>: <key>=<value> ...`), ### Controlled
 (`<key>=<value>  # <reason>` or `<key> in <v1>,<v2>,...  # <reason>`) and ### Adaptable
-(`<key>  # <rule>`), and lists as facts: lines it cannot read; runs where a Controlled line
+(`<key>  # <rule>`), and lists as facts: problems of the spec itself (unreadable lines,
+Controlled lines without a reason, a missing Arms or Controlled section, keys in several
+sections); runs where a Controlled line
 does not hold or whose config lacks its key (未记录); runs matching no arm or several; arms
 missing values of an `in` line; keys in no section whose values differ across the runs that
 recorded a config; arms with no run; and the values each Adaptable key took per arm. Values
@@ -69,12 +71,14 @@ def norm(value):
 
 
 def read_spec(text):
-    """Arms {arm: {key: value}}, Controlled [(line, key, values)], Adaptable [key] and the lines
-    that cannot be read, from a study body; `  # ...` ends a line's item."""
-    spec, section = {"arms": {}, "controlled": [], "adaptable": [], "bad": []}, None
+    """Arms {arm: {key: value}}, Controlled [(line, key, values)], Adaptable [key], the declared
+    keys and the spec's own problems, from a study body; `  # ...` ends a line's item."""
+    spec = {"arms": {}, "controlled": [], "adaptable": [], "problems": []}
+    section, seen = None, set()
     for line in text.splitlines():
         if line.startswith("### "):
             section = line[4:].strip()
+            seen.add(section)
             continue
         if section not in ("Arms", "Controlled", "Adaptable") or line.strip() in ("", "_No response_"):
             continue
@@ -87,14 +91,23 @@ def read_spec(text):
                 continue
         elif section == "Controlled":
             m = re.fullmatch(r"([^\s=]+)\s+in\s+(.+)|([^\s=]+)\s*=(.*)", item)
-            if m and note and note[0].strip():  # the reason is required
+            if m:
                 values = [v.strip() for v in m[2].split(",")] if m[1] else [m[4].strip()]
                 spec["controlled"].append((item, m[1] or m[3], values))
+                if not (note and note[0].strip()):
+                    spec["problems"].append(f"Controlled 行没有写理由：{line.strip()}")
                 continue
         elif re.fullmatch(r"[^\s=]+", item):
             spec["adaptable"].append(item)
             continue
-        spec["bad"].append(f"{section}：{line.strip()}")
+        spec["problems"].append(f"读不懂的规格行：{section}：{line.strip()}")
+    spec["problems"] += [f"规格里没有 {s} 一节" for s in ("Arms", "Controlled") if s not in seen]
+    keys = {"Arms": {k for kv in spec["arms"].values() for k in kv},
+            "Controlled": {key for _, key, _ in spec["controlled"]}, "Adaptable": set(spec["adaptable"])}
+    spec["declared"] = set().union(*keys.values())
+    for key in sorted(spec["declared"]):
+        if len(where := [s for s, ks in keys.items() if key in ks]) > 1:
+            spec["problems"].append(f"`{key}` 出现在多节：{'、'.join(where)}")
     return spec
 
 
@@ -112,7 +125,7 @@ def check(spec, runs):
     if not spec:
         return ["- 没有给出规格（--spec）"]
     arms = spec["arms"]
-    out = [f"- 读不懂的规格行：{line}" for line in spec["bad"]]
+    out = [f"- {problem}" for problem in spec["problems"]]
     for item, key, values in spec["controlled"]:
         allowed = {norm(v) for v in values}
         if missing := [r for r in runs if key not in r["cfg"]]:
@@ -131,15 +144,13 @@ def check(spec, runs):
             took = {norm(r["cfg"][key]) for r in rs if key in r["cfg"]}
             if len(values) > 1 and rs and (lack := [v for v in values if norm(v) not in took]):
                 out.append(f"- arm {arm} 缺 `{item}` 的取值：{', '.join(lack)}")
-    declared = {k for kv in arms.values() for k in kv} | set(spec["adaptable"])
-    declared |= {key for _, key, _ in spec["controlled"]}
     recorded = [r for r in runs if r["cfg"]]
-    for key in sorted({k for r in recorded for k in r["cfg"]} - declared):
+    for key in sorted({k for r in recorded for k in r["cfg"]} - spec["declared"]):
         if len(values := tally(recorded, key)) > 1:
             out.append(f"- 未声明的差异 `{key}`：{'、'.join(values)}")
     if empty := [arm for arm, rs in member.items() if not rs]:
         out.append(f"- 没有 run 的 arm：{'、'.join(empty)}")
-    if len(out) == len(spec["bad"]):
+    if not out:
         out.append("- 没有偏差")
     for key in spec["adaptable"]:
         per = [f"{arm} 取 {'、'.join(tally(rs, key))}" for arm, rs in member.items() if rs]
@@ -161,7 +172,8 @@ def main():
     with store_setup(uri):
         client = MlflowClient(uri)
         exp = client.get_experiment_by_name(experiment_name(cfg))
-    found = sorted((r for i in a.issue for r in fetch(client, exp.experiment_id, i)) if exp else [],
+    issues = list(dict.fromkeys(a.issue))
+    found = sorted((r for i in issues for r in fetch(client, exp.experiment_id, i)) if exp else [],
                    key=lambda r: r.info.start_time)
     # One dict per run: the rh.* params without the prefix, plus status, deletion, metrics and config.
     runs = [{k[3:]: v for k, v in r.data.params.items() if k.startswith("rh.")}
@@ -180,7 +192,7 @@ def main():
     # The table is read by people, so its text is Chinese; metric names and hashes stay as they are.
     head = ["命令", *(["arm"] if spec else []), "n", "失败数",
             *(f"{m} {s}" for m in metrics for s in ("均值", "标准差")), "commit", "环境锁", "数据"]
-    out = [f"{'、'.join(f'#{i}' for i in a.issue)} 的结果：{len(runs)} 个 run，{len(groups)} 组，"
+    out = [f"{'、'.join(f'#{i}' for i in issues)} 的结果：{len(runs)} 个 run，{len(groups)} 组，"
            "按去掉 seed 的命令分组。", "", "| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for cmd, rs in groups.items():
         ok = [r for r in rs if r["ok"]]

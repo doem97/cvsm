@@ -92,21 +92,23 @@ b > a by 1 point
 
 
 def test_spec_check_lists_each_deviation(repo, tmp_path):
-    common = {"lr": "0.1", "optim.name": "adamw", "batch": "32", "warmup": "100"}
+    common = {"lr": "0.1", "optim.name": "adamw", "batch": "32", "warmup": "100", "wd": "0"}
     r1 = finished(repo, 1000, cfg=common | {"method": "a", "seed": "1"})
     r2 = finished(repo, 2000, cfg=common | {"method": "a", "seed": "2.0", "lr": "0.10", "batch": "64"})
     r3 = finished(repo, 3000, cfg=common | {"method": "b", "seed": "1", "lr": "0.2"})
     r4 = finished(repo, 4000, cfg=common | {"method": "b", "depth": "2", "seed": "1", "warmup": "200"})
-    r5 = finished(repo, 5000, cfg={"method": "d", "lr": "0.1", "seed": "3", "batch": "16", "warmup": "100"})
+    r5 = finished(repo, 5000, cfg={"method": "d", "lr": "0.1", "seed": "3", "batch": "16", "warmup": "100",
+                                   "wd": "1"})
     (tmp_path / "spec.md").write_text(SPEC)
     out = repo.results("--spec", str(tmp_path / "spec.md"))
     assert table(out)["python t.py"]["arm"] == "base、ours、deep、无"
     assert "\n标注：\n- 无\n" in out  # the flags are unchanged
     assert spec_check(out) == f"""- 读不懂的规格行：Arms：broken line
-- 读不懂的规格行：Controlled：wd=0
+- Controlled 行没有写理由：wd=0
 - `lr=0.1` 不成立：1 个 run，{r3}（0.2）
 - `seed in 1,2` 不成立：1 个 run，{r5}（3）
 - `optim.name="adamw"`：1 个 run 未记录 `optim.name`：{r5}
+- `wd=0` 不成立：1 个 run，{r5}（1）
 - 1 个 run 不属于任何 arm：{r5}
 - 1 个 run 属于多个 arm：{r4}（ours、deep）
 - arm ours 缺 `seed in 1,2` 的取值：2
@@ -126,6 +128,15 @@ def test_spec_from_stdin_without_deviations(repo):
     out = repo.results("--spec", "-", input=spec)
     assert spec_check(out) == "- 没有偏差\n"
     assert table(out)["python t.py"]["arm"] == "base、ours"
+
+
+def test_problems_of_the_spec_itself(repo):
+    out = repo.results("--spec", "-", input="### Comparison\n\na vs b\n", issue=99)
+    assert spec_check(out) == "- 规格里没有 Arms 一节\n- 规格里没有 Controlled 一节\n"
+    spec = "### Arms\n\nbase: lr=0.1\n\n### Controlled\n\nlr=0.1  # x\n\n### Adaptable\n\nlr  # y\n"
+    out = repo.results("--spec", "-", input=spec, issue=99)
+    assert spec_check(out) == ("- `lr` 出现在多节：Arms、Controlled、Adaptable\n- 没有 run 的 arm：base\n"
+                               "- Adaptable `lr`：没有属于 arm 的 run\n")
 
 
 def test_no_spec_is_said(repo):
@@ -237,6 +248,7 @@ def test_other_issues_are_ignored(repo):
     assert [p.communicate(timeout=30) and p.returncode for p in procs] == [0, 0, 0]
     assert set(table(repo.results(issue=5))) == {group()}
     assert set(table(repo.results(issue=15))) == {group("method=b")}
+    assert repo.results(issue=[5, 5]).startswith("#5 的结果：1 个 run")
     out = repo.results(issue=[5, 15])
     assert set(table(out)) == {group(), group("method=b")} and out.startswith("#5、#15 的结果：2 个 run")
 
