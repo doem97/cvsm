@@ -1,30 +1,30 @@
-name: Code task
-description: A change to code or files, limited to a fixed Scope.
+name: 代码任务
+description: 一次代码或文件改动，限定在固定的 Scope 内。
 labels: [code]
 body:
   - type: textarea
     id: goal
     attributes:
       label: Goal
-      description: At most 3 sentences.
+      description: 最多 3 句。
     validations:
       required: true
   - type: textarea
     id: scope
     attributes:
       label: Scope
-      description: Path globs, one per line, no leading wildcard.
+      description: 路径 glob，每行一个，不能以通配符开头。
     validations:
       required: true
   - type: textarea
     id: acceptance
     attributes:
       label: Acceptance
-      description: Commands, one per line.
+      description: 命令，每行一个。
     validations:
       required: true
   - type: input
     id: budget
     attributes:
       label: Budget
-      description: Time budget, for example 2h.
+      description: 时间预算，例如 2h。

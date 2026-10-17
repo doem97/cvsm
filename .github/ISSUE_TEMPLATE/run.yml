@@ -1,21 +1,21 @@
-name: Run task
-description: Experiment runs whose results are posted as one comment.
+name: 运行任务
+description: 一组实验运行，结果以一条评论贴出。
 labels: [run]
 body:
   - type: textarea
     id: runs
     attributes:
       label: Runs
-      description: One command per line, including overrides and seed.
+      description: 每行一条命令，包含配置覆盖和 seed。
     validations:
       required: true
   - type: input
     id: budget
     attributes:
       label: Budget
-      description: GPU hours, for example 2.
+      description: GPU 小时，例如 2。
   - type: input
     id: report
     attributes:
       label: Report
-      description: Metric names, space-separated.
+      description: 指标名，空格分隔。

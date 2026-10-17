@@ -84,7 +84,7 @@ def test_study_form():
     assert list(fields) == ["Question", "Comparison", "Criteria", "Budget", "Context"]
     for name in ("Question", "Comparison", "Criteria"):
         assert fields[name]["type"] == "textarea" and required(fields[name])
-    assert "config differences" in fields["Comparison"]["attributes"]["description"]
+    assert "配置" in fields["Comparison"]["attributes"]["description"]
 
 
 def test_run_form():
@@ -93,8 +93,8 @@ def test_run_form():
     assert list(fields) == ["Runs", "Budget", "Report"]
     assert fields["Runs"]["type"] == "textarea" and required(fields["Runs"])
     assert "seed" in fields["Runs"]["attributes"]["description"]
-    assert "GPU hours" in fields["Budget"]["attributes"]["description"]
-    assert "Metric names" in fields["Report"]["attributes"]["description"]
+    assert "GPU 小时" in fields["Budget"]["attributes"]["description"]
+    assert "指标名" in fields["Report"]["attributes"]["description"]
 
 
 def test_codex_rules_static():
