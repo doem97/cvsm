@@ -28,23 +28,24 @@ def test_groups_by_command_without_seed(repo):
     rows = table(out)
     assert set(rows) == {group("method=a"), group("method=b")}
     a, b = rows[group("method=a")], rows[group("method=b")]
-    assert (a["n"], a["n_failed"], a["acc mean"], a["acc std"]) == ("3", "0", "2", "1")
-    assert (b["n"], b["acc mean"], b["acc std"]) == ("3", "20", "10")
-    assert a["loss mean"] == "0.5" and a["loss std"] == "0"
+    assert (a["n"], a["失败数"], a["acc 均值"], a["acc 标准差"]) == ("3", "0", "2", "1")
+    assert (b["n"], b["acc 均值"], b["acc 标准差"]) == ("3", "20", "10")
+    assert a["loss 均值"] == "0.5" and a["loss 标准差"] == "0"
     assert a["commit"] == repo.git("rev-parse", "HEAD")[:7]
-    assert "commits differ" not in out and "env differs" not in out
+    assert out.startswith("#5 的结果：6 个 run，2 组，按去掉 seed 的命令分组。")
+    assert "commit 不同" not in out and "环境不同" not in out
 
 
 def test_metric_selection(repo):
     repo.run("seed=1")
     row = table(repo.results("--metric", "acc"))[group()]
-    assert "acc mean" in row and "loss mean" not in row
+    assert "acc 均值" in row and "loss 均值" not in row
 
 
 def test_single_seed_shows_dash_for_std(repo):
     repo.run("method=a", "seed=4")
     row = table(repo.results())[group("method=a")]
-    assert (row["n"], row["acc mean"], row["acc std"]) == ("1", "4", "—")
+    assert (row["n"], row["acc 均值"], row["acc 标准差"]) == ("1", "4", "—")
 
 
 def finished(repo, start, **rh):
@@ -63,8 +64,7 @@ def test_different_commits_are_flagged_with_diff_stat(repo):
     finished(repo, 1000, commit=first)
     out = repo.results()
     assert table(out)["python t.py"]["commit"] == f"{first[:7]}, {second[:7]}"  # ordered by run start
-    assert "commits differ" in out
-    assert f"git diff --stat {first[:7]} {second[:7]}" in out
+    assert f"- commit 不同：{first[:7]}, {second[:7]}；`git diff --stat {first[:7]} {second[:7]}`：" in out
     assert "shared.py" in out and "1 file changed" in out
 
 
@@ -72,9 +72,9 @@ def test_different_env_and_data_are_flagged(repo):
     finished(repo, 1000, env_lock_sha="a" * 64, data_manifest_sha="c" * 64)
     finished(repo, 2000, env_lock_sha="b" * 64, data_manifest_sha="c" * 64)
     out = repo.results()
-    assert "env differs: aaaaaaaa, bbbbbbbb" in out and "data differs" not in out
+    assert "- 环境不同：aaaaaaaa, bbbbbbbb" in out and "数据不同" not in out
     finished(repo, 3000, env_lock_sha="b" * 64, data_manifest_sha="d" * 64)
-    assert "data differs: cccccccc, dddddddd" in repo.results()
+    assert "- 数据不同：cccccccc, dddddddd" in repo.results()
 
 
 def test_failed_and_incomplete_runs_are_counted(repo):
@@ -83,10 +83,10 @@ def test_failed_and_incomplete_runs_are_counted(repo):
     stuck = repo.record(3000, status="RUNNING", issue="5", command="python other.py", seed="", host="h")
     out = repo.results()
     row = table(out)[group("fail_seed=2")]
-    assert (row["n"], row["n_failed"], row["acc mean"]) == ("1", "1", "1")
-    assert "incomplete runs (1" in out and stuck in out
+    assert (row["n"], row["失败数"], row["acc 均值"]) == ("1", "1", "1")
+    assert f"- 1 个 run 未完成（还在跑或已被杀）：{stuck}" in out
     other = table(out)["python other.py"]
-    assert (other["n"], other["n_failed"], other["commit"]) == ("0", "0", "none")
+    assert (other["n"], other["失败数"], other["commit"]) == ("0", "0", "无")
 
 
 def test_sigkilled_run_is_incomplete(repo):
@@ -97,7 +97,7 @@ def test_sigkilled_run_is_incomplete(repo):
     p.communicate(timeout=30)
     os.kill(int(hold.with_suffix(".pid").read_text()), signal.SIGKILL)
     out = repo.results()
-    assert "incomplete runs (1" in out and repo.only_run().info.run_id in out
+    assert f"- 1 个 run 未完成（还在跑或已被杀）：{repo.only_run().info.run_id}" in out
 
 
 def test_deleted_runs_are_flagged(repo):
@@ -106,26 +106,26 @@ def test_deleted_runs_are_flagged(repo):
     repo.client.delete_run(gone)
     out = repo.results()
     assert table(out)[group()]["n"] == "2"
-    assert "deleted runs (1" in out and gone in out
+    assert f"- 1 个 run 已在 MLflow 中删除，但仍计入上表：{gone}" in out
 
 
 def test_missing_env_lock_is_flagged(repo):
     repo.run()
     out = repo.results()
-    assert "env lock missing" in out and "uv.lock" in out
+    assert "- 1 个 run 缺环境锁文件：uv.lock" in out
 
 
 def test_dirty_runs_are_flagged(repo):
     (repo.root / "scratch.py").write_text("1\n")
     repo.run()
     out = repo.results()
-    assert "dirty runs (1" in out and repo.only_run().info.run_id in out
+    assert f"- 1 个 run 的工作区不干净（见产物 diff.patch 和 untracked.txt）：{repo.only_run().info.run_id}" in out
 
 
 def test_bad_metrics_file_is_flagged_not_fatal(repo):
     repo.run("metrics=list")
     out = repo.results()
-    assert "no metrics (1 run(s)" in out and repo.only_run().info.run_id in out
+    assert f"- 1 个 run 成功退出但没有指标：{repo.only_run().info.run_id}" in out
 
 
 def test_other_issues_are_ignored(repo):
@@ -138,9 +138,9 @@ def test_other_issues_are_ignored(repo):
 
 def test_no_runs_still_prints_a_table(repo):
     out = repo.results(issue=99)
-    assert "| command |" in out and table(out) == {}
+    assert "| 命令 |" in out and table(out) == {} and out.rstrip().endswith("标注：\n- 无")
     out = repo.results(env={"MLFLOW_EXPERIMENT_NAME": "no-such-experiment"})
-    assert "| command |" in out and table(out) == {}
+    assert "| 命令 |" in out and table(out) == {}
 
 
 def test_missing_mlflow_is_a_clear_error(repo):

@@ -36,7 +36,7 @@ def fmt(x):
 
 
 def short(values, n):
-    return ", ".join(dict.fromkeys(v[:n] if v else "none" for v in values))
+    return ", ".join(dict.fromkeys(v[:n] if v else "无" for v in values))
 
 
 def ids(runs):
@@ -67,10 +67,10 @@ def main():
         groups.setdefault(shlex.join(cmd), []).append(r)
     metrics = a.metric or sorted({m for r in runs for m, v in r["metrics"].items() if num(v)})
 
-    head = ["command", "n", "n_failed", *(f"{m} {s}" for m in metrics for s in ("mean", "std")),
-            "commit", "env_lock", "data"]
-    out = [f"Results for #{a.issue}: {len(runs)} run(s) in {len(groups)} group(s), "
-           "grouped by command without the seed.", "",
+    # The table is read by people, so its text is Chinese; metric names and hashes stay as they are.
+    head = ["命令", "n", "失败数", *(f"{m} {s}" for m in metrics for s in ("均值", "标准差")),
+            "commit", "环境锁", "数据"]
+    out = [f"#{a.issue} 的结果：{len(runs)} 个 run，{len(groups)} 组，按去掉 seed 的命令分组。", "",
            "| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for cmd, rs in groups.items():
         ok = [r for r in rs if r["ok"]]
@@ -89,25 +89,24 @@ def main():
         first, last = commits[0], commits[-1]
         p = subprocess.run(["git", "diff", "--stat", first, last], capture_output=True, text=True,
                            errors="replace")
-        flags += [f"- commits differ: {short(commits, 7)}; `git diff --stat {first[:7]} {last[:7]}`:",
+        flags += [f"- commit 不同：{short(commits, 7)}；`git diff --stat {first[:7]} {last[:7]}`：",
                   "", "```", (p.stdout or p.stderr).rstrip(), "```"]
-    for key, name in (("env_lock_sha", "env"), ("data_manifest_sha", "data")):
+    for key, name in (("env_lock_sha", "环境"), ("data_manifest_sha", "数据")):
         if len({r[key] for r in runs if key in r}) > 1:  # runs killed before launch have none
-            flags.append(f"- {name} differs: {short((r[key] for r in runs if key in r), 8)}")
+            flags.append(f"- {name}不同：{short((r[key] for r in runs if key in r), 8)}")
     missing = [r for r in runs if r.get("env_lock_missing")]
     if missing:
         files = sorted({f for r in missing for f in r["env_lock_missing"].split(",")})
-        flags.append(f"- env lock missing in {len(missing)} run(s): {', '.join(files)}")
+        flags.append(f"- {len(missing)} 个 run 缺环境锁文件：{', '.join(files)}")
     if dirty := [r for r in runs if r.get("dirty") == "true"]:
-        flags.append(f"- dirty runs ({len(dirty)}, see their diff.patch and untracked.txt): {ids(dirty)}")
+        flags.append(f"- {len(dirty)} 个 run 的工作区不干净（见产物 diff.patch 和 untracked.txt）：{ids(dirty)}")
     if nometrics := [r for r in runs if r["ok"] and not r["metrics"]]:
-        flags.append(f"- no metrics ({len(nometrics)} run(s) exited 0 without metrics): {ids(nometrics)}")
+        flags.append(f"- {len(nometrics)} 个 run 成功退出但没有指标：{ids(nometrics)}")
     if incomplete := [r for r in runs if r["status"] == "RUNNING"]:
-        flags.append(f"- incomplete runs ({len(incomplete)}, status RUNNING: still running or killed): "
-                     f"{ids(incomplete)}")
+        flags.append(f"- {len(incomplete)} 个 run 未完成（还在跑或已被杀）：{ids(incomplete)}")
     if deleted := [r for r in runs if r["deleted"]]:
-        flags.append(f"- deleted runs ({len(deleted)}, deleted in MLflow but counted above): {ids(deleted)}")
-    print("\n".join(out + ["", "Flags:", *(flags or ["- none"])]))
+        flags.append(f"- {len(deleted)} 个 run 已在 MLflow 中删除，但仍计入上表：{ids(deleted)}")
+    print("\n".join(out + ["", "标注：", *(flags or ["- 无"])]))
 
 
 if __name__ == "__main__":
