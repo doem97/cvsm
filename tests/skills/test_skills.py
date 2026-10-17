@@ -123,3 +123,15 @@ def test_run_cleans_up_like_implement():
     run = cleanup_block(skill_text("run"))
     assert "git branch -D t/N-<slug>" in run
     assert run == cleanup_block(skill_text("implement"))
+
+
+def test_run_uses_project_commands():
+    # Launch and results commands come from AGENTS.md's `Run` line; this repo's values are only
+    # an example, so no command block may spell them out.
+    text = skill_text("run")
+    blocks = "".join(re.findall(r"^```[^\n]*\n(.*?)^```", text, re.M | re.S))
+    assert "<run> --issue N -- <cmd>" in blocks
+    assert "<run> --issue N --gpus 4 -- <cmd>" in blocks
+    assert "<results> --issue N --metric <Report metrics>" in blocks
+    assert "scripts/run.py" not in blocks and "scripts/results.py" not in blocks
+    assert not re.search(r"python scripts/run\.py --issue", text)
