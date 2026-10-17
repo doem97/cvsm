@@ -61,7 +61,7 @@
 - Before acting, read your issue, the code in its Scope and the interfaces that code uses; your skill lists the rest.
 - Write only to GitHub (issues, comments, PRs), to files in Scope and to run records; keep no memory, notes, docs or discussion.
 - Record decisions and conclusions on GitHub.
-- Get each review from a fresh session (`codex exec review --base main` with the issue as its brief, or a fresh subagent), never from the implementer's session.
+- Get each review from a fresh session (`codex exec review --base main`, or a fresh subagent) whose only input is the issue and the diff; never pass it your summary or reasoning.
 
 ## Skills
 - Skills live in `.agents/skills/<name>/SKILL.md`; follow the one for your role.
