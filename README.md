@@ -64,7 +64,7 @@ harness 刻意不做的事：
 | `.github/workflows/test.yml` | 在 PR 和推到 main 时跑项目测试 |
 | `scripts/run.py` | Run 命令的参考实现：跑一条命令，记成一个 MLflow run，可选按 GPU 排队 |
 | `scripts/results.py` | 从一个 issue 的运行记录生成结果表 |
-| `scripts/run.toml` | run.py 的配置：MLflow 实验名、环境锁、数据清单、seed 参数名、GPU 列表 |
+| `scripts/run.toml` | run.py 的配置：MLflow 实验名、环境锁、数据清单、seed 参数名、GPU 列表、GPU 锁目录 |
 | `scripts/setup.sh` | 一次性设置仓库：label、合并方式、main 的分支保护 |
 | `tests/` | 以上脚本和规则文件的测试 |
 | `docs/` | 人写的设计文档 |
@@ -83,15 +83,15 @@ git -C <rh clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts 
 再把 `.gitignore` 的几行并进去；`tests/` 里用不上的测试可以删掉。记下复制自 rh 的哪个 commit（`git -C <rh clone> rev-parse HEAD`），写进接入提交的信息，以后好对照 rh 的改进同步。
 - 改 `.github/guard.toml`：`layout` 加上你的目录（如 `src/**`、`configs/**`）和项目会改的根目录文件（如 `pyproject.toml`、`uv.lock` 等锁文件、`.python-version`），漏了的话改依赖的 PR 会被 guard 拒收；`protected` 加上评测和数据路径，`markdown` 按需调整。
 - 改 `scripts/run.toml`：`experiment`、`env_lock`（你的锁文件）、`gpus`。数据目录通常被 git 忽略，数据指纹因此来自一个被跟踪的数据清单：记着各数据文件校验和的文件（例如 `sha256sum` 的输出存成 `data.sha256`）。把它相对仓库根目录的路径写进 `data_manifest`，并加进 guard.toml 的 `layout` 和 `protected`。
-- 几个用户共用一台机器、`TMPDIR` 又按用户区分时，默认的 GPU 锁目录各在各的 `TMPDIR` 下，互相看不见；把 run.toml 的 `lock_dir` 设成他们都能写的同一个本机目录（权限要求见 `scripts/run.py` 开头的说明）。
-- 已有的 CLAUDE.md 并进 AGENTS.md 后删掉：harness 只认 AGENTS.md，guard 会拒收别处的 `.md`。
+- 几个用户共用一台机器、`TMPDIR` 又按用户区分时，默认的 GPU 锁目录各在各的 `TMPDIR` 下，互相看不见；把 run.toml 的 `lock_dir` 设成他们都能写的同一个本机目录。
+- 已有的 CLAUDE.md：只把项目事实压缩进 AGENTS.md 的 Project 一节（每个字段一行），其余内容挪到 `docs/` 或代码注释里，然后删掉 CLAUDE.md：harness 只认 AGENTS.md，guard 会拒收别处的 `.md`。
 
 **2. 填写 AGENTS.md 的 Project 一节。** 其他各节不用改。AGENTS.md 最多 80 行（有测试检查），每个字段只写一行：
 - `Layout`：代码目录怎么分，共享代码和方法模块各在哪里；
 - `Test`：测试命令，和 CI 里跑的一致；
 - `Language`：面向人的文字用什么语言（见下文"语言"）；
 - `Protected eval/data paths`：不许 agent 随意改的评测和数据路径，与 guard.toml 的 `protected` 一致；
-- `Run`：Run 命令和结果评论命令。run 在新建的 worktree（`../worktrees/N-<slug>`）里启动，那里没有被忽略的 `.venv` 和数据目录，所以命令要在新 worktree 里直接能用，环境里既有项目依赖又有 MLflow。用 uv 时，把 `mlflow-skinny`、`sqlalchemy`、`alembic` 放进 dev 依赖组（`uv add --dev`；`uv run` 默认带上 dev 组），写成 `uv run python scripts/run.py --issue N -- <cmd>`。数据用绝对路径、环境变量或被跟踪的软链找到；
+- `Run`：Run 命令和结果评论命令。run 在新建的 worktree（`../worktrees/N-<slug>`）里启动，那里没有被忽略的 `.venv` 和数据目录，所以命令要在新 worktree 里直接能用，环境里既有项目依赖又有 MLflow。用 uv 时，把 `mlflow-skinny`、`sqlalchemy`、`alembic` 放进 dev 依赖组（`uv add --dev`；`uv run` 默认带上 dev 组），写成 `uv run python scripts/run.py --issue N -- <cmd>`，结果命令同样写成 `uv run python scripts/results.py --issue N`（results.py 也要 MLflow）。数据用绝对路径、环境变量或被跟踪的软链找到；
 - `Run records`：运行记录写到哪个 MLflow 后端。
 
 **3. 安装 CI 依赖。** 改 `.github/workflows/test.yml` 里的 `pip install` 一行，装上你项目的依赖和测试工具，测试命令与 AGENTS.md 的 `Test` 一致；项目用 uv 时，CI 也可以用 pip 装依赖、跑同一套测试。复制来的规则、skill 和 guard 测试需要 `pyyaml`；如果保留 `scripts/run.py` 的测试，还要装 MLflow（模板里装的是 `mlflow-skinny`，加上 SQLite 需要的 `sqlalchemy` 和 `alembic`）。CI 的 runner 没有 GPU：锁文件里是 CUDA 版 torch 时，CI 里改装 CPU 版（`pip install torch --index-url https://download.pytorch.org/whl/cpu`）。job 名 `guard` 和 `test` 不要改，分支保护按这两个名字认检查。
@@ -120,7 +120,7 @@ bash scripts/setup.sh owner/repo
     [shell_environment_policy]
     set = { GH_CONFIG_DIR = "<dir>" }
     ```
-- 提交也用它的身份：在仓库里运行 `git config user.name <账号>` 和 `git config user.email <id>+<账号>@users.noreply.github.com`（`<id>` 用 `gh api users/<账号> -q .id` 查）；remote 用 HTTPS 地址，并运行一次 `gh auth setup-git`，让 push 走 gh 的登录；
+- 提交也用它的身份：在仓库里运行 `git config user.name <账号>` 和 `git config user.email <id>+<账号>@users.noreply.github.com`（`<id>` 用 `gh api users/<账号> -q .id` 查）；remote 用 HTTPS 地址，并运行一次 `gh auth setup-git`，让 push 走 gh 的登录（它写的是全局 git 配置，用哪个账号取决于运行时设的 `GH_CONFIG_DIR`）；
 - agent 在另一台机器上跑时，那台机器也要用这个 token 登录；
 - 管理员的事（运行 setup.sh、改分支保护）仍然用人的账号。
 
