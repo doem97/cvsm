@@ -28,3 +28,12 @@ body:
     attributes:
       label: Budget
       description: 时间预算，例如 2h。
+  - type: dropdown
+    id: merge
+    attributes:
+      label: Merge
+      description: 谁来合并。human：由人合并；agent：审查通过后由 agent 用 .github/scripts/merge.py 合并。碰了受保护路径的 PR 一律由人合并。
+      options:
+        - human
+        - agent
+      default: 0

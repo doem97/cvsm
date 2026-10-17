@@ -63,6 +63,16 @@ def test_agents_project_fields():
         assert f"- {field}" in text, field
 
 
+def test_agents_tiered_merge():
+    text = agents()
+    assert "python .github/scripts/merge.py N" in section("Gates") and "Merge: agent" in section("Gates")
+    assert ".github/scripts/merge.py" in section("Git") and "gh pr merge" in section("Git")
+    review = next(l for l in section("Skills").splitlines() if l.startswith("- `review`"))
+    assert "Verdict: pass @ <head SHA>" in review and "Verdict: changes @ <head SHA>" in review
+    assert "human merges" not in section("State")  # agents merge `Merge: agent` tasks too
+    assert "Only the human merges" not in text
+
+
 def test_claude_settings_deny_merge():
     s = json.loads((ROOT / ".claude" / "settings.json").read_text())
     assert "Bash(gh pr merge:*)" in s["permissions"]["deny"]
@@ -101,6 +111,7 @@ def test_codex_rules_static():
     text = RULES.read_text()
     assert '["gh", "pr", "merge"]' in text and 'decision = "forbidden"' in text
     assert '"prompt"' not in text  # under approval policy never, prompt becomes forbidden
+    assert ".github/scripts/merge.py" in text
 
 
 def codex_check(*cmd):
@@ -117,3 +128,4 @@ def test_codex_forbids_merge():
     assert codex_check("gh", "pr", "merge", "--squash", "3")["decision"] == "forbidden"
     assert codex_check("gh", "pr", "view", "12")["matchedRules"] == []
     assert codex_check("gh", "pr", "create")["matchedRules"] == []
+    assert codex_check("python", ".github/scripts/merge.py", "12")["matchedRules"] == []

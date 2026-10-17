@@ -8,7 +8,7 @@
 - Continue an in-progress issue only if the instruction names it or this session claimed it.
 - Needs decision: label `needs-decision` plus a blocker comment; remove the label once the human has answered.
 - In review: PR open, checks or review not finished. Merge-ready: `guard` and `test` green, no blocking review finding.
-- Done: a `code` issue closes when the human merges its PR (`Closes #N`); close a `run` issue yourself with its results comment.
+- Done: a `code` issue closes when its PR merges (`Closes #N`); close a `run` issue yourself with its results comment.
 - Only the human abandons a task (closes it as not planned) and closes a parent (as completed with the conclusion, or as not planned).
 - Write every state change to GitHub or git as it happens; the session can end at any moment.
 
@@ -17,7 +17,7 @@
 - Stop only at the target, at a gate, or at a blocker; otherwise keep going.
 - Stop at these four gates even when everything works:
   1. New or changed approved work: publishing a plan; changing a task's Goal, Scope or Acceptance; changing a protected path.
-  2. Merging. Only the human merges; the merge-ready PR is the request, so add no label or blocker comment.
+  2. Merging, unless the task says `Merge: agent`. Then merge once merge-ready with `python .github/scripts/merge.py N`, which refuses protected paths and unreviewed heads. Otherwise, or if it refuses, the merge-ready PR is the request: add no label or blocker comment.
   3. Exceeding a budget: tokens, time or GPU hours.
   4. Concluding and closing a study.
 - An explicit instruction from the user approves what it names; do not ask again.
@@ -45,7 +45,7 @@
 - One task = one issue = one branch `t/<N>-<slug>` = one worktree `../worktrees/<N>-<slug>` (relative to the main clone) = one PR.
 - PR title: `<type>(#N): <summary>`, type one of feat, fix, refactor, test, exp, docs, chore; N is the issue the PR closes.
 - PR body: `.github/pull_request_template.md`; first line `Closes #N`, `## Changes` (at most 5 items), `## Acceptance` (commands and results), `## Out of scope` (new issues, or none); at most 40 lines.
-- Never run `gh pr merge`, push to main, force-push, create tags, or touch another task's branch.
+- Never run `gh pr merge` directly; merge only through `.github/scripts/merge.py`. Never push to main, force-push, create tags, or touch another task's branch.
 
 ## Files
 - Add files only where `layout` in `.github/guard.toml` allows.
@@ -67,7 +67,7 @@
 - Skills live in `.agents/skills/<name>/SKILL.md`; follow the one for your role.
 - `plan`: discussing work and publishing a study or plan with its sub-issues; stops at publishing.
 - `implement`: a `code` issue, from claim to merge-ready.
-- `review`: one PR, in a fresh session; ends with one review comment.
+- `review`: one PR, in a fresh session; ends with one comment whose first line is `Verdict: pass @ <head SHA>` or `Verdict: changes @ <head SHA>`.
 - `run`: a `run` issue, from its Runs to the results comment and closing.
 
 ## Project
