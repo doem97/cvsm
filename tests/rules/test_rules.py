@@ -95,13 +95,29 @@ def required(field):
     return (field.get("validations") or {}).get("required") is True
 
 
+STUDY = ["Question", "Arms", "Controlled", "Adaptable", "Criteria", "Budget", "Context"]
+
+
 def test_study_form():
     form, fields = load_form("study.yml")
     assert form["labels"] == ["study"]
-    assert list(fields) == ["Question", "Comparison", "Criteria", "Budget", "Context"]
-    for name in ("Question", "Comparison", "Criteria"):
+    assert list(fields) == STUDY
+    for name in ("Question", "Arms", "Controlled", "Criteria"):
         assert fields[name]["type"] == "textarea" and required(fields[name])
-    assert "配置" in fields["Comparison"]["attributes"]["description"]
+    assert fields["Adaptable"]["type"] == "textarea" and not required(fields["Adaptable"])
+    # The spec's line formats, which the results command parses (#29).
+    desc = {name: fields[name]["attributes"]["description"] for name in STUDY}
+    assert "`<arm>: <key>=<value> [<key>=<value> ...]`" in desc["Arms"]
+    assert "`  # <注释>`" in desc["Arms"] and "JSON" in desc["Arms"]
+    assert "`<key>=<value>  # <理由>`" in desc["Controlled"]
+    assert "`<key> in <v1>,<v2>,...  # <理由>`" in desc["Controlled"]
+    assert "`<key>  # <规则>`" in desc["Adaptable"]
+
+
+def test_plan_skill_drafts_the_study_form():
+    plan = (ROOT / ".agents" / "skills" / "plan" / "SKILL.md").read_text()
+    assert ", ".join(STUDY) in " ".join(plan.split())
+    assert "<results> --issue <N>" in plan and "scripts/results.py" not in plan
 
 
 def test_run_form():
