@@ -135,3 +135,31 @@ def test_run_uses_project_commands():
     assert "<results> --issue N --metric <Report metrics>" in blocks
     assert "scripts/run.py" not in blocks and "scripts/results.py" not in blocks
     assert not re.search(r"python scripts/run\.py --issue", text)
+
+
+def test_run_checks_runs_against_study_spec():
+    # The study body is the spec; the check runs right after launch and in the results comment.
+    blocks = "".join(re.findall(r"^```[^\n]*\n(.*?)^```", skill_text("run"), re.M | re.S))
+    spec = "gh issue view P --json body -q .body | <results> --issue N"
+    assert f"{spec} --spec -\n" in blocks
+    assert f"{spec} --metric <Report metrics> --spec -)" in blocks
+
+
+@pytest.mark.parametrize("name", ["implement", "review"])
+def test_code_held_to_study_spec(name):
+    text = skill_text(name)
+    assert "`$RUN_DIR/config.json`" in text and "differ beyond Arms" in text
+
+
+def test_review_gets_study_spec():
+    text = skill_text("review")
+    codex = re.search(r'^codex exec review "(.*?)" >', text, re.M | re.S).group(1)
+    assert "Arms, Controlled" in codex
+    assert "its spec (`gh issue view P`)" in text  # pre-PR review prompt
+
+
+def test_review_worktree_at_head_sha():
+    # FETCH_HEAD can be overwritten by a parallel review in the same clone.
+    text = skill_text("review")
+    assert "git worktree add --detach ../worktrees/review-<PR> <sha>" in text
+    assert not re.search(r"git worktree add .*FETCH_HEAD", text)

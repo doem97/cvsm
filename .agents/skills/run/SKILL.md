@@ -38,7 +38,7 @@ to the branch; a run issue has no PR.
 ```
 gh issue view N                 # body: Runs, Budget (GPU hours), Report; parent P
 gh issue view N --comments      # Decisions
-gh issue view P                 # the study
+gh issue view P                 # the study and its spec: Arms, Controlled, Adaptable
 gh issue view P --comments      # its Decisions
 <results> --issue N             # runs already recorded for N, if any
 ```
@@ -48,8 +48,10 @@ earlier attempt ended in an infra failure (section 4).
 
 ## 3. Launch within Budget
 
-For each Runs line, from the worktree root. A line is `<cmd>`, or `<options> -- <cmd>` when it
-carries options of the Run command such as `--gpus 4`; pass those through before `--`:
+Before launching, check that the Runs lines cover every arm and every value of each Controlled
+`in` line; if they do not, that is a blocker (AGENTS.md Blockers). Launch each Runs line from the
+worktree root. A line is `<cmd>`, or `<options> -- <cmd>` when it carries options of the Run
+command such as `--gpus 4`; pass those through before `--`:
 
 ```
 <run> --issue N -- <cmd>
@@ -60,6 +62,18 @@ carries options of the Run command such as `--gpus 4`; pass those through before
   waits for the GPUs it needs (this repo's Run command leases them from `scripts/run.toml`),
   so several lines may be launched at once. Use your tool's background execution for long
   runs; stop one the way the Run command provides (this repo's: SIGTERM).
+- Right after launch, once the runs have recorded their configs (`cfg.*` params), run the check
+  below and stop every running run its `规格核对` section lists as violating the spec (a
+  Controlled value not held or not recorded, no arm or several, an undeclared difference).
+  A stopped run stays recorded. A code bug is a `code` issue (section 4), any other cause a
+  blocker; relaunch a stopped line only once its cause is fixed, and note it for the results comment.
+
+```
+gh issue view P --json body -q .body | <results> --issue N --spec -
+```
+
+- Change an Adaptable setting only within its rule (e.g. a smaller per-device batch after an
+  out-of-memory error), and note each change, with the run and the reason, for the results comment.
 - GPU hours used = the sum over this issue's runs, failed ones included, of wall time times
   the number of GPUs. Estimate a run from the first finished one.
 - Before launching a run that would take the total past Budget, stop at gate 3: report the
@@ -82,8 +96,8 @@ carries options of the Run command such as `--gpus 4`; pass those through before
 When every line has a finished or failed record:
 
 ```
-table=$(<results> --issue N --metric <Report metrics>)
-gh issue comment N --body "$(printf '%s\n\n%s\n' "<中文说明：跑了什么、失败与重跑及原因、超出预算与否>" "$table")"
+table=$(gh issue view P --json body -q .body | <results> --issue N --metric <Report metrics> --spec -)
+gh issue comment N --body "$(printf '%s\n\n%s\n' "<中文说明：跑了什么、失败与重跑及原因、每项 Adaptable 改动、超出预算与否>" "$table")"
 gh issue close N --reason completed
 ```
 
