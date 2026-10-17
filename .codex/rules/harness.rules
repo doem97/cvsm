@@ -1,0 +1,7 @@
+prefix_rule(
+    pattern = ["gh", "pr", "merge"],
+    decision = "forbidden",
+    justification = "Only the human merges. Stop at merge-ready and report.",
+    match = ["gh pr merge 12", "gh pr merge --squash 3"],
+    not_match = ["gh pr view 12", "gh pr create"],
+)

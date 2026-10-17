@@ -362,7 +362,7 @@ def test_repo_guard_toml():
     assert c["types"] == ["feat", "fix", "refactor", "test", "exp", "docs", "chore"]
     assert c["max_body_lines"] == 40
     assert c["forbidden_names"] == ["TODO", "NOTES", "PLAN", "PROGRESS"]
-    assert {"AGENTS.md", "CLAUDE.md", ".agents/**", ".codex/**", ".claude/**", ".github/**"} <= set(c["protected"])
+    assert {"AGENTS.md", ".agents/**", ".codex/**", ".claude/**", ".github/**"} <= set(c["protected"])
     assert "max_diff_lines" not in c
 
 

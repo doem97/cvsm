@@ -1,0 +1,21 @@
+name: 运行任务
+description: 一组实验运行，结果以一条评论贴出。
+labels: [run]
+body:
+  - type: textarea
+    id: runs
+    attributes:
+      label: Runs
+      description: 每行一条命令，包含配置覆盖和 seed。
+    validations:
+      required: true
+  - type: input
+    id: budget
+    attributes:
+      label: Budget
+      description: GPU 小时，例如 2。
+  - type: input
+    id: report
+    attributes:
+      label: Report
+      description: 指标名，空格分隔。

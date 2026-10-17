@@ -1,0 +1,35 @@
+name: 研究
+description: 一个研究问题，由 code 和 run 子 issue 来回答。
+labels: [study]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: 这个研究要回答的问题。
+    validations:
+      required: true
+  - type: textarea
+    id: comparison
+    attributes:
+      label: Comparison
+      description: 各组之间只写配置上的差异。
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Criteria
+      description: 什么样的结果算回答了这个问题。
+    validations:
+      required: true
+  - type: input
+    id: budget
+    attributes:
+      label: Budget
+      description: GPU 小时和时间，例如 4 GPU 小时、1 天。
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: 相关研究、结果评论和论文的链接。
