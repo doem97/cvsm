@@ -83,17 +83,18 @@ codex exec review "Review the changes of this branch against origin/main \
 <their Decision: comments>. Checklist: <section 2>." > ../codex-review-<PR>.md
 ```
 
-  Its stdout, saved in that file, is the review: a summary and findings tagged `[P0]`–`[P3]`. Any `[P0]` or `[P1]`
-  finding means `changes`, otherwise `pass`. In the checkout Codex reviewed, compare its SHA
-  with the PR head; if they differ, review the current head instead. The session that ran it
-  posts the file verbatim under the Verdict line, with the reviewed SHA, in one shell call
-  (agent shells may not keep variables between calls):
+  Its stdout, saved in that file, is the review: a summary and findings tagged `[P0]`–`[P3]`.
+  Any `[P0]` or `[P1]` finding means `changes`, otherwise `pass`. The session that ran it posts
+  the file verbatim under the Verdict line, with the reviewed SHA, in one shell call run in the
+  checkout Codex reviewed (agent shells may not keep variables between calls). The post and the
+  `rm` run only if the PR head still equals `$sha`; if the `test` fails, nothing is posted:
+  review the current head instead.
 
 ```
 sha=$(git rev-parse HEAD)
-gh pr view <PR> --json headRefOid -q .headRefOid   # must equal $sha
-{ printf 'Verdict: %s @ %s\n\n' "<pass|changes>" "$sha"; cat ../codex-review-<PR>.md; } | gh pr comment <PR> --body-file -
-rm ../codex-review-<PR>.md
+test "$(gh pr view <PR> --json headRefOid -q .headRefOid)" = "$sha" &&
+  { printf 'Verdict: %s @ %s\n\n' "<pass|changes>" "$sha"; cat ../codex-review-<PR>.md; } |
+  gh pr comment <PR> --body-file - && rm ../codex-review-<PR>.md
 ```
 
 A pre-PR review in the implementer's inner loop gets only the issue number and the diff, uses

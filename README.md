@@ -111,7 +111,7 @@ bash scripts/setup.sh owner/repo
 
 skill、guard、merge.py 和结果评论都依赖下面这些接口。适配时只换实现，不改它们的形状：
 
-**Run 命令的形状**：`<run> --issue N [options] -- <cmd>`。`run` skill 把 run issue 的每行 Runs 原样放在 `--` 之后，选项（如 `--gpus 4`）放在 `--` 之前。结果命令的形状是 `<results> --issue N [--metric M ...]`。两者的实际命令写在 AGENTS.md 的 `Run` 一行。
+**Run 命令的形状**：`<run> --issue N [options] -- <cmd>`。run issue 的每行 Runs 是 `<cmd>` 或 `<选项> -- <cmd>`：`run` skill 把选项（如 `--gpus 4`）放在 `--` 之前，命令原样放在 `--` 之后。结果命令的形状是 `<results> --issue N [--metric M ...]`。两者的实际命令写在 AGENTS.md 的 `Run` 一行。
 
 **运行记录**：每次运行是一个 MLflow run（字段以 `scripts/run.py` 开头的说明为准）：
 - `rh.*` 参数（写入后不能改）：创建时写 `rh.issue`、`rh.command`、`rh.seed`、`rh.host`；启动前写 `rh.commit`、`rh.dirty`、`rh.env_lock_sha`、`rh.env_lock_missing`、`rh.data_manifest_sha`、`rh.gpus`；结束时写 `rh.exit_code`。没有的值写空字符串，列表用逗号连接。
