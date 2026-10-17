@@ -65,12 +65,14 @@ def test_agents_project_fields():
 
 def test_agents_tiered_merge():
     text = agents()
-    assert "python .github/scripts/merge.py N" in section("Gates") and "Merge: agent" in section("Gates")
+    assert "python .github/scripts/merge.py <PR>" in section("Gates") and "Merge: agent" in section("Gates")
     assert ".github/scripts/merge.py" in section("Git") and "gh pr merge" in section("Git")
     review = next(l for l in section("Skills").splitlines() if l.startswith("- `review`"))
     assert "Verdict: pass @ <head SHA>" in review and "Verdict: changes @ <head SHA>" in review
     gate1 = next(l for l in section("Gates").splitlines() if l.strip().startswith("1."))
     assert "Goal, Scope, Acceptance or Merge" in gate1  # flipping Merge to agent is approved work
+    blockers = section("Blockers")
+    assert "three `changes` verdicts come in a row" in blockers and "A pass ends the loop" in blockers
     implement = next(l for l in section("Skills").splitlines() if l.startswith("- `implement`"))
     assert "merge-ready" in implement and "Merge: agent" in implement
     assert "human merges" not in section("State")  # agents merge `Merge: agent` tasks too

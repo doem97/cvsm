@@ -46,13 +46,20 @@ def verdict(word="pass", sha=HEAD[:7]):
     return f"Verdict: {word} @ {sha}\n\n审查通过。"
 
 
+def at(i):
+    return f"2026-10-17T06:{i:02d}:00Z"
+
+
 def as_comments(bodies):
-    return [{"body": b, "html_url": f"https://github.com/o/r/pull/7#issuecomment-{i}"} for i, b in enumerate(bodies)]
+    # Plain strings become issue comments in posting order; dicts are passed through.
+    return [b if isinstance(b, dict) else
+            {"body": b, "html_url": f"https://github.com/o/r/pull/7#issuecomment-{i}", "at": at(i)}
+            for i, b in enumerate(bodies)]
 
 
 def run(body=BODY, files=None, comments=None, issue="default"):
-    pr = {"number": 7, "title": TITLE, "body": body, "head": HEAD, "repo": REPO}
     files = [f("src/a.py"), f("tests/test_a.py")] if files is None else files
+    pr = {"number": 7, "title": TITLE, "body": body, "head": HEAD, "repo": REPO, "changed_files": len(files)}
     comments = [verdict()] if comments is None else comments
     issue = {"number": 12, "body": issue_body()} if issue == "default" else issue
     return merge.check(pr, files, as_comments(comments), issue, cfg())
@@ -131,6 +138,10 @@ def test_refuses_protected_paths(files, path):
     ([verdict(), "**Verdict**: changes"], "**Verdict**: changes"),
     ([verdict(), "Thanks.\nVerdict: changes @ " + HEAD[:7]], "Thanks."),
     ([verdict(), "Review done.\n\nOverall verdict : needs work"], "Review done."),
+    ([verdict(), "Verdict：changes @ " + HEAD[:7]], "Verdict：changes"),
+    ([verdict(), "Verdict - changes"], "Verdict - changes"),
+    ([verdict(), "The verdict is changes, see inline."], "The verdict is changes"),
+    ([verdict(), "Verdict:  pass @ " + HEAD[:7]], "Verdict:  pass"),
     # A pass that is not on the first line does not count.
     (["See below.\nVerdict: pass @ " + HEAD], "See below."),
     (["verdict: pass @ " + HEAD[:7]], "verdict: pass"),
@@ -156,6 +167,30 @@ def test_latest_verdict_wins(comments):
     assert run(comments=comments) == []
 
 
+def test_timeline_orders_by_time_not_by_list_position():
+    review_pass = {"body": verdict(), "html_url": "review-1", "at": at(9)}
+    comment_changes = {"body": verdict("changes"), "html_url": "comment-1", "at": at(5)}
+    assert run(comments=[review_pass, comment_changes]) == []
+    comment_changes["at"] = at(10)
+    reasons = run(comments=[review_pass, comment_changes])
+    assert len(reasons) == 1 and "comment-1" in reasons[0]
+
+
+def test_timeline_tie_refuses_unless_all_pass():
+    a = {"body": verdict(), "html_url": "a", "at": at(3)}
+    b = {"body": verdict("changes"), "html_url": "b", "at": at(3)}
+    for order in ([a, b], [b, a]):
+        reasons = run(comments=order)
+        assert len(reasons) == 1 and " b " in reasons[0]
+
+
+def test_refuses_truncated_file_list():
+    pr = {"number": 7, "title": TITLE, "body": BODY, "head": HEAD, "repo": REPO, "changed_files": 3001}
+    reasons = merge.check(pr, [f("src/a.py")] * 3000, as_comments([verdict()]),
+                          {"number": 12, "body": issue_body()}, cfg())
+    assert len(reasons) == 1 and "3001" in reasons[0] and "3000" in reasons[0]
+
+
 def test_reasons_are_collected():
     reasons = run(files=[f("AGENTS.md"), f(".github/x.yml")], comments=[],
                   issue={"number": 12, "body": issue_body("human")})
@@ -177,7 +212,7 @@ if args[:2] == ["pr", "merge"]:
     sys.exit(0)
 assert args[0] == "api", args
 path = args[1]
-if path.endswith(("/files", "/comments")):
+if path.endswith(("/files", "/comments", "/reviews")):
     assert "--paginate" in args and "--slurp" in args, args
 if path not in data:
     sys.stderr.write("gh: Not Found (HTTP 404)\n")
@@ -197,13 +232,21 @@ def source(rel, text=None):
     return {f"repos/o/r/contents/{rel}?ref=main": contents(data)}
 
 
-def responses(merge_value="agent", comments=None, files=None, body=BODY):
+def responses(merge_value="agent", comments=None, files=None, body=BODY, reviews=(), inline=()):
+    files = files or [f("tests/b.py", "renamed", prev="tests/a.py")]
     return {
         "repos/{owner}/{repo}/pulls/7": {"number": 7, "title": TITLE, "body": body, "head": {"sha": HEAD},
+                                         "changed_files": 1 + len(files),
                                          "base": {"ref": "main", "repo": {"full_name": REPO}}},
-        "repos/o/r/pulls/7/files": [[f("src/a.py")], files or [f("tests/b.py", "renamed", prev="tests/a.py")]],
-        "repos/o/r/issues/7/comments": [[{"body": "first", "html_url": "u0"}],
-                                        [{"body": c, "html_url": "u1"} for c in (comments or [verdict()])]],
+        "repos/o/r/pulls/7/files": [[f("src/a.py")], files],
+        "repos/o/r/issues/7/comments": [[{"body": "first", "html_url": "u0", "created_at": at(0)}],
+                                        [{"body": c, "html_url": "u1", "created_at": at(1)}
+                                         for c in (comments or [verdict()])]],
+        # Reviews carry `submitted_at`; a pending review has none.
+        "repos/o/r/pulls/7/reviews": [[{"body": b, "html_url": f"r{i}", "submitted_at": t}
+                                       for i, (b, t) in enumerate(reviews)]],
+        "repos/o/r/pulls/7/comments": [[{"body": b, "html_url": f"c{i}", "created_at": t}
+                                        for i, (b, t) in enumerate(inline)]],
         "repos/o/r/issues/12": {"number": 12, "body": issue_body(merge_value)},
         **source(".github/guard.toml"), **source(".github/scripts/guard.py"), **source(".github/scripts/merge.py"),
     }
@@ -252,6 +295,42 @@ def test_main_refuses_later_bold_changes(tmp_path):
     assert p.returncode == 2 and merge_calls(calls) == []
 
 
+@pytest.mark.parametrize("channel", ["reviews", "inline"])
+def test_main_refuses_later_changes_in_review_channels(tmp_path, channel):
+    later = [("Verdict: changes @ " + HEAD[:7], at(5))]
+    p, calls = run_main(tmp_path, responses(**{channel: later}))
+    assert p.returncode == 2, p.stdout + p.stderr
+    assert merge_calls(calls) == [] and ("r0" if channel == "reviews" else "c0") in p.stdout
+
+
+def test_main_ignores_older_review_changes(tmp_path):
+    p, calls = run_main(tmp_path, responses(comments=["no verdict here"],
+                                            reviews=[("Verdict: changes @ " + OLD[:7], at(0)), (verdict(), at(4))],
+                                            inline=[("nit: verdict pending", at(2))]))
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert len(merge_calls(calls)) == 1
+
+
+def test_main_pass_only_in_review(tmp_path):
+    p, calls = run_main(tmp_path, responses(comments=["thanks"], reviews=[("", at(2)), (verdict(), at(3))]))
+    assert p.returncode == 0, p.stdout + p.stderr
+    (tmp_path / "bold").mkdir()
+    p, calls = run_main(tmp_path / "bold", responses(comments=["thanks"], reviews=[("**" + verdict() + "**", at(3))]))
+    assert p.returncode == 2 and merge_calls(calls) == []
+
+
+def test_main_pending_review_verdict_refuses(tmp_path):
+    p, calls = run_main(tmp_path, responses(reviews=[("Verdict: changes", None)]))
+    assert p.returncode == 2 and merge_calls(calls) == []
+
+
+def test_main_truncated_file_list(tmp_path):
+    data = responses()
+    data["repos/{owner}/{repo}/pulls/7"]["changed_files"] = 3001
+    p, calls = run_main(tmp_path, data)
+    assert p.returncode == 2 and merge_calls(calls) == [] and "3001" in p.stdout
+
+
 def test_main_merge_failure(tmp_path):
     data = responses()
     data["merge_fails"] = True
@@ -279,13 +358,13 @@ def test_main_other_repo_ref(tmp_path):
 
 
 @pytest.mark.parametrize("rel", [".github/scripts/merge.py", ".github/scripts/guard.py"])
-def test_main_refuses_local_script_differing_from_base(tmp_path, rel):
+def test_main_stale_local_copy_is_a_usage_error(tmp_path, rel):
     data = responses()
     data.update(source(rel, (ROOT / rel).read_text() + "# changed on main\n"))
     p, calls = run_main(tmp_path, data)
-    assert p.returncode == 2, p.stdout + p.stderr
+    assert p.returncode == 1, p.stdout + p.stderr
     assert merge_calls(calls) == []
-    assert rel in p.stdout and p.stdout.strip().splitlines()[-1] == "等人合并"
+    assert rel in p.stdout and "git pull" in p.stdout and "等人合并" not in p.stdout
 
 
 def test_main_source_read_fails(tmp_path):

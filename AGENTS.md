@@ -17,15 +17,15 @@
 - Stop only at the target, at a gate, or at a blocker; otherwise keep going.
 - Stop at these four gates even when everything works:
   1. New or changed approved work: publishing a plan; changing a task's Goal, Scope, Acceptance or Merge; changing a protected path.
-  2. Merging, unless the task says `Merge: agent`. Then merge once merge-ready with `python .github/scripts/merge.py N`, which refuses protected paths and unreviewed heads. Otherwise, or if it refuses, the merge-ready PR is the request: add no label or blocker comment.
+  2. Merging, unless the task says `Merge: agent`. Then merge once merge-ready with `python .github/scripts/merge.py <PR>`, which refuses protected paths and unreviewed heads. Otherwise, or if it refuses, the merge-ready PR is the request: add no label or blocker comment.
   3. Exceeding a budget: tokens, time or GPU hours.
   4. Concluding and closing a study.
 - An explicit instruction from the user approves what it names; do not ask again.
 - Record each decision as an issue comment: `Decision: <choice> — <one-line reason>`.
 
 ## Blockers
-- Stop and ask when a gate is reached, the same failure happens 3 times in a row, or an ambiguity would change the deliverable.
-- Handle without asking: test or CI failures, merge conflicts, infra retries, bugs inside Scope, and review findings: fix them, then get a fresh review of the new head, until it passes.
+- Stop and ask when a gate is reached, the same failure happens 3 times in a row, three `changes` verdicts come in a row, or an ambiguity would change the deliverable.
+- Handle without asking: test or CI failures, merge conflicts, infra retries, bugs inside Scope, and a `changes` verdict: fix its findings, then get a fresh review of the new head. A pass ends the loop; minor findings that come with it stay as comments for the human.
 - For a bug outside Scope, open a new issue and keep working; keep the fix out of the current PR.
 - Ask once per blocker, with evidence, at most 3 options and a recommendation.
 - If the user is in the session, ask there. Otherwise add `needs-decision`, post the blocker comment, and move on to other ready work.
