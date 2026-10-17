@@ -25,7 +25,7 @@
 
 ## Blockers
 - Stop and ask when a gate is reached, the same failure happens 3 times in a row, three `changes` verdicts come in a row, or an ambiguity would change the deliverable.
-- Handle without asking: test or CI failures, merge conflicts, infra retries, bugs inside Scope, and a `changes` verdict: fix its findings, then get a fresh review of the new head. A pass ends the loop; fix its minor findings inside Scope and get one more fresh review, then post one PR comment proposing for each remaining minor a new issue, an existing issue or no action. The human's merge instruction approves the proposals (under `Merge: agent`, the instruction naming the task does), and the agent that merges carries them out.
+- Handle without asking: test or CI failures, merge conflicts, infra retries, bugs inside Scope, and a `changes` verdict: fix its findings, then get a fresh review of the new head. A pass ends the loop; fix its minor findings inside Scope and, if you pushed fixes, get one more fresh review; then post one PR comment proposing for each remaining minor a new issue, an existing issue or no action. The human's merge instruction approves the proposals (under `Merge: agent`, the instruction naming the task does), and the agent that merges carries them out.
 - For a bug outside Scope, open a new issue and keep working; keep the fix out of the current PR.
 - Ask once per blocker, with evidence, at most 3 options and a recommendation.
 - If the user is in the session, ask there. Otherwise add `needs-decision`, post the blocker comment, and move on to other ready work.

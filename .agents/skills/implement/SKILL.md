@@ -79,10 +79,10 @@ the newest `Verdict:` comment (`gh pr view <PR> --comments`) names the current h
 (`gh pr view <PR> --json headRefOid -q .headRefOid`).
 - `changes`: fix its findings, rerun Acceptance, push, and get a fresh review of the new head.
   Three `changes` in a row is a blocker (AGENTS.md Blockers).
-- `pass` with minor findings: fix the ones inside Scope, push, and get ONE more fresh review
-  (a `changes` there returns to the line above). Then post one PR comment listing every
-  remaining minor with a proposal: a new issue, an existing issue #M, or no action, each with a
-  one-line reason. Its first line must not start with `Verdict:`.
+- `pass` with minor findings: fix the ones inside Scope. If you pushed fixes, get ONE more
+  fresh review (a `changes` there returns to the line above); otherwise go straight on. Then
+  post one PR comment listing every remaining minor with a proposal: a new issue, an existing
+  issue #M, or no action, each with a one-line reason. Its first line must not start with `Verdict:`.
 
 ```
 gh pr comment <PR> --body "$(cat <<'EOF'

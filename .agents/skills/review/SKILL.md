@@ -84,11 +84,14 @@ out=$(codex exec review "Review the changes of this branch against origin/main \
 ```
 
   Its stdout is the review: a summary and findings tagged `[P0]`–`[P3]`. Any `[P0]` or `[P1]`
-  finding means `changes`, otherwise `pass`. The session that ran it posts `$out` verbatim
-  under the Verdict line:
+  finding means `changes`, otherwise `pass`. In the checkout Codex reviewed, compare its SHA
+  with the PR head; if they differ, review the current head instead. The session that ran it
+  posts `$out` verbatim under the Verdict line, with the reviewed SHA:
 
 ```
-gh pr comment <PR> --body "$(printf 'Verdict: %s @ %s\n\n%s\n' "<pass|changes>" "<full head SHA>" "$out")"
+sha=$(git rev-parse HEAD)
+gh pr view <PR> --json headRefOid -q .headRefOid   # must equal $sha
+gh pr comment <PR> --body "$(printf 'Verdict: %s @ %s\n\n%s\n' "<pass|changes>" "$sha" "$out")"
 ```
 
 A pre-PR review in the implementer's inner loop gets only the issue number and the diff, uses

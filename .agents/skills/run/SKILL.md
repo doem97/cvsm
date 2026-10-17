@@ -91,7 +91,8 @@ Then clean up from the main clone:
 
 ```
 git worktree remove ../worktrees/N-<slug>
-git push origin --delete t/N-<slug>
+git branch -D t/N-<slug>
+git ls-remote --exit-code --heads origin t/N-<slug> && git push origin --delete t/N-<slug>
 ```
 
 ## 6. Report
