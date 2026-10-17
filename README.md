@@ -63,7 +63,7 @@ harness 刻意不做的事：
 | `.github/workflows/guard.yml` | 用 `pull_request_target` 跑 guard，代码取自 main，不执行 PR 里的代码 |
 | `.github/workflows/test.yml` | 在 PR 和推到 main 时跑项目测试 |
 | `scripts/run.py` | Run 命令的参考实现：跑一条命令，记成一个 MLflow run，可选按 GPU 排队 |
-| `scripts/results.py` | 从一个 issue 的运行记录生成结果表 |
+| `scripts/results.py` | 从一个或几个 issue 的运行记录生成结果表，并按研究规格逐个核对 run |
 | `scripts/run.toml` | run.py 的配置：MLflow 实验名、环境锁、数据清单、seed 参数名、GPU 列表、GPU 锁目录 |
 | `scripts/setup.sh` | 一次性设置仓库：label、合并方式、main 的分支保护 |
 | `tests/` | 以上脚本和规则文件的测试 |
@@ -83,6 +83,7 @@ git -C <rh clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts 
 再把 `.gitignore` 的几行并进去；`tests/` 里用不上的测试可以删掉。记下复制自 rh 的哪个 commit（`git -C <rh clone> rev-parse HEAD`），写进接入提交的信息，以后好对照 rh 的改进同步。
 - 改 `.github/guard.toml`：`layout` 加上你的目录（如 `src/**`、`configs/**`）和项目会改的根目录文件（如 `pyproject.toml`、`uv.lock` 等锁文件、`.python-version`），漏了的话改依赖的 PR 会被 guard 拒收；`protected` 加上评测和数据路径，`markdown` 按需调整。
 - 改 `scripts/run.toml`：`experiment`、`env_lock`（你的锁文件）、`gpus`。数据目录通常被 git 忽略，数据指纹因此来自一个被跟踪的数据清单：记着各数据文件校验和的文件（例如 `sha256sum` 的输出存成 `data.sha256`）。把它相对仓库根目录的路径写进 `data_manifest`，并加进 guard.toml 的 `layout` 和 `protected`。
+- 让训练代码在启动时把解析后的完整配置写成 JSON 对象，存到 `$RUN_DIR/config.json`（只由一个进程写，例如 rank 0）：所有可能影响结果的设置都要在里面，包括推导出来的，例如有效 batch。研究规格里的键就是这份配置展开后的点号键（如 `optim.lr`），结果命令靠它核对每个 run 是否符合规格。
 - 几个用户共用一台机器、`TMPDIR` 又按用户区分时，默认的 GPU 锁目录各在各的 `TMPDIR` 下，互相看不见；把 run.toml 的 `lock_dir` 设成他们都能写的同一个本机目录。
 - 已有的 CLAUDE.md：只把项目事实压缩进 AGENTS.md 的 Project 一节（每个字段一行），其余内容挪到 `docs/` 或代码注释里，然后删掉 CLAUDE.md：harness 只认 AGENTS.md，guard 会拒收别处的 `.md`。
 
@@ -94,7 +95,7 @@ git -C <rh clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts 
 - `Run`：Run 命令和结果评论命令。run 在新建的 worktree（`../worktrees/N-<slug>`）里启动，那里没有被忽略的 `.venv` 和数据目录，所以命令要在新 worktree 里直接能用，环境里既有项目依赖又有 MLflow。用 uv 时，把 `mlflow-skinny`、`sqlalchemy`、`alembic` 放进 dev 依赖组（`uv add --dev`；`uv run` 默认带上 dev 组），写成 `uv run python scripts/run.py --issue N -- <cmd>`，结果命令同样写成 `uv run python scripts/results.py --issue N`（results.py 也要 MLflow）。数据用绝对路径、环境变量或被跟踪的软链找到；
 - `Run records`：运行记录写到哪个 MLflow 后端。
 
-**3. 安装 CI 依赖。** 改 `.github/workflows/test.yml` 里的 `pip install` 一行，装上你项目的依赖和测试工具，测试命令与 AGENTS.md 的 `Test` 一致；项目用 uv 时，CI 也可以用 pip 装依赖、跑同一套测试。复制来的规则、skill 和 guard 测试需要 `pyyaml`；如果保留 `scripts/run.py` 的测试，还要装 MLflow（模板里装的是 `mlflow-skinny`，加上 SQLite 需要的 `sqlalchemy` 和 `alembic`）。CI 的 runner 没有 GPU：锁文件里是 CUDA 版 torch 时，CI 里改装 CPU 版（`pip install torch --index-url https://download.pytorch.org/whl/cpu`）。job 名 `guard` 和 `test` 不要改，分支保护按这两个名字认检查。
+**3. 安装 CI 依赖。** 改 `.github/workflows/test.yml` 里的 `pip install` 一行，装上你项目的依赖和测试工具，测试命令与 AGENTS.md 的 `Test` 一致；项目用 uv 时，CI 也可以用 pip 装依赖、跑同一套测试。复制来的规则、skill 和 guard 测试需要 `pyyaml`；如果保留 `scripts/run.py` 的测试，还要装 MLflow（模板里装的是 `mlflow-skinny`，加上 SQLite 需要的 `sqlalchemy` 和 `alembic`）。CI 的 runner 没有 GPU：锁文件里是 CUDA 版 torch 时，CI 里改装 CPU 版，而且要在装项目依赖之前先装（`pip install torch --index-url https://download.pytorch.org/whl/cpu`），因为已经装上的 CUDA 版不会被后装的替换。job 名 `guard` 和 `test` 不要改，分支保护按这两个名字认检查。
 
 **4. 推到 main，再以管理员身份运行 `scripts/setup.sh`。** 默认分支需要叫 `main`（老仓库是 `master` 的，先在 GitHub 上改名），setup.sh、guard 和各个 skill 都按 main 写。先把以上改动作为一个接入提交直接推到 main：guard 用 `pull_request_target`，跑的是 main 上的版本；main 上还没有 `guard` 和 `test` 两个 workflow 时，必过检查会卡住所有 PR。这是 AGENTS.md 里"never push to main"唯一的例外，只在加保护之前做这一次。推上去后 `test` workflow 会在 main 上跑一次，到 Actions 页面确认 CI 通过。然后在仓库根目录、用人的管理员账号（不是机器账号）的 gh 登录运行：
 
@@ -128,20 +129,21 @@ bash scripts/setup.sh owner/repo
 
 skill、guard、merge.py 和结果评论都依赖下面这些接口。适配时只换实现，不改它们的形状：
 
-**Run 命令的形状**：`<run> --issue N [options] -- <cmd>`。run issue 的每行 Runs 是 `<cmd>` 或 `<选项> -- <cmd>`：`run` skill 把选项（如 `--gpus 4`）放在 `--` 之前，命令原样放在 `--` 之后。结果命令的形状是 `<results> --issue N [--metric M ...]`。两者的实际命令写在 AGENTS.md 的 `Run` 一行。
+**Run 命令的形状**：`<run> --issue N [options] -- <cmd>`。run issue 的每行 Runs 是 `<cmd>` 或 `<选项> -- <cmd>`：`run` skill 把选项（如 `--gpus 4`）放在 `--` 之前，命令原样放在 `--` 之后。结果命令的形状是 `<results> --issue N [N ...] [--metric M ...] [--spec FILE]`：`--spec` 读研究 issue 的正文，FILE 为 `-` 时从标准输入读，例如 `gh issue view P --json body -q .body | <results> --issue N --spec -`。两者的实际命令写在 AGENTS.md 的 `Run` 一行。
 
 **运行记录**：每次运行是一个 MLflow run（字段以 `scripts/run.py` 开头的说明为准）：
 - `rh.*` 参数（写入后不能改）：创建时写 `rh.issue`、`rh.command`、`rh.seed`、`rh.host`；启动前写 `rh.commit`、`rh.dirty`、`rh.env_lock_sha`、`rh.env_lock_missing`、`rh.data_manifest_sha`、`rh.gpus`；结束时写 `rh.exit_code`。没有的值写空字符串，列表用逗号连接。
+- `cfg.*` 参数：命令写的 `$RUN_DIR/config.json` 一能解析成 JSON 对象就记一次，命令还在跑时就记，所以运行中的 run 也能核对；文件到结束时才出现的，在结束时记。嵌套对象展开成点号键 `cfg.<键>`，字符串原样记，其他值记成 JSON；超过 MLflow 长度上限的键和值截断到上限，完整内容看产物 `config.json`。
 - tag `mlflow.source.git.commit`。
-- 产物：工作区不干净时有 `diff.patch`（`git diff HEAD`）和 `untracked.txt`；命令的输出 `log.txt`；命令写进 `$RUN_DIR` 的所有文件。`$RUN_DIR/metrics.json`（扁平的 `{名字: 数值}`）记成指标；训练代码也可以用 MLflow 的标准 API 记指标，`MLFLOW_RUN_ID` 让它接到同一个 run。
+- 产物：工作区不干净时有 `diff.patch`（`git diff HEAD`）和 `untracked.txt`；命令的输出 `log.txt`；命令写进 `$RUN_DIR` 的所有文件，包括 `config.json`。`$RUN_DIR/metrics.json`（扁平的 `{名字: 数值}`）记成指标；训练代码也可以用 MLflow 的标准 API 记指标，`MLFLOW_RUN_ID` 让它接到同一个 run。
 - 最终状态：退出码 0 为 `FINISHED`，被信号停止为 `KILLED`，其他为 `FAILED`。
 - 后端由 `MLFLOW_TRACKING_URI` 决定；不设时用主 clone 根目录下的 `mlflow.db`，产物放在旁边的 `mlartifacts/`。实验名取 `MLFLOW_EXPERIMENT_NAME`，否则取 `scripts/run.toml` 的 `experiment`。
 - 记录不改不删，不运行 `mlflow gc`。
 
-**结果评论**：run issue 结束时贴一条评论：一段说明加结果命令生成的表，表原样粘贴。表按去掉 seed 的命令分组，给出 n、失败数、每个指标的均值和标准差，以及 commit、环境锁和数据的指纹；组间 commit、环境或数据不同要标出来，commit 不同时附 `git diff --stat`；成功但没有指标、未完成和已删除的 run 也列出来。
+**结果评论**：run issue 结束时贴一条评论：一段说明加结果命令生成的输出，原样粘贴。表按去掉 seed 的命令分组，给出 n、失败数、每个指标的均值和标准差，以及 commit、环境锁和数据的指纹，给了规格时还有每组所属的 arm；组间 commit、环境或数据不同要标出来，commit 不同时附 `git diff --stat`；成功但没有指标、未完成和已删除的 run 也列出来。之后是 `规格核对` 一节，按规格的原话列出所选 run（含还在跑的）的事实：Controlled 不成立或没记录该键（`未记录`）的 run；不属于任何 arm 或属于多个 arm 的 run；缺 `in` 行某些取值的 arm；不在任何一节、取值却不同的键（`未声明的差异`）；没有 run 的 arm；读不懂的规格行；以及各 Adaptable 键在每个 arm 的取值。没给规格或没有偏差时，也会写明。
 
 **issue 表单的各节**：guard、merge.py 和 skill 按 `### ` 标题读正文，标题名不能改：
-- `study`：Question、Comparison、Criteria、Budget、Context；
+- `study`：Question、Arms、Controlled、Adaptable、Criteria、Budget、Context。结果命令按行读规格三节，每行一项，行尾可加 `  # <注释>`：Arms 每行 `<arm>: <键>=<值> ...`；Controlled 每行 `<键>=<值>  # <理由>` 或 `<键> in <值1>,<值2>,...  # <理由>`，理由必填；Adaptable 每行 `<键>  # <规则>`，可以留空。值能解析成 JSON 时按 JSON 比较，否则按字符串比较；
 - `code`：Goal、Scope、Acceptance、Budget、Merge（human 或 agent，默认 human）；
 - `run`：Runs、Budget、Report。
 

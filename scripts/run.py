@@ -26,6 +26,16 @@ go to $RUN_DIR/log.txt, and a flat {name: number} $RUN_DIR/metrics.json is logge
 so training code need not import mlflow. RUN_DIR is removed after the upload, or kept and
 printed if the upload fails.
 
+The command writes its resolved config, every setting that can affect results, as a JSON
+object to $RUN_DIR/config.json at start (from one process only, e.g. rank 0). run.py looks for
+it every POLL_SECONDS while the command runs and logs it once, as soon as it parses as a JSON
+object, so a running run can already be checked against its study's spec; a file that only
+appears by the end is logged then, before the upload. Its settings become params
+cfg.<dotted key>: nested objects flatten to dotted keys (an empty one is the value {}), strings
+are logged as they are and other values as JSON. Keys and values longer than MLflow's limits
+(250 and 6000 characters in MLflow 3) are truncated to them, as MLflow's autologging does; the
+file itself is uploaded with the other RUN_DIR files.
+
 The final status is FINISHED for exit 0, KILLED when a signal stopped the command, and FAILED
 otherwise (127 when it cannot start). The exit status is the command's own; signal S gives
 128 + S, and rh.exit_code records -S.
@@ -66,11 +76,14 @@ try:
     from mlflow import MlflowClient
     from mlflow.entities import Metric, Param, RunTag
     from mlflow.exceptions import MlflowException
+    from mlflow.utils.validation import (MAX_ENTITY_KEY_LENGTH, MAX_PARAM_VAL_LENGTH,
+                                         MAX_PARAMS_TAGS_PER_BATCH)
 except ImportError:
     sys.exit(f"{Path(sys.argv[0]).name}: mlflow is not installed "
              "(pip install mlflow, or mlflow-skinny with sqlalchemy and alembic)")
 
 RETRY_SECONDS = 30
+POLL_SECONDS = 0.5  # how often a running command's RUN_DIR is checked for config.json
 
 
 def git(*args, raw=False):
@@ -236,6 +249,32 @@ def experiment_id(client, name, uri):
         raise
 
 
+def flatten(cfg, prefix="cfg."):
+    """(cfg.<dotted key>, value) pairs: strings as they are, other values as JSON."""
+    for k, v in cfg.items():
+        if isinstance(v, dict) and v:
+            yield from flatten(v, f"{prefix}{k}.")
+        else:
+            yield prefix + k, v if isinstance(v, str) else json.dumps(v, ensure_ascii=False)
+
+
+def log_config(client, run_id, run_dir):
+    """Log $RUN_DIR/config.json as cfg.* params once it is a JSON object; True once done."""
+    try:
+        cfg = json.loads((run_dir / "config.json").read_bytes())
+    except (OSError, ValueError):
+        return False
+    if not isinstance(cfg, dict):
+        return False
+    ps = [Param(k[:MAX_ENTITY_KEY_LENGTH], v[:MAX_PARAM_VAL_LENGTH]) for k, v in flatten(cfg)]
+    try:
+        for i in range(0, len(ps), MAX_PARAMS_TAGS_PER_BATCH):
+            client.log_batch(run_id, params=ps[i:i + MAX_PARAMS_TAGS_PER_BATCH])
+    except Exception as e:
+        print(f"run.py: cannot log config.json of run {run_id}: {e}", file=sys.stderr)
+    return True
+
+
 def upload(client, run_id, run_dir):
     """Log metrics.json and every file in run_dir; remove run_dir once all of it is stored."""
     try:
@@ -331,6 +370,7 @@ def main(argv):
     env = dict(os.environ, MLFLOW_RUN_ID=run_id, MLFLOW_TRACKING_URI=uri, RUN_DIR=str(run_dir))
     if ids:
         env["CUDA_VISIBLE_DEVICES"] = ",".join(str(i) for i, _ in held)
+    logged = False  # config.json
     with open(run_dir / "log.txt", "wb") as log:
         try:
             child = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=env,
@@ -342,10 +382,17 @@ def main(argv):
             for sig in pending:  # arrived while Popen ran, before the handler could see child
                 if sig != signal.SIGINT:
                     child.send_signal(sig)
-            code = child.wait()
+            while True:
+                try:
+                    code = child.wait(POLL_SECONDS)
+                    break
+                except subprocess.TimeoutExpired:
+                    logged = logged or log_config(client, run_id, run_dir)
     for _, fd in held:
         os.close(fd)
 
+    if not logged:
+        log_config(client, run_id, run_dir)
     upload(client, run_id, run_dir)
     try:
         client.log_batch(run_id, params=params(exit_code=code))

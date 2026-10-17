@@ -3,6 +3,7 @@ import shlex
 import signal
 import subprocess
 import sys
+import time
 
 from run_record_helpers import RESULTS, wait_for
 
@@ -48,12 +49,114 @@ def test_single_seed_shows_dash_for_std(repo):
     assert (row["n"], row["acc 均值"], row["acc 标准差"]) == ("1", "4", "—")
 
 
-def finished(repo, start, **rh):
-    """A successful run of `python t.py` recorded directly; rh overrides its rh.* params."""
+def finished(repo, start, cfg=None, **rh):
+    """A successful run of `python t.py` recorded directly; rh overrides its rh.* params and cfg
+    gives its cfg.* params."""
     params = {"issue": "5", "command": "python t.py", "seed": str(start), "host": "h", "commit": "0" * 40,
               "dirty": "false", "env_lock_sha": "e" * 64, "env_lock_missing": "",
               "data_manifest_sha": "", "gpus": "", "exit_code": "0"}
-    return repo.record(start, metrics={"acc": 1.0}, **(params | rh))
+    return repo.record(start, metrics={"acc": 1.0}, cfg=cfg, **(params | rh))
+
+
+def spec_check(out):
+    return out.split("\n规格核对：\n", 1)[1]
+
+
+SPEC = """### Question
+
+Does b beat a?
+
+### Arms
+
+base: method=a
+ours: method=b  # the change under study
+deep: method=b depth=2
+c: method=c
+broken line
+
+### Controlled
+
+lr=0.1  # paper X, table 3
+seed in 1,2  # two seeds, as in #12
+optim.name="adamw"  # a JSON string equals the plain value
+wd=0
+
+### Adaptable
+
+batch  # per-device; the effective batch is fixed
+
+### Criteria
+
+b > a by 1 point
+"""
+
+
+def test_spec_check_lists_each_deviation(repo, tmp_path):
+    common = {"lr": "0.1", "optim.name": "adamw", "batch": "32", "warmup": "100"}
+    r1 = finished(repo, 1000, cfg=common | {"method": "a", "seed": "1"})
+    r2 = finished(repo, 2000, cfg=common | {"method": "a", "seed": "2.0", "lr": "0.10", "batch": "64"})
+    r3 = finished(repo, 3000, cfg=common | {"method": "b", "seed": "1", "lr": "0.2"})
+    r4 = finished(repo, 4000, cfg=common | {"method": "b", "depth": "2", "seed": "1", "warmup": "200"})
+    r5 = finished(repo, 5000, cfg={"method": "d", "lr": "0.1", "seed": "3", "batch": "16", "warmup": "100"})
+    (tmp_path / "spec.md").write_text(SPEC)
+    out = repo.results("--spec", str(tmp_path / "spec.md"))
+    assert table(out)["python t.py"]["arm"] == "base、ours、deep、无"
+    assert "\n标注：\n- 无\n" in out  # the flags are unchanged
+    assert spec_check(out) == f"""- 读不懂的规格行：Arms：broken line
+- 读不懂的规格行：Controlled：wd=0
+- `lr=0.1` 不成立：1 个 run，{r3}（0.2）
+- `seed in 1,2` 不成立：1 个 run，{r5}（3）
+- `optim.name="adamw"`：1 个 run 未记录 `optim.name`：{r5}
+- 1 个 run 不属于任何 arm：{r5}
+- 1 个 run 属于多个 arm：{r4}（ours、deep）
+- arm ours 缺 `seed in 1,2` 的取值：2
+- arm deep 缺 `seed in 1,2` 的取值：2
+- 未声明的差异 `warmup`：100（4 个 run）、200（1 个 run）
+- 没有 run 的 arm：c
+- Adaptable `batch`：base 取 32（1 个 run）、64（1 个 run）；ours 取 32（2 个 run）；deep 取 32（1 个 run）
+"""
+    assert r1 not in spec_check(out) and r2 not in spec_check(out)
+
+
+def test_spec_from_stdin_without_deviations(repo):
+    spec = SPEC.replace("deep: method=b depth=2\nc: method=c\nbroken line\n", "").replace("wd=0\n", "")
+    spec = spec.replace("batch  # per-device; the effective batch is fixed", "_No response_")
+    for start, (method, seed) in enumerate([("a", 1), ("a", 2), ("b", 1), ("b", 2)]):
+        finished(repo, start, cfg={"method": method, "seed": str(seed), "lr": "0.1", "optim.name": "adamw"})
+    out = repo.results("--spec", "-", input=spec)
+    assert spec_check(out) == "- 没有偏差\n"
+    assert table(out)["python t.py"]["arm"] == "base、ours"
+
+
+def test_no_spec_is_said(repo):
+    finished(repo, 1000, cfg={"method": "a"})
+    out = repo.results()
+    assert spec_check(out) == "- 没有给出规格（--spec）\n" and "arm" not in table(out)["python t.py"]
+
+
+def recorded_config(repo, timeout=10):
+    deadline = time.time() + timeout
+    while not (cfg := {k: v for k, v in repo.only_run().data.params.items() if k.startswith("cfg.")}):
+        assert time.time() < deadline, "config.json was not logged"
+        time.sleep(0.05)
+    return cfg
+
+
+def test_a_running_run_is_checked_once_its_config_is_recorded(repo):
+    hold = repo.tmp / "release"
+    p = repo.start("config=1", "method=b", "seed=1", "hold=" + str(hold))
+    try:
+        wait_for(hold.with_suffix(".pid"))
+        assert recorded_config(repo)["cfg.method"] == "b"
+        run_id = repo.only_run().info.run_id
+        out = repo.results("--spec", "-", input="### Arms\n\nbase: method=a\n\n### Controlled\n\n"
+                                                "seed in 1,2  # two seeds\n")
+        assert spec_check(out) == f"- 1 个 run 不属于任何 arm：{run_id}\n- 没有 run 的 arm：base\n"
+        assert p.poll() is None and repo.only_run().info.status == "RUNNING"
+    finally:
+        hold.write_text("go")
+        p.communicate(timeout=30)
+    assert p.returncode == 0
 
 
 def test_different_commits_are_flagged_with_diff_stat(repo):
@@ -134,11 +237,14 @@ def test_other_issues_are_ignored(repo):
     assert [p.communicate(timeout=30) and p.returncode for p in procs] == [0, 0, 0]
     assert set(table(repo.results(issue=5))) == {group()}
     assert set(table(repo.results(issue=15))) == {group("method=b")}
+    out = repo.results(issue=[5, 15])
+    assert set(table(out)) == {group(), group("method=b")} and out.startswith("#5、#15 的结果：2 个 run")
 
 
 def test_no_runs_still_prints_a_table(repo):
     out = repo.results(issue=99)
-    assert "| 命令 |" in out and table(out) == {} and out.rstrip().endswith("标注：\n- 无")
+    assert "| 命令 |" in out and table(out) == {}
+    assert out.endswith("标注：\n- 无\n\n规格核对：\n- 没有给出规格（--spec）\n")
     out = repo.results(env={"MLFLOW_EXPERIMENT_NAME": "no-such-experiment"})
     assert "| 命令 |" in out and table(out) == {}
 

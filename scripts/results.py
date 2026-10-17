@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Print a Markdown results table for the MLflow runs of one issue.
+"""Print a Markdown results table for the MLflow runs of some issues, checked against a spec.
 
-    python scripts/results.py --issue N [--metric M ...] [--config scripts/run.toml]
+    python scripts/results.py --issue N [N ...] [--metric M ...] [--spec FILE] [--config scripts/run.toml]
+    gh issue view P --json body -q .body | python scripts/results.py --issue N --spec -
 
-Reads the runs whose rh.issue param is N, deleted ones included, from the experiment run.py
+Reads the runs whose rh.issue param is one of the Ns, deleted ones included, from the experiment run.py
 writes to (MLFLOW_EXPERIMENT_NAME, else `experiment` in run.toml) in the store it writes to
 (MLFLOW_TRACKING_URI, else <main clone>/mlflow.db). Runs are grouped by command with the seed
 tokens removed. Per group: n (runs that exited 0, which the statistics use), n_failed (runs
@@ -11,11 +12,26 @@ that ended any other way), and the mean and sample std of each metric's latest v
 Provenance differences (commit, env lock, data manifest), dirty trees, successful runs without
 metrics, incomplete runs (still RUNNING) and deleted runs are flagged; whether runs are
 comparable is for the reader to decide.
+
+The section 规格核对 checks every selected run, running ones included, against the study spec
+in FILE (a study issue's body; - reads stdin), using the cfg.* params run.py logs from
+config.json. It reads the lines of ### Arms (`<arm>: <key>=<value> ...`), ### Controlled
+(`<key>=<value>  # <reason>` or `<key> in <v1>,<v2>,...  # <reason>`) and ### Adaptable
+(`<key>  # <rule>`), and lists as facts: lines it cannot read; runs where a Controlled line
+does not hold or whose config lacks its key (未记录); runs matching no arm or several; arms
+missing values of an `in` line; keys in no section whose values differ across the runs that
+recorded a config; arms with no run; and the values each Adaptable key took per arm. Values
+compare as JSON when they parse as JSON (numbers by value), else as strings. With a spec, the
+table gains each group's arms.
 """
 import argparse
+import json
+import re
 import shlex
 import statistics
 import subprocess
+import sys
+from pathlib import Path
 
 from run import MlflowClient, experiment_name, load_config, num, split_seed, store_setup, tracking_uri
 from mlflow.entities import ViewType
@@ -43,39 +59,136 @@ def ids(runs):
     return ", ".join(r["id"] for r in runs)
 
 
+def norm(value):
+    """A value as it compares: canonical JSON when it parses as JSON (1 and 1.0 alike), else itself."""
+    try:
+        v = json.loads(value, parse_float=lambda x: int(f) if (f := float(x)).is_integer() else f)
+    except ValueError:
+        return value
+    return v if isinstance(v, str) else json.dumps(v, sort_keys=True)
+
+
+def read_spec(text):
+    """Arms {arm: {key: value}}, Controlled [(line, key, values)], Adaptable [key] and the lines
+    that cannot be read, from a study body; `  # ...` ends a line's item."""
+    spec, section = {"arms": {}, "controlled": [], "adaptable": [], "bad": []}, None
+    for line in text.splitlines():
+        if line.startswith("### "):
+            section = line[4:].strip()
+            continue
+        if section not in ("Arms", "Controlled", "Adaptable") or line.strip() in ("", "_No response_"):
+            continue
+        item, *note = re.split(r"\s+#", line.strip(), maxsplit=1)
+        if section == "Arms":
+            arm, colon, rest = item.partition(":")
+            pairs = [p.partition("=") for p in re.split(r"\s+(?=[^\s=]+=)", rest.strip())]
+            if colon and arm.strip() and all(k and eq for k, eq, _ in pairs):
+                spec["arms"][arm.strip()] = {k: v for k, _, v in pairs}
+                continue
+        elif section == "Controlled":
+            m = re.fullmatch(r"([^\s=]+)\s+in\s+(.+)|([^\s=]+)\s*=(.*)", item)
+            if m and note and note[0].strip():  # the reason is required
+                values = [v.strip() for v in m[2].split(",")] if m[1] else [m[4].strip()]
+                spec["controlled"].append((item, m[1] or m[3], values))
+                continue
+        elif re.fullmatch(r"[^\s=]+", item):
+            spec["adaptable"].append(item)
+            continue
+        spec["bad"].append(f"{section}：{line.strip()}")
+    return spec
+
+
+def tally(runs, key):
+    """The values runs took for key, equal ones merged: [`value（n 个 run）`]."""
+    seen = {}
+    for r in runs:
+        v = r["cfg"].get(key)
+        seen.setdefault(None if v is None else norm(v), ["未记录" if v is None else v, 0])[1] += 1
+    return [f"{v}（{n} 个 run）" for v, n in seen.values()]
+
+
+def check(spec, runs):
+    """The 规格核对 lines: deviations from the spec as facts, then the Adaptable values."""
+    if not spec:
+        return ["- 没有给出规格（--spec）"]
+    arms = spec["arms"]
+    out = [f"- 读不懂的规格行：{line}" for line in spec["bad"]]
+    for item, key, values in spec["controlled"]:
+        allowed = {norm(v) for v in values}
+        if missing := [r for r in runs if key not in r["cfg"]]:
+            out.append(f"- `{item}`：{len(missing)} 个 run 未记录 `{key}`：{ids(missing)}")
+        if wrong := [r for r in runs if key in r["cfg"] and norm(r["cfg"][key]) not in allowed]:
+            out.append(f"- `{item}` 不成立：{len(wrong)} 个 run，"
+                       + ", ".join(f"{r['id']}（{r['cfg'][key]}）" for r in wrong))
+    if none := [r for r in runs if not r["arms"]]:
+        out.append(f"- {len(none)} 个 run 不属于任何 arm：{ids(none)}")
+    if several := [r for r in runs if len(r["arms"]) > 1]:
+        out.append(f"- {len(several)} 个 run 属于多个 arm："
+                   + ", ".join(f"{r['id']}（{'、'.join(r['arms'])}）" for r in several))
+    member = {arm: [r for r in runs if arm in r["arms"]] for arm in arms}
+    for item, key, values in spec["controlled"]:
+        for arm, rs in member.items():
+            took = {norm(r["cfg"][key]) for r in rs if key in r["cfg"]}
+            if len(values) > 1 and rs and (lack := [v for v in values if norm(v) not in took]):
+                out.append(f"- arm {arm} 缺 `{item}` 的取值：{', '.join(lack)}")
+    declared = {k for kv in arms.values() for k in kv} | set(spec["adaptable"])
+    declared |= {key for _, key, _ in spec["controlled"]}
+    recorded = [r for r in runs if r["cfg"]]
+    for key in sorted({k for r in recorded for k in r["cfg"]} - declared):
+        if len(values := tally(recorded, key)) > 1:
+            out.append(f"- 未声明的差异 `{key}`：{'、'.join(values)}")
+    if empty := [arm for arm, rs in member.items() if not rs]:
+        out.append(f"- 没有 run 的 arm：{'、'.join(empty)}")
+    if len(out) == len(spec["bad"]):
+        out.append("- 没有偏差")
+    for key in spec["adaptable"]:
+        per = [f"{arm} 取 {'、'.join(tally(rs, key))}" for arm, rs in member.items() if rs]
+        out.append(f"- Adaptable `{key}`：{'；'.join(per) or '没有属于 arm 的 run'}")
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(prog="results.py")
-    ap.add_argument("--issue", type=int, required=True)
+    ap.add_argument("--issue", type=int, nargs="+", required=True)
     ap.add_argument("--metric", nargs="+", action="extend", help="metrics to show (default all)")
+    ap.add_argument("--spec", help="study issue body to check the runs against; - reads stdin")
     ap.add_argument("--config", default="scripts/run.toml")
     a = ap.parse_args()
     cfg = load_config(a.config)
+    spec = a.spec and read_spec(sys.stdin.read() if a.spec == "-" else Path(a.spec).read_text())
 
     uri = tracking_uri()
     with store_setup(uri):
         client = MlflowClient(uri)
         exp = client.get_experiment_by_name(experiment_name(cfg))
-    found = sorted(fetch(client, exp.experiment_id, a.issue) if exp else [], key=lambda r: r.info.start_time)
-    # One dict per run: the rh.* params without the prefix, plus status, deletion and metrics.
+    found = sorted((r for i in a.issue for r in fetch(client, exp.experiment_id, i)) if exp else [],
+                   key=lambda r: r.info.start_time)
+    # One dict per run: the rh.* params without the prefix, plus status, deletion, metrics and config.
     runs = [{k[3:]: v for k, v in r.data.params.items() if k.startswith("rh.")}
             | {"id": r.info.run_id, "status": r.info.status, "metrics": r.data.metrics,
-               "deleted": r.info.lifecycle_stage == "deleted"} for r in found]
+               "deleted": r.info.lifecycle_stage == "deleted",
+               "cfg": {k[4:]: v for k, v in r.data.params.items() if k.startswith("cfg.")}} for r in found]
     groups = {}
     for r in runs:
         r["ok"] = r.get("exit_code") == "0"
+        r["arms"] = [arm for arm, kv in spec["arms"].items() if all(
+            k in r["cfg"] and norm(r["cfg"][k]) == norm(v) for k, v in kv.items())] if spec else []
         cmd = split_seed(shlex.split(r.get("command", "")), cfg["seed_key"])[1]
         groups.setdefault(shlex.join(cmd), []).append(r)
     metrics = a.metric or sorted({m for r in runs for m, v in r["metrics"].items() if num(v)})
 
     # The table is read by people, so its text is Chinese; metric names and hashes stay as they are.
-    head = ["命令", "n", "失败数", *(f"{m} {s}" for m in metrics for s in ("均值", "标准差")),
-            "commit", "环境锁", "数据"]
-    out = [f"#{a.issue} 的结果：{len(runs)} 个 run，{len(groups)} 组，按去掉 seed 的命令分组。", "",
-           "| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    head = ["命令", *(["arm"] if spec else []), "n", "失败数",
+            *(f"{m} {s}" for m in metrics for s in ("均值", "标准差")), "commit", "环境锁", "数据"]
+    out = [f"{'、'.join(f'#{i}' for i in a.issue)} 的结果：{len(runs)} 个 run，{len(groups)} 组，"
+           "按去掉 seed 的命令分组。", "", "| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for cmd, rs in groups.items():
         ok = [r for r in rs if r["ok"]]
         failed = [r for r in rs if not r["ok"] and r["status"] != "RUNNING"]
-        row = ["`" + cmd.replace("|", "\\|") + "`", str(len(ok)), str(len(failed))]
+        row = ["`" + cmd.replace("|", "\\|") + "`"]
+        if spec:
+            row.append("、".join(dict.fromkeys(arm for r in rs for arm in r["arms"] or ["无"])))
+        row += [str(len(ok)), str(len(failed))]
         for m in metrics:
             v = [r["metrics"][m] for r in ok if num(r["metrics"].get(m))]
             row += [fmt(statistics.mean(v)) if v else "—", fmt(statistics.stdev(v)) if len(v) > 1 else "—"]
@@ -106,7 +219,7 @@ def main():
         flags.append(f"- {len(incomplete)} 个 run 未完成（还在跑或已被杀）：{ids(incomplete)}")
     if deleted := [r for r in runs if r["deleted"]]:
         flags.append(f"- {len(deleted)} 个 run 已在 MLflow 中删除，但仍计入上表：{ids(deleted)}")
-    print("\n".join(out + ["", "标注：", *(flags or ["- 无"])]))
+    print("\n".join(out + ["", "标注：", *(flags or ["- 无"]), "", "规格核对：", *check(spec, runs)]))
 
 
 if __name__ == "__main__":
