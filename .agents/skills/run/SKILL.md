@@ -97,11 +97,11 @@ gh issue close N --reason completed
 ```
 
 - Paste the table unedited. Do not drop, filter or reorder runs.
-- If all sub-issues of P are now closed, P awaits analysis (AGENTS.md State). Post on P, the
-  same way, the study-level table and check over all P's run issues, with their Report metrics:
+- If all `run` sub-issues of P are now closed, post on P, the same way, the study-level table
+  and check over all of them (P awaits analysis once all its sub-issues are closed):
 
 ```
-runs=$(gh api 'repos/{owner}/{repo}/issues/P/sub_issues' --jq '[.[] | select(any(.labels[]; .name == "run")) | .number] | join(" ")')
+runs=$(gh api --paginate 'repos/{owner}/{repo}/issues/P/sub_issues' --jq '[.[] | select(any(.labels[]; .name == "run")) | .number] | join(" ")')
 table=$(gh issue view P --json body -q .body | <results> --issue $runs --metric <Report metrics> --spec -)
 gh issue comment P --body "$(printf '%s\n\n%s\n' "<一行中文说明：本研究全部 run issue 的结果与规格核对>" "$table")"
 ```
