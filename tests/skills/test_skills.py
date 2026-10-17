@@ -138,11 +138,15 @@ def test_run_uses_project_commands():
 
 
 def test_run_checks_runs_against_study_spec():
-    # The study body is the spec; the check runs right after launch and in the results comment.
-    blocks = "".join(re.findall(r"^```[^\n]*\n(.*?)^```", skill_text("run"), re.M | re.S))
-    spec = "gh issue view P --json body -q .body | <results> --issue N"
-    assert f"{spec} --spec -\n" in blocks
-    assert f"{spec} --metric <Report metrics> --spec -)" in blocks
+    # The study body is the spec; the check runs right after launch, in the results comment,
+    # and over all the study's run issues once the study awaits analysis.
+    text = skill_text("run")
+    blocks = "".join(re.findall(r"^```[^\n]*\n(.*?)^```", text, re.M | re.S))
+    spec = "gh issue view P --json body -q .body | <results> --issue"
+    assert f"`{spec} N --spec -`" in text
+    assert f"{spec} N --metric <Report metrics> --spec -)" in blocks
+    assert f"{spec} $runs --metric <Report metrics> --spec -)" in blocks
+    assert "gh issue comment P --body" in blocks
 
 
 @pytest.mark.parametrize("name", ["implement", "review"])

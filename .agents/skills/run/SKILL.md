@@ -5,12 +5,10 @@ description: Use when doing a `run` issue, from claiming it and launching its Ru
 
 # run
 
-Take one `run` issue N from ready to closed: launch every Runs line through the Run command,
-stay within Budget, post the results comment and close N. AGENTS.md rules apply throughout;
-this skill adds the procedure. Below, `<run>` and `<results>` are the Run and results
-commands named on the `Run` line of AGENTS.md Project, the part before `--issue N`; use them
-exactly as written there. In this repo, for example, they are `python scripts/run.py` and
-`python scripts/results.py`; an adopting project may use `uv run ...` or a cluster launcher.
+Take one `run` issue N from ready to closed: launch every Runs line within Budget, post the
+results comment and close N. Below, `<run>` and `<results>` are the Run and results commands on
+the `Run` line of AGENTS.md Project, the part before `--issue N`, used exactly as written there
+(here `python scripts/run.py` and `python scripts/results.py`; elsewhere maybe a cluster launcher).
 
 ## 1. Claim and set up
 
@@ -50,9 +48,9 @@ earlier attempt ended in an infra failure (section 4).
 
 Before launching, check that each Runs line runs exactly one arm and that each arm this issue
 runs gets every value of each Controlled `in` line; otherwise it is a blocker (AGENTS.md
-Blockers). The study's run issues together run every arm (`--issue N1 N2` lists arms with no
-run). Launch each Runs line from the worktree root. A line is `<cmd>`, or `<options> -- <cmd>`
-when it carries options of the Run command such as `--gpus 4`; pass those through before `--`:
+Blockers); whether every arm runs is checked for the whole study (section 5). Launch each Runs
+line from the worktree root. A line is `<cmd>`, or `<options> -- <cmd>` when it carries options
+of the Run command such as `--gpus 4`; pass those through before `--`:
 
 ```
 <run> --issue N -- <cmd>
@@ -60,20 +58,15 @@ when it carries options of the Run command such as `--gpus 4`; pass those throug
 ```
 
 - The Run command records every run as an MLflow run (AGENTS.md Project, Run records) and
-  waits for the GPUs it needs (this repo's Run command leases them from `scripts/run.toml`),
-  so several lines may be launched at once. Use your tool's background execution for long
-  runs; stop one the way the Run command provides (this repo's: SIGTERM).
-- Right after launch, once the runs have recorded their configs (`cfg.*` params), run the check
-  below. Stop every running run that `规格核对` lists as breaking a Controlled `key=value` line,
-  not recording one, or matching no arm or several. A key under `未声明的差异` is a blocker; if
-  it can affect results, stop the runs first. Stopped runs stay recorded. Whether to relaunch a
-  stopped line follows section 4, or the human's answer to the blocker; note every stopped or
-  relaunched run for the results comment.
-
-```
-gh issue view P --json body -q .body | <results> --issue N --spec -
-```
-
+  waits for the GPUs it needs, so several lines may be launched at once. Use your tool's
+  background execution for long runs; stop one the way the Run command provides (here SIGTERM).
+- Right after launch, once the runs have recorded their configs (`cfg.*` params), run
+  `gh issue view P --json body -q .body | <results> --issue N --spec -`. Stop every running
+  run that `规格核对` lists as breaking a Controlled `key=value` line, not recording one, or
+  matching no arm or several. A key under `未声明的差异` is a blocker; if it can affect results,
+  stop the runs first. Stopped runs stay recorded. Whether to relaunch a stopped line follows
+  section 4, or the human's answer to the blocker; note every stopped or relaunched run for the
+  results comment.
 - Change an Adaptable setting only within its rule (e.g. a smaller per-device batch after an
   out-of-memory error); note each change, its run and reason for the results comment.
 - GPU hours used = the sum over this issue's runs, failed ones included, of wall time times
@@ -104,7 +97,14 @@ gh issue close N --reason completed
 ```
 
 - Paste the table unedited. Do not drop, filter or reorder runs.
-- If all sub-issues of P are now closed, P awaits analysis (AGENTS.md State).
+- If all sub-issues of P are now closed, P awaits analysis (AGENTS.md State). Post on P, the
+  same way, the study-level table and check over all P's run issues, with their Report metrics:
+
+```
+runs=$(gh api 'repos/{owner}/{repo}/issues/P/sub_issues' --jq '[.[] | select(any(.labels[]; .name == "run")) | .number] | join(" ")')
+table=$(gh issue view P --json body -q .body | <results> --issue $runs --metric <Report metrics> --spec -)
+gh issue comment P --body "$(printf '%s\n\n%s\n' "<一行中文说明：本研究全部 run issue 的结果与规格核对>" "$table")"
+```
 
 Then clean up from the main clone:
 
