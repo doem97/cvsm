@@ -25,7 +25,7 @@
 
 ## Blockers
 - Stop and ask when a gate is reached, the same failure happens 3 times in a row, three `changes` verdicts come in a row, or an ambiguity would change the deliverable.
-- Handle without asking: test or CI failures, merge conflicts, infra retries, bugs inside Scope, and a `changes` verdict: fix its findings, then get a fresh review of the new head. A pass ends the loop; minor findings that come with it stay as comments for the human.
+- Handle without asking: test or CI failures, merge conflicts, infra retries, bugs inside Scope, and a `changes` verdict: fix its findings, then get a fresh review of the new head. A pass ends the loop; fix its minor findings inside Scope and get one more fresh review, then post one PR comment proposing for each remaining minor a new issue, an existing issue or no action. The human's merge instruction approves the proposals, and the agent that merges carries them out.
 - For a bug outside Scope, open a new issue and keep working; keep the fix out of the current PR.
 - Ask once per blocker, with evidence, at most 3 options and a recommendation.
 - If the user is in the session, ask there. Otherwise add `needs-decision`, post the blocker comment, and move on to other ready work.
@@ -61,7 +61,7 @@
 - Before acting, read your issue, the code in its Scope and the interfaces that code uses; your skill lists the rest.
 - Write only to GitHub (issues, comments, PRs), to files in Scope and to run records; keep no memory, notes, docs or discussion.
 - Record decisions and conclusions on GitHub.
-- Get each review from a fresh session (`codex exec review --base main`, or a fresh subagent) whose only input is the issue and the diff; never pass it your summary or reasoning.
+- Get each review from a fresh session that follows the `review` skill and gets only the PR number; never pass it your summary or reasoning.
 
 ## Skills
 - Skills live in `.agents/skills/<name>/SKILL.md`; follow the one for your role.
@@ -74,7 +74,7 @@
 <!-- Adopters replace this section with their own project's values. -->
 - Layout: this repo is the template itself; there is no src/, and scripts/ holds the reference run and results scripts.
 - Test: `python -m pytest -q`
-- Language: human-facing text is Chinese (PR bodies, issue and PR comments, reports, issue-form descriptions, README, the results comment); agent instructions (AGENTS.md, skills), code, PR titles and format keywords stay English.
+- Language: human-facing text is Chinese (PR bodies, issue and PR comments, reports, issue-form descriptions, README, the results comment), except review comments, which keep the reviewing tool's own text below the Verdict line; agent instructions (AGENTS.md, skills), code, PR titles and format keywords stay English.
 - Protected eval/data paths: none.
 - Run: `python scripts/run.py --issue N -- <cmd>`; results comment: `python scripts/results.py --issue N`.
 - Run records: MLflow runs in the backend that `MLFLOW_TRACKING_URI` names; if unset, `mlflow.db` at the main clone root. The experiment is set in `scripts/run.toml`.

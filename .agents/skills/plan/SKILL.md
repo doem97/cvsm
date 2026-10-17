@@ -1,0 +1,112 @@
+---
+name: plan
+description: Use when the human wants to discuss new work and turn it into a published study (research) or plan (development) parent issue with its code and run sub-issues.
+---
+
+# plan
+
+Discuss the work with the human in the session, draft a parent issue and its sub-issues,
+and publish them only on the human's explicit instruction (gate 1). Stop after publishing.
+AGENTS.md rules apply throughout; this skill adds the procedure.
+
+## 1. Read state and context
+
+Read state as AGENTS.md State says, then what the plan builds on:
+
+```
+gh issue list --state open --label study
+gh issue list --state open --label plan
+gh issue list --state open --label needs-decision
+gh pr list --state open
+gh issue view <N> --comments            # earlier studies, their results comments and Decisions
+python scripts/results.py --issue <N>   # run records of an earlier run issue
+```
+
+Read the code the work will touch. Write nothing to GitHub or to files while discussing.
+
+## 2. Discuss
+
+Talk with the human in Chinese until the draft below is complete: the question or goal,
+what is compared (config differences only), what result answers it, and the budget.
+Raise every ambiguity that would change a deliverable now, not after publishing.
+
+## 3. Draft the issues
+
+Parent issue, one of:
+- `study`: the `### ` sections of `.github/ISSUE_TEMPLATE/study.yml`, in order:
+  Question, Comparison, Criteria, Budget, Context.
+- `plan` (development work, no form): `### Goal` and `### Context`.
+
+Sub-issues, with the exact `### ` sections of their forms:
+- `code` (`.github/ISSUE_TEMPLATE/code.yml`):
+  - `### Goal`: at most 3 sentences; the outcome, not the steps.
+  - `### Scope`: path globs, one per line, none starting with a wildcard; the smallest set
+    that covers the work. List a protected path (AGENTS.md Files) only when the task must change it.
+  - `### Acceptance`: shell commands, one per line, run from the repo root; all exit 0 iff done.
+  - `### Budget`: time, e.g. `2h`.
+  - `### Merge`: `human` by default. `agent` only for a low-risk task whose Scope matches
+    no path in `protected` of `.github/guard.toml`.
+- `run` (`.github/ISSUE_TEMPLATE/run.yml`):
+  - `### Runs`: one command per line with its config overrides and seed; each line is the
+    `<cmd>` that the Run command in AGENTS.md Project wraps.
+  - `### Budget`: GPU hours.
+  - `### Report`: metric names, space-separated.
+
+A run issue that needs new code is blocked by that code issue.
+
+## 4. Order the sub-issues into waves
+
+- Wave 1: issues with no blocker. Wave k: issues blocked only by issues in earlier waves.
+- Issues in the same wave can be ready at the same time, so their Scopes must be disjoint:
+  no path may match globs of two of them. If two Scopes overlap, chain them with
+  blocked-by, which moves one to a later wave. Then parallel PRs never conflict.
+- Show the human the whole draft in Chinese: the parent, every sub-issue body, and the graph
+  with placeholders, for example:
+
+```
+Wave 1: A code <title> (Scope: src/pkg/core/**)  |  B code <title> (Scope: src/pkg/methods/foo/**)
+Wave 2: C run <title>  blocked by A, B
+```
+
+Revise until the human approves.
+
+## 5. Publish (gate 1)
+
+Publish only when the human explicitly says so. Create the parent first, then the sub-issues
+wave by wave so every blocker already exists. Each `gh issue create` prints the issue URL.
+
+```
+url=$(gh issue create --label study --title "<title>" --body "$(cat <<'EOF'
+### Question
+...
+EOF
+)")
+P=${url##*/}
+
+url=$(gh issue create --label code --title "<title>" --parent "$P" --body "$(cat <<'EOF'
+### Goal
+...
+EOF
+)")
+A=${url##*/}
+
+url=$(gh issue create --label run --title "<title>" --parent "$P" --blocked-by "$A,$B" --body "...")
+```
+
+- Use `--label plan` for a development parent. Omit `--blocked-by` in wave 1.
+- Never write parents or dependencies into a body (AGENTS.md State).
+- Check the result: `gh issue view "$P"` lists every sub-issue, and `gh issue view <N>` shows
+  each blocked-by.
+
+## 6. Record and stop
+
+```
+gh issue comment "$P" --body "Decision: 发布 <研究或计划>及子 issue #A、#B、#C — <一行理由>"
+```
+
+Then report the three lines of AGENTS.md Report in Chinese, with links, and stop. Do not claim
+or start any sub-issue unless the instruction names a target beyond publishing.
+
+Changing a published task's Goal, Scope, Acceptance or Merge is gate 1 as well: edit it with
+`gh issue edit <N> --body "..."` only on the human's explicit instruction, then record a Decision
+on that issue.

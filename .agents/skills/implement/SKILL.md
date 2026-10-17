@@ -1,0 +1,130 @@
+---
+name: implement
+description: Use when doing a `code` issue, from claiming it through fresh reviews to a merge-ready PR, or to merged when its Merge field is agent.
+---
+
+# implement
+
+Take one `code` issue N from ready to merge-ready, or to merged under `Merge: agent`.
+AGENTS.md rules apply throughout; this skill adds the procedure. Most quality comes from the
+inner loop in step 4; the review of the PR is the final independent check.
+
+## 1. Claim and set up the worktree
+
+Read state as AGENTS.md State says. N must be ready, or in progress and named by the
+instruction or claimed by this session (then reuse its branch and worktree).
+
+```
+gh issue develop N --name t/N-<slug> --base main
+gh issue develop --list N
+```
+
+If `--list` shows another branch besides yours, run `git push origin --delete t/N-<slug>` and
+pick other work. Otherwise work only in a worktree, made from the main clone root (AGENTS.md Git):
+
+```
+git fetch origin
+git worktree add ../worktrees/N-<slug> t/N-<slug>
+```
+
+## 2. Read
+
+```
+gh issue view N --comments                       # Goal, Scope, Acceptance, Merge, Decisions
+gh issue view N --json parent -q .parent.number  # parent P
+gh issue view P --comments                       # project-level Decisions
+```
+
+Read AGENTS.md, the code in Scope and the interfaces that code uses.
+
+## 3. Implement
+
+- Use TDD where it fits: first a failing test that pins the contract, then the code.
+- Change only paths that Scope matches; check with `git diff --name-only origin/main...`.
+- A bug outside Scope: open a new `code` issue with `--parent P` (AGENTS.md Blockers), keep it
+  out of this branch, and list it under Out of scope in the PR.
+- A Scope that is too small, or an ambiguity that changes the deliverable, is a blocker.
+- Commit with subjects `<type>(#N): <summary>` and push often:
+  `git push -u origin t/N-<slug>`.
+
+## 4. Inner loop, before the PR
+
+Repeat until every Acceptance command passes and a fresh reviewer finds nothing blocking:
+1. Run each Acceptance line from the worktree root, plus the Test command in AGENTS.md Project.
+2. Get a fresh review of the diff against the issue. Give the reviewer only this:
+   "Review `git diff origin/main...HEAD` in <worktree> against issue #N
+   (`gh issue view N --comments`) with the checklist in `.agents/skills/review/SKILL.md`.
+   Report blocking and minor findings here; post nothing to GitHub."
+   - Claude Code: a fresh subagent.
+   - Codex: a fresh session, `codex exec -s danger-full-access "<that prompt>"` in the worktree.
+   Never pass it your summary or reasoning.
+3. Fix the findings worth fixing, commit, push, and start the next round with a new reviewer.
+
+## 5. Open the PR
+
+Follow `.github/pull_request_template.md` and AGENTS.md Git: an English title, a Chinese body.
+
+```
+gh pr create --base main --head t/N-<slug> --title "<type>(#N): <summary>" --body "$(cat <<'EOF'
+Closes #N
+
+## Changes
+
+- <至多 5 条>
+
+## Acceptance
+
+- `<命令>`：<结果>
+
+## Out of scope
+
+none
+EOF
+)"
+gh pr checks <PR> --watch
+```
+
+Fix `guard` or `test` failures without asking.
+
+## 6. Outer loop: fresh review of the PR
+
+Get a review per `.agents/skills/review/SKILL.md`; its only input is the PR number:
+- Claude Code: a fresh subagent with the prompt "Follow `.agents/skills/review/SKILL.md` for PR #<PR>."
+- Codex: `codex exec -s danger-full-access "Follow .agents/skills/review/SKILL.md for PR #<PR>."`,
+  or the built-in review as that skill describes.
+
+Then check that the newest `Verdict:` comment (`gh pr view <PR> --comments`) names the current
+head (`gh pr view <PR> --json headRefOid -q .headRefOid`).
+- `changes`: fix its findings, rerun Acceptance, push, and get a fresh review of the new head.
+  Three `changes` in a row is a blocker (AGENTS.md Blockers).
+- `pass` with minor findings: fix the ones inside Scope, push, and get ONE more fresh review
+  (a `changes` there returns to the line above). Then post one PR comment listing every
+  remaining minor with a proposal: a new issue, an existing issue #M, or no action, each with a
+  one-line reason. Its first line must not start with `Verdict:`.
+
+```
+gh pr comment <PR> --body "$(cat <<'EOF'
+剩余的 minor 意见与处理建议（人说合并即批准，由执行合并的 agent 照办）：
+1. <意见>（<审查评论链接>）— 建议：开新 issue「<标题>」；理由：<一行>
+2. <意见> — 建议：并进 #M；理由：<一行>
+3. <意见> — 建议：不处理；理由：<一行>
+EOF
+)"
+```
+
+## 7. Merge-ready
+
+Merge-ready means `guard` and `test` are green and the newest Verdict is a pass for the
+current head (AGENTS.md State).
+- `Merge: agent`: run `python .github/scripts/merge.py <PR>`. If it refuses (exit 2), the PR
+  is the request: stop and report.
+- Otherwise stop and report; the merge-ready PR is the request. Add no label or blocker comment.
+
+When the human explicitly says to merge, run `python .github/scripts/merge.py <PR> --human`
+and record `Decision: 合并 PR #<PR> — <人的指示>` on issue N. The instruction also approves the
+minor proposals. After either kind of merge:
+1. Carry out the minor proposals: `gh issue create --label code --parent P ...` for a new
+   issue, `gh issue comment M --body "..."` to add one to an existing issue.
+2. From the main clone, `git worktree remove ../worktrees/N-<slug>`.
+
+At every stop, report the three lines of AGENTS.md Report in Chinese, with links.
