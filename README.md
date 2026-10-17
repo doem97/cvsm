@@ -112,7 +112,7 @@ bash scripts/setup.sh owner/repo
 **可选：给 agent 一个机器账号。** 想在 GitHub 上分清人和 agent 的操作时，可以让所有 agent 共用一个机器账号：
 - 把它加为仓库协作者，给写权限，不给管理员权限；
 - 给它建一个 classic token，勾选 `repo`、`workflow` 和 `read:org`（fine-grained token 不能以协作者身份操作别人名下的仓库）；
-- 用 `GH_CONFIG_DIR=<dir> gh auth login` 把它登录到单独的目录 `<dir>`，只在这个仓库里让 agent 用它：下面两个本地文件都把 `GH_CONFIG_DIR` 指向 `<dir>`，两个路径都写进 `.git/info/exclude`，不进仓库；
+- 用 `GH_CONFIG_DIR=<dir> gh auth login` 把它登录到单独的目录 `<dir>`，只在这个仓库里让 agent 用它：下面两个本地文件都把 `GH_CONFIG_DIR` 指向 `<dir>`，两个路径都写进 `.git/info/exclude`，不进仓库。这两个文件只在主 clone 里，worktree 里没有：从主 clone 启动的会话会把这个设置传给它派出的 agent，直接在 worktree 里开会话就要先在那里也放一份；
   - `.claude/settings.local.json`：`{"env": {"GH_CONFIG_DIR": "<dir>"}}`
   - `.codex/config.toml`：
 
