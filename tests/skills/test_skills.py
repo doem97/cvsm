@@ -93,9 +93,24 @@ def test_review_verdict_line():
     assert "`Verdict: pass @ <full head SHA>`" in text
     assert "`Verdict: changes @ <full head SHA>`" in text
     assert "patch is correct" not in text  # Codex's built-in review maps by [P0]/[P1] findings
+    # The Codex path binds the Verdict to the reviewed commit, and keeps the review in a file
+    # because agent shells may not keep variables between calls.
+    assert "sha=$(git rev-parse HEAD)" in text
+    assert "printf 'Verdict: %s @ %s\\n\\n' \"<pass|changes>\" \"$sha\"" in text
+    assert "$out" not in text
 
 
 @pytest.mark.parametrize("name", ["implement", "review", "run"])
 def test_issue_body_is_read(name):
     # Without a TTY, `gh issue view N --comments` prints only the comments, not the body.
     assert re.search(r"gh issue view N(?! --comments)\b", skill_text(name))
+
+
+def cleanup_block(text):
+    return re.search(r"^```\n(git worktree remove .*?)^```", text, re.M | re.S).group(1)
+
+
+def test_run_cleans_up_like_implement():
+    run = cleanup_block(skill_text("run"))
+    assert "git branch -D t/N-<slug>" in run
+    assert run == cleanup_block(skill_text("implement"))
