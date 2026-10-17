@@ -261,7 +261,7 @@ def main(argv):
     # Stop signals before launch are kept in pending (the run then ends KILLED without
     # launching); afterwards SIGTERM and SIGHUP are forwarded to the command. Ctrl-C reaches
     # the command directly through the terminal's process group, so forwarding SIGINT would
-    # interrupt its cleanup a second time. SIGHUP stays ignored under nohup.
+    # interrupt its cleanup a second time. A signal ignored at startup (nohup, background jobs) stays ignored.
     child, pending = None, []
 
     def on_stop(sig, _):
@@ -270,11 +270,9 @@ def main(argv):
         elif sig != signal.SIGINT:
             child.send_signal(sig)
 
-    stops = [signal.SIGINT, signal.SIGTERM]
-    if signal.getsignal(signal.SIGHUP) is not signal.SIG_IGN:
-        stops.append(signal.SIGHUP)
-    for sig in stops:
-        signal.signal(sig, on_stop)
+    for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+        if signal.getsignal(sig) is not signal.SIG_IGN:  # keep what nohup or the shell ignored
+            signal.signal(sig, on_stop)
 
     # The command gets this URI too, so it writes to the same store. It may carry
     # credentials, so it is never printed.
