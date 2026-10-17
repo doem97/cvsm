@@ -405,11 +405,16 @@ def test_code_form():
     form = load_yaml(".github/ISSUE_TEMPLATE/code.yml")
     assert form["labels"] == ["code"]
     fields = {b["attributes"]["label"]: b for b in form["body"]}
-    assert list(fields) == ["Goal", "Scope", "Acceptance", "Budget"]
+    assert list(fields) == ["Goal", "Scope", "Acceptance", "Budget", "Merge"]
     for name in ("Goal", "Scope", "Acceptance"):
         assert fields[name]["type"] == "textarea"
         assert fields[name]["validations"]["required"] is True
     assert fields["Budget"]["type"] == "input"
+    m = fields["Merge"]
+    assert m["type"] == "dropdown"
+    assert m["attributes"]["options"] == ["human", "agent"] and m["attributes"]["default"] == 0
+    assert (m.get("validations") or {}).get("required") is not True
+    assert ".github/scripts/merge.py" in m["attributes"]["description"]
 
 
 def test_pr_template():
