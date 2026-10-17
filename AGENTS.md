@@ -24,7 +24,7 @@
 - Record each decision as an issue comment: `Decision: <choice> — <one-line reason>`.
 
 ## Blockers
-- Stop and ask when a gate is reached, the same failure happens 3 times in a row, three `changes` verdicts come in a row, an ambiguity would change the deliverable, or a study's Controlled line cannot be met without changing the comparison: `Blocked: 这个对比按规格做不了，因为 <X>`, with the options: change the implementation, relax the spec (gate 1), or drop the comparison.
+- Stop and ask when a gate is reached, the same failure happens 3 times in a row, three `changes` verdicts come in a row, an ambiguity would change the deliverable, or a study's Controlled line cannot be met without changing the comparison: `Blocked: 这个对比按规格做不了，因为 <X>`, with the options: change the implementation (optimize or change code), relax the spec (gate 1), or drop the comparison.
 - Handle without asking: test or CI failures, merge conflicts, infra retries, bugs inside Scope, changing an Adaptable setting within its rule (stated in the results comment), and a `changes` verdict: fix its findings, then get a fresh review of the new head. A pass ends the loop; fix its minor findings inside Scope and, if you pushed fixes, get one more fresh review; then post one PR comment proposing for each remaining minor a new issue, an existing issue or no action. The human's merge instruction approves the proposals (under `Merge: agent`, the instruction naming the task does), and the agent that merges carries them out.
 - For a bug outside Scope, open a new issue and keep working; keep the fix out of the current PR.
 - Ask once per blocker, with evidence, at most 3 options and a recommendation.

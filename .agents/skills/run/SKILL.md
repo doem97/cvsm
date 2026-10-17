@@ -48,10 +48,11 @@ earlier attempt ended in an infra failure (section 4).
 
 ## 3. Launch within Budget
 
-Before launching, check that the Runs lines cover every arm and every value of each Controlled
-`in` line; if they do not, that is a blocker (AGENTS.md Blockers). Launch each Runs line from the
-worktree root. A line is `<cmd>`, or `<options> -- <cmd>` when it carries options of the Run
-command such as `--gpus 4`; pass those through before `--`:
+Before launching, check that each Runs line runs exactly one arm and that each arm this issue
+runs gets every value of each Controlled `in` line; otherwise it is a blocker (AGENTS.md
+Blockers). The study's run issues together run every arm (`--issue N1 N2` lists arms with no
+run). Launch each Runs line from the worktree root. A line is `<cmd>`, or `<options> -- <cmd>`
+when it carries options of the Run command such as `--gpus 4`; pass those through before `--`:
 
 ```
 <run> --issue N -- <cmd>
@@ -63,17 +64,18 @@ command such as `--gpus 4`; pass those through before `--`:
   so several lines may be launched at once. Use your tool's background execution for long
   runs; stop one the way the Run command provides (this repo's: SIGTERM).
 - Right after launch, once the runs have recorded their configs (`cfg.*` params), run the check
-  below and stop every running run its `规格核对` section lists as violating the spec (a
-  Controlled value not held or not recorded, no arm or several, an undeclared difference).
-  A stopped run stays recorded. A code bug is a `code` issue (section 4), any other cause a
-  blocker; relaunch a stopped line only once its cause is fixed, and note it for the results comment.
+  below. Stop every running run that `规格核对` lists as breaking a Controlled `key=value` line,
+  not recording one, or matching no arm or several. A key under `未声明的差异` is a blocker; if
+  it can affect results, stop the runs first. Stopped runs stay recorded. Whether to relaunch a
+  stopped line follows section 4, or the human's answer to the blocker; note every stopped or
+  relaunched run for the results comment.
 
 ```
 gh issue view P --json body -q .body | <results> --issue N --spec -
 ```
 
 - Change an Adaptable setting only within its rule (e.g. a smaller per-device batch after an
-  out-of-memory error), and note each change, with the run and the reason, for the results comment.
+  out-of-memory error); note each change, its run and reason for the results comment.
 - GPU hours used = the sum over this issue's runs, failed ones included, of wall time times
   the number of GPUs. Estimate a run from the first finished one.
 - Before launching a run that would take the total past Budget, stop at gate 3: report the

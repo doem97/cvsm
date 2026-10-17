@@ -31,7 +31,7 @@ git worktree add ../worktrees/N-<slug> t/N-<slug>
 ```
 gh issue view N             # body: Goal, Scope, Acceptance, Merge; parent P
 gh issue view N --comments  # Decisions
-gh issue view P --comments  # project-level Decisions
+gh issue view P && gh issue view P --comments  # parent: body (a study's spec), Decisions
 ```
 
 Read AGENTS.md, the code in Scope and the interfaces that code uses.
@@ -40,9 +40,10 @@ Read AGENTS.md, the code in Scope and the interfaces that code uses.
 
 - Use TDD where it fits: first a failing test that pins the contract, then the code.
 - Change only paths that Scope matches; check with `git diff --name-only origin/main...`.
-- If P is a `study`, its spec (`gh issue view P`: Arms, Controlled, Adaptable) binds the code:
-  set every key it names through config and write it to `$RUN_DIR/config.json`; never alter a
-  Controlled setting or make the arms differ beyond Arms.
+- If P is a `study`, its spec (Arms, Controlled, Adaptable) binds the code: set every key it
+  names through config; write the resolved config (every setting that can affect results,
+  derived ones included) to `$RUN_DIR/config.json` from one process; never alter a Controlled
+  setting or make the arms differ beyond Arms.
 - A bug outside Scope: open a new `code` issue with `--parent P` (AGENTS.md Blockers), keep it
   out of this branch, and list it under Out of scope in the PR.
 - A Scope that is too small, an ambiguity that changes the deliverable, or a Controlled line the
@@ -77,9 +78,8 @@ gh pr checks <PR> --watch   # fix guard or test failures without asking
 
 ## 6. Outer loop: fresh review of the PR
 
-Start a fresh PR review as section 4 of `.agents/skills/review/SKILL.md` says. Then check that
-the newest `Verdict:` comment (`gh pr view <PR> --comments`) names the current head
-(`gh pr view <PR> --json headRefOid -q .headRefOid`).
+Start a fresh PR review (section 4 of `.agents/skills/review/SKILL.md`). Then check that the
+newest `Verdict:` comment names the PR head (`gh pr view <PR> --json headRefOid -q .headRefOid`).
 - `changes`: fix its findings, rerun Acceptance, push, and get a fresh review of the new head.
   Three `changes` in a row is a blocker (AGENTS.md Blockers).
 - `pass` with minor findings: fix the ones inside Scope. If you pushed fixes, get ONE more
