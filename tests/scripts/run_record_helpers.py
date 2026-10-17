@@ -21,6 +21,7 @@ GIT_ENV = {
     "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1",
 }
 EXPERIMENT = "rh-test"
+GITIGNORE = "mlflow.db*\nmlartifacts/\nmlruns/\n"  # MLflow's default files in the clone
 
 # A fake training command. key=value args; writes metrics.json into $RUN_DIR (metrics=list writes a
 # JSON list instead); config=1 also writes config.json; hold=<path> writes its pid to <path>.pid and
@@ -77,7 +78,8 @@ def closed_port():
 class Repo:
     """A temporary git repo with scripts/run.toml and fake.py committed, a copy of a migrated
     SQLite backend, the test experiment (artifacts outside the repo) and a private TMPDIR.
-    The harness's own .gitignore is committed too, so MLflow's default files keep the tree clean."""
+    A .gitignore with just MLflow's default files is committed, so they keep the tree clean; the
+    project's own .gitignore is not used, since adopters' ignore lines vary."""
 
     def __init__(self, tmp, template, **cfg):
         self.tmp = tmp
@@ -95,7 +97,7 @@ class Repo:
         self.env.update(GIT_ENV, MLFLOW_TRACKING_URI=self.uri, TMPDIR=str(self.tmpdir))
         self.git("init", "-q", "-b", "main")
         (self.root / "fake.py").write_text(FAKE)
-        shutil.copy(ROOT / ".gitignore", self.root / ".gitignore")
+        (self.root / ".gitignore").write_text(GITIGNORE)
         self.configure(**cfg)
         self.commit("init")
 

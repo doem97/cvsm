@@ -187,12 +187,12 @@ def test_non_utf8_changes_are_recorded_byte_exact(repo):
 
 
 def test_untracked_only_is_dirty(repo):
-    (repo.root / "data").mkdir()
-    (repo.root / "data" / "x.csv").write_text("1\n")
+    (repo.root / "rh_untracked").mkdir()
+    (repo.root / "rh_untracked" / "x.csv").write_text("1\n")
     repo.run()
     r = repo.only_run()
     assert r.data.params["rh.dirty"] == "true"
-    assert repo.artifact(r, "untracked.txt").read_text().split() == ["data/x.csv"]
+    assert repo.artifact(r, "untracked.txt").read_text().split() == ["rh_untracked/x.csv"]
 
 
 @pytest.mark.parametrize("cmd, seed, rest", [
@@ -344,7 +344,13 @@ def test_another_users_lock_file_is_used_read_only(make_repo):
         assert stat.S_IMODE(d.stat().st_mode) == 0o1777
 
 
-def test_configured_lock_dir_keeps_its_permissions(make_repo):
+def test_configured_lock_dir_gets_a_shareable_host_dir(make_repo):
+    repo = make_repo(gpus=[0])  # lock_dir is repo.locks, not yet created
+    assert repo.run(umask=0o022).returncode == 0
+    assert stat.S_IMODE((repo.locks / socket.gethostname()).stat().st_mode) == 0o1777
+
+
+def test_existing_configured_lock_dirs_keep_their_permissions(make_repo):
     repo = make_repo(gpus=[0])
     host_dir = repo.locks / socket.gethostname()
     host_dir.mkdir(parents=True)
