@@ -5,9 +5,8 @@ description: Use when doing a `code` issue, from claiming it through fresh revie
 
 # implement
 
-Take one `code` issue N from ready to merge-ready, or to merged under `Merge: agent`.
-AGENTS.md rules apply throughout; this skill adds the procedure. Most quality comes from the
-inner loop in step 4; the review of the PR is the final independent check.
+Take one `code` issue N from ready to merge-ready, or to merged under `Merge: agent`, following
+AGENTS.md. Most quality comes from the inner loop (step 4); the PR review is the final check.
 
 ## 1. Claim and set up the worktree
 
@@ -57,28 +56,21 @@ Repeat until every Acceptance command passes and a fresh reviewer finds nothing 
 ## 5. Open the PR
 
 Follow `.github/pull_request_template.md` and AGENTS.md Git: an English title, a Chinese body.
+Fix `guard` or `test` failures without asking.
 
 ```
 gh pr create --base main --head t/N-<slug> --title "<type>(#N): <summary>" --body "$(cat <<'EOF'
 Closes #N
-
 ## Changes
-
 - <至多 5 条>
-
 ## Acceptance
-
 - `<命令>`：<结果>
-
 ## Out of scope
-
 none
 EOF
 )"
 gh pr checks <PR> --watch
 ```
-
-Fix `guard` or `test` failures without asking.
 
 ## 6. Outer loop: fresh review of the PR
 
@@ -108,13 +100,21 @@ Once the PR is merge-ready (AGENTS.md State):
 - `Merge: agent`: run `python .github/scripts/merge.py <PR>`. If it refuses (exit 2), the PR
   is the request: stop and report.
 - Otherwise stop and report; the merge-ready PR is the request. Add no label or blocker comment.
+- If `merge.py` exits 1 (it could not read the PR, or the merge itself failed), read its
+  message, fix the cause (checks not green yet, head moved, ...) and retry; the same failure
+  3 times in a row is a blocker.
 
 When the human explicitly says to merge, run `python .github/scripts/merge.py <PR> --human`
 and record `Decision: 合并 PR #<PR> — <人的指示>` on issue N. The instruction also approves the
 minor proposals; under `Merge: agent`, the instruction naming the task approves them. After
 either kind of merge:
-1. Carry out the minor proposals: `gh issue create --label code --parent P ...` for a new
-   issue, `gh issue comment M --body "..."` to add one to an existing issue.
-2. From the main clone, `git worktree remove ../worktrees/N-<slug>`.
+1. Carry out the minor proposals (`gh issue create --label code --parent P ...`, `gh issue comment M`).
+2. Clean up from the main clone; the origin branch is gone if the repo deletes merged branches:
+
+```
+git worktree remove ../worktrees/N-<slug>
+git branch -D t/N-<slug>
+git ls-remote --exit-code --heads origin t/N-<slug> && git push origin --delete t/N-<slug>
+```
 
 At every stop, report the three lines of AGENTS.md Report in Chinese, with links.

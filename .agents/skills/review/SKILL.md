@@ -95,7 +95,8 @@ A pre-PR review in the implementer's inner loop gets only the issue number and t
 the checklist above and posts nothing. Give a fresh subagent, or
 `codex exec -s danger-full-access "<prompt>"` in the worktree, this prompt:
 "Review `git diff origin/main...HEAD` in <worktree> against issue #N (`gh issue view N`, then
-`gh issue view N --comments`) with the checklist in `.agents/skills/review/SKILL.md`.
-Report blocking and minor findings here; post nothing to GitHub."
+`gh issue view N --comments`) and the Decisions on its parent P (`gh issue view P --comments`),
+with the checklist in `.agents/skills/review/SKILL.md`. Report blocking and minor findings
+here; post nothing to GitHub."
 
 A reviewer reports the comment link and the verdict, in Chinese, to the session that asked.

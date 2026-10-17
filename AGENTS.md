@@ -61,7 +61,7 @@
 - Before acting, read your issue, the code in its Scope and the interfaces that code uses; your skill lists the rest.
 - Write only to GitHub (issues, comments, PRs), to files in Scope and to run records; keep no memory, notes, docs or discussion.
 - Record decisions and conclusions on GitHub.
-- Get each review from a fresh session that follows the `review` skill: a pre-PR review gets only the issue and the diff, a PR review only the PR number; never pass it your summary or reasoning.
+- Get each review from a fresh session that follows the `review` skill: a pre-PR review gets only the issue and the diff, a PR review only the PR number (the built-in Codex review also gets the issue and its Decisions); never pass it your summary or reasoning.
 
 ## Skills
 - Skills live in `.agents/skills/<name>/SKILL.md`; follow the one for your role.
