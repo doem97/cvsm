@@ -1,3 +1,4 @@
+import base64
 import importlib.util
 import json
 import os
@@ -9,7 +10,8 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-MERGE = ROOT / ".github" / "scripts" / "merge.py"
+SCRIPTS = ROOT / ".github" / "scripts"
+MERGE = SCRIPTS / "merge.py"
 _spec = importlib.util.spec_from_file_location("merge", MERGE)
 merge = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(merge)
@@ -44,12 +46,16 @@ def verdict(word="pass", sha=HEAD[:7]):
     return f"Verdict: {word} @ {sha}\n\n审查通过。"
 
 
+def as_comments(bodies):
+    return [{"body": b, "html_url": f"https://github.com/o/r/pull/7#issuecomment-{i}"} for i, b in enumerate(bodies)]
+
+
 def run(body=BODY, files=None, comments=None, issue="default"):
     pr = {"number": 7, "title": TITLE, "body": body, "head": HEAD, "repo": REPO}
     files = [f("src/a.py"), f("tests/test_a.py")] if files is None else files
     comments = [verdict()] if comments is None else comments
     issue = {"number": 12, "body": issue_body()} if issue == "default" else issue
-    return merge.check(pr, files, comments, issue, cfg())
+    return merge.check(pr, files, as_comments(comments), issue, cfg())
 
 
 # --- Merge field
@@ -57,13 +63,20 @@ def run(body=BODY, files=None, comments=None, issue="default"):
 @pytest.mark.parametrize("value,mode", [
     ("agent", "agent"), ("AGENT", "agent"), ("  Agent  ", "agent"), (None, "human"),
     ("_No response_", "human"), ("", "human"), ("human", "human"),
+    ("agent\n\nbut ask me first", "human"), ("agent please", "human"),
 ])
 def test_merge_mode(value, mode):
     assert merge.merge_mode(issue_body(value)) == mode
 
 
-def test_merge_mode_empty_body():
+@pytest.mark.parametrize("extra", ["\n\n### Merge\n\nagent", "\n\n### Merge\n\nhuman", "\n\n### merge\n\nagent"])
+def test_merge_mode_two_sections_is_human(extra):
+    assert merge.merge_mode(issue_body("agent") + extra) == "human"
+
+
+def test_merge_mode_empty_body_and_crlf():
     assert merge.merge_mode(None) == "human"
+    assert merge.merge_mode(issue_body("agent").replace("\n", "\r\n")) == "agent"
 
 
 # --- check
@@ -72,11 +85,11 @@ def test_allows_agent_task_with_fresh_pass():
     assert run() == []
 
 
-def test_allows_full_sha_and_uppercase():
+def test_allows_full_sha_and_uppercase_hex():
     assert run(comments=[verdict(sha=HEAD.upper())]) == []
 
 
-@pytest.mark.parametrize("value", [None, "_No response_", "human"])
+@pytest.mark.parametrize("value", [None, "_No response_", "human", "agent\nnot yet"])
 def test_refuses_human_task(value):
     reasons = run(issue={"number": 12, "body": issue_body(value)})
     assert len(reasons) == 1 and "Merge" in reasons[0] and "#12" in reasons[0]
@@ -112,11 +125,25 @@ def test_refuses_protected_paths(files, path):
     ([verdict(sha=HEAD[:6])], HEAD[:6]),
     ([verdict(), verdict("changes")], "changes"),
     ([verdict(), "Verdict: maybe"], "Verdict: maybe"),
-    (["See below.\nVerdict: pass @ " + HEAD], "Verdict: pass @"),
+    # A later changes in any non-canonical shape still overrides the earlier pass.
+    ([verdict(), "verdict: changes @ " + HEAD[:7]], "verdict: changes"),
+    ([verdict(), "**Verdict: changes @ " + HEAD[:7] + "**"], "**Verdict: changes"),
+    ([verdict(), "**Verdict**: changes"], "**Verdict**: changes"),
+    ([verdict(), "Thanks.\nVerdict: changes @ " + HEAD[:7]], "Thanks."),
+    ([verdict(), "Review done.\n\nOverall verdict : needs work"], "Review done."),
+    # A pass that is not on the first line does not count.
+    (["See below.\nVerdict: pass @ " + HEAD], "See below."),
+    (["verdict: pass @ " + HEAD[:7]], "verdict: pass"),
+    (["Verdict: pass @ " + HEAD[:7] + " (with nits)"], "with nits"),
 ])
 def test_refuses_without_fresh_pass(comments, needle):
     reasons = run(comments=comments)
     assert len(reasons) == 1 and needle in reasons[0], reasons
+
+
+def test_reason_names_the_deciding_comment():
+    reasons = run(comments=[verdict(), "lgtm", verdict("changes"), "ok"])
+    assert len(reasons) == 1 and "issuecomment-2" in reasons[0]
 
 
 @pytest.mark.parametrize("comments", [
@@ -159,13 +186,26 @@ print(json.dumps(data[path]))
 """
 
 
-def responses(merge_value="agent", comments=None, files=None):
+def contents(data: bytes):
+    # The contents API wraps base64 at 60 columns.
+    b64 = base64.b64encode(data).decode()
+    return {"encoding": "base64", "content": "\n".join(b64[i:i + 60] for i in range(0, len(b64), 60)) + "\n"}
+
+
+def source(rel, text=None):
+    data = (ROOT / rel).read_bytes() if text is None else text.encode()
+    return {f"repos/o/r/contents/{rel}?ref=main": contents(data)}
+
+
+def responses(merge_value="agent", comments=None, files=None, body=BODY):
     return {
-        "repos/{owner}/{repo}/pulls/7": {"number": 7, "title": TITLE, "body": BODY, "head": {"sha": HEAD},
-                                         "base": {"repo": {"full_name": REPO}}},
+        "repos/{owner}/{repo}/pulls/7": {"number": 7, "title": TITLE, "body": body, "head": {"sha": HEAD},
+                                         "base": {"ref": "main", "repo": {"full_name": REPO}}},
         "repos/o/r/pulls/7/files": [[f("src/a.py")], files or [f("tests/b.py", "renamed", prev="tests/a.py")]],
-        "repos/o/r/issues/7/comments": [[{"body": "first"}], [{"body": c} for c in (comments or [verdict()])]],
+        "repos/o/r/issues/7/comments": [[{"body": "first", "html_url": "u0"}],
+                                        [{"body": c, "html_url": "u1"} for c in (comments or [verdict()])]],
         "repos/o/r/issues/12": {"number": 12, "body": issue_body(merge_value)},
+        **source(".github/guard.toml"), **source(".github/scripts/guard.py"), **source(".github/scripts/merge.py"),
     }
 
 
@@ -204,7 +244,12 @@ def test_main_refuses(tmp_path):
     assert lines[-1] == "等人合并"
     assert any("Merge" in line for line in lines)
     assert any("AGENTS.md" in line for line in lines)
-    assert any(OLD[:7] in line for line in lines)
+    assert any(OLD[:7] in line and "u1" in line for line in lines)
+
+
+def test_main_refuses_later_bold_changes(tmp_path):
+    p, calls = run_main(tmp_path, responses(comments=[verdict(), "**Verdict: changes @ " + HEAD[:7] + "**"]))
+    assert p.returncode == 2 and merge_calls(calls) == []
 
 
 def test_main_merge_failure(tmp_path):
@@ -214,6 +259,58 @@ def test_main_merge_failure(tmp_path):
     assert p.returncode == 1
     assert len(merge_calls(calls)) == 1
     assert "Required status check" in p.stdout + p.stderr
+
+
+def test_main_issue_read_fails(tmp_path):
+    data = responses()
+    del data["repos/o/r/issues/12"]
+    p, calls = run_main(tmp_path, data)
+    assert p.returncode == 2 and merge_calls(calls) == []
+    assert "#12" in p.stdout and "Traceback" not in p.stderr
+
+
+def test_main_other_repo_ref(tmp_path):
+    data = responses(body=BODY.replace("Closes #12", "Closes other/repo#12"))
+    data["repos/other/repo/issues/12"] = data["repos/o/r/issues/12"]
+    p, calls = run_main(tmp_path, data)
+    assert p.returncode == 2 and merge_calls(calls) == []
+    assert "Closes #N" in p.stdout
+    assert not any("issues/12" in c[1] for c in calls if c[0] == "api")
+
+
+@pytest.mark.parametrize("rel", [".github/scripts/merge.py", ".github/scripts/guard.py"])
+def test_main_refuses_local_script_differing_from_base(tmp_path, rel):
+    data = responses()
+    data.update(source(rel, (ROOT / rel).read_text() + "# changed on main\n"))
+    p, calls = run_main(tmp_path, data)
+    assert p.returncode == 2, p.stdout + p.stderr
+    assert merge_calls(calls) == []
+    assert rel in p.stdout and p.stdout.strip().splitlines()[-1] == "等人合并"
+
+
+def test_main_source_read_fails(tmp_path):
+    data = responses()
+    del data["repos/o/r/contents/.github/guard.toml?ref=main"]
+    p, calls = run_main(tmp_path, data)
+    assert p.returncode == 1 and merge_calls(calls) == []
+
+
+def test_main_uses_base_guard_toml(tmp_path):
+    # main protects src/** although the local guard.toml does not, so src/a.py blocks the merge.
+    toml = (ROOT / ".github" / "guard.toml").read_text().replace('protected = [', 'protected = ["src/**", ', 1)
+    data = responses()
+    data.update(source(".github/guard.toml", toml))
+    p, calls = run_main(tmp_path, data)
+    assert p.returncode == 2 and merge_calls(calls) == []
+    assert "src/a.py" in p.stdout
+    # and main no longer protects AGENTS.md although the local guard.toml does, so it merges.
+    toml = (ROOT / ".github" / "guard.toml").read_text().replace('"AGENTS.md", ".agents', '".agents', 1)
+    data = responses(files=[f("AGENTS.md")])
+    data.update(source(".github/guard.toml", toml))
+    (tmp_path / "again").mkdir()
+    p, calls = run_main(tmp_path / "again", data)
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert len(merge_calls(calls)) == 1
 
 
 def test_main_unreadable_pr(tmp_path):

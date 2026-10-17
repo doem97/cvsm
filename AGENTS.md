@@ -16,7 +16,7 @@
 - Each instruction names a target state: "do #12" means merged if the task says `Merge: agent` and merge-ready otherwise, "take #10 to analysis" means all its sub-issues closed, "continue" means the next gate.
 - Stop only at the target, at a gate, or at a blocker; otherwise keep going.
 - Stop at these four gates even when everything works:
-  1. New or changed approved work: publishing a plan; changing a task's Goal, Scope or Acceptance; changing a protected path.
+  1. New or changed approved work: publishing a plan; changing a task's Goal, Scope, Acceptance or Merge; changing a protected path.
   2. Merging, unless the task says `Merge: agent`. Then merge once merge-ready with `python .github/scripts/merge.py N`, which refuses protected paths and unreviewed heads. Otherwise, or if it refuses, the merge-ready PR is the request: add no label or blocker comment.
   3. Exceeding a budget: tokens, time or GPU hours.
   4. Concluding and closing a study.
@@ -66,7 +66,7 @@
 ## Skills
 - Skills live in `.agents/skills/<name>/SKILL.md`; follow the one for your role.
 - `plan`: discussing work and publishing a study or plan with its sub-issues; stops at publishing.
-- `implement`: a `code` issue, from claim to merge-ready.
+- `implement`: a `code` issue, from claim to merge-ready, or to merged when the task says `Merge: agent`.
 - `review`: one PR, in a fresh session; ends with one comment whose first line is `Verdict: pass @ <head SHA>` or `Verdict: changes @ <head SHA>`.
 - `run`: a `run` issue, from its Runs to the results comment and closing.
 
