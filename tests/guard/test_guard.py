@@ -394,11 +394,15 @@ def test_guard_workflow():
 
 
 def test_test_workflow():
+    """The contract only: job `test` runs the suite on PRs and on pushes to main. Adopters edit the
+    install line freely, so dependencies and their versions are not checked."""
     wf = load_yaml(".github/workflows/test.yml")
-    assert "pull_request" in triggers(wf)
+    on = triggers(wf)
+    assert set(on) == {"pull_request", "push"}
+    assert on["push"]["branches"] == ["main"]
     assert set(wf["permissions"].values()) == {"read"}
-    runs = " ".join(s.get("run", "") for s in wf["jobs"]["test"]["steps"])
-    assert "pytest==8.3.3" in runs and "pyyaml==6.0.2" in runs and "python -m pytest -q" in runs
+    runs = [s["run"].strip() for s in wf["jobs"]["test"]["steps"] if "run" in s]
+    assert "python -m pytest -q" in runs
 
 
 def test_code_form():

@@ -32,11 +32,15 @@ otherwise (127 when it cannot start). The exit status is the command's own; sign
 
 GPU locks are <lock_dir>/<host>/gpu<i>.lock and the command inherits them, so a lease lasts as
 long as the command, even if run.py itself is killed. The default lock_dir, <tmp>/rh-gpu-locks,
-is shared by all users of the host; a configured lock_dir keeps its own permissions. SIGTERM,
-and SIGHUP unless it is ignored (nohup), are forwarded to the command. Ctrl-C already reaches
-it through the terminal, so SIGINT is not forwarded; stop a background run with SIGTERM. Any of
-the three before launch, including during the GPU wait, ends the run as KILLED without
-launching.
+is shared by all users of the host only if they share the temp dir (TMPDIR). When several users
+share a machine and TMPDIR is per-user, set lock_dir in run.toml to a local directory they can
+all write to; run.py makes the per-host subdirectory it creates there shareable (sticky,
+world-writable). Directories that already exist keep their permissions.
+
+SIGTERM, and SIGHUP unless it is ignored (nohup), are forwarded to the command. Ctrl-C already
+reaches it through the terminal, so SIGINT is not forwarded; stop a background run with
+SIGTERM. Any of the three before launch, including during the GPU wait, ends the run as KILLED
+without launching.
 """
 import argparse
 import fcntl
@@ -158,11 +162,16 @@ def hash_files(paths, base):
 
 
 def lock_dir(configured):
-    """<lock_dir>/<host>; the default one under the temp dir is shared by all users."""
+    """<lock_dir>/<host>, shareable by every user who can reach it."""
     if configured:
         # Per host, as a configured lock_dir may be on storage that several machines share.
         path = Path(configured).expanduser() / socket.gethostname()
-        path.mkdir(parents=True, exist_ok=True)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            path.mkdir()
+        except FileExistsError:
+            return path  # an existing one keeps its permissions
+        path.chmod(0o1777)  # else another user's O_CREAT fails there, as with the default below
         return path
     base = Path(tempfile.gettempdir()) / "rh-gpu-locks"
     for path in (base, base / socket.gethostname()):
