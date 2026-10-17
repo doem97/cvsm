@@ -86,16 +86,16 @@ harness 刻意不做的事：
 - `Run`：Run 命令和结果评论命令；
 - `Run records`：运行记录写到哪个 MLflow 后端。
 
-**3. 以管理员身份运行 `scripts/setup.sh`。** 先把以上改动合进 main：guard 用 `pull_request_target`，跑的是 main 上的版本；main 上还没有 `guard` 和 `test` 两个 workflow 时，必过检查会卡住所有 PR。然后在仓库根目录、用有管理员权限的 gh 登录运行：
+**3. 安装 CI 依赖。** 改 `.github/workflows/test.yml` 里的 `pip install` 一行，装上你项目的依赖和测试工具，测试命令与 AGENTS.md 的 `Test` 一致。如果保留 `scripts/run.py` 的测试，还要装 MLflow（模板里装的是 `mlflow-skinny`，加上 SQLite 需要的 `sqlalchemy` 和 `alembic`）。job 名 `guard` 和 `test` 不要改，分支保护按这两个名字认检查。本机跑实验的环境同样需要 MLflow。
+
+**4. 以管理员身份运行 `scripts/setup.sh`。** 默认分支需要叫 `main`（老仓库是 `master` 的，先在 GitHub 上改名），setup.sh、guard 和各个 skill 都按 main 写。先把以上改动合进 main：guard 用 `pull_request_target`，跑的是 main 上的版本；main 上还没有 `guard` 和 `test` 两个 workflow 时，必过检查会卡住所有 PR。然后在仓库根目录、用有管理员权限的 gh 登录运行：
 
 ```
 bash scripts/setup.sh            # 默认是当前目录所在的仓库
 bash scripts/setup.sh owner/repo
 ```
 
-它建五个 label（`study`、`plan`、`code`、`run`、`needs-decision`），只允许 squash 合并（PR 标题作提交标题，正文留空），合并后自动删分支；给 main 加分支保护：必须走 PR，`guard` 和 `test` 必过，0 个批准，管理员也不能绕过，禁止强推和删除。可以重复运行；不会删除已有的其他 label。私有仓库的分支保护需要 GitHub 付费套餐（例如 Pro 或 Team），公开仓库不需要。
-
-**4. 安装 CI 依赖。** 改 `.github/workflows/test.yml` 里的 `pip install` 一行，装上你项目的依赖和测试工具，测试命令与 AGENTS.md 的 `Test` 一致。如果保留 `scripts/run.py` 的测试，还要装 MLflow（模板里装的是 `mlflow-skinny`，加上 SQLite 需要的 `sqlalchemy` 和 `alembic`）。job 名 `guard` 和 `test` 不要改，分支保护按这两个名字认检查。本机跑实验的环境同样需要 MLflow。
+它建五个 label（`study`、`plan`、`code`、`run`、`needs-decision`），只允许 squash 合并（PR 标题作提交标题，正文留空），合并后自动删分支；给 main 加分支保护：必须走 PR，`guard` 和 `test` 必过，0 个批准，管理员也不能绕过，禁止强推和删除。可以重复运行，不会删除已有的其他 label；但分支保护是整体覆盖的，项目后来自己加的保护设置（例如要求批准）重跑时会被还原。私有仓库的分支保护需要 GitHub 付费套餐（例如 Pro 或 Team），公开仓库不需要。
 
 **5. 确认两种 agent 都读到了规则。**
 - Codex：读 `AGENTS.md`，从 `.agents/skills` 读 skill，从 `.codex/rules` 读规则。可以用 `codex execpolicy check --rules .codex/rules/harness.rules gh pr merge 1` 确认结果是 `forbidden`。
