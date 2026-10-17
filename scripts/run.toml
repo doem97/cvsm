@@ -1,0 +1,6 @@
+experiment = "research-harness"  # MLflow experiment for this project; MLFLOW_EXPERIMENT_NAME overrides it
+env_lock = ["uv.lock"]           # hashed into rh.env_lock_sha; missing files listed in rh.env_lock_missing
+data_manifest = ""               # hashed into rh.data_manifest_sha; empty means none
+seed_key = "seed"                # matches seed=N, --seed=N or --seed N in the command
+gpus = []                        # GPU ids to lease from; empty disables leasing
+lock_dir = ""                    # GPU lock files go in <lock_dir>/<host>/; empty means the system temp dir
