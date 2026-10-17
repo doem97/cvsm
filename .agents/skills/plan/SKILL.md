@@ -29,10 +29,10 @@ Write nothing to GitHub or to files while discussing.
 
 ## 2. Discuss
 
-Talk with the human in Chinese until the draft below is complete; raise every ambiguity that
-would change a deliverable now, not after publishing. The human approves a study's spec but
-cannot check the work below it, so work out with them the ideal fair comparison, complete
-and justified before publishing:
+Talk with the human in Chinese until the draft below is complete: the question or goal, what
+result answers it, the budget, and for a study its spec; raise every ambiguity that would change
+a deliverable now. The human approves the spec but cannot check the work below it, so work out
+with them the ideal fair comparison, complete and justified before publishing:
 - Arms: the only settings in which the arms differ.
 - Controlled: walk the usual confounders with the human and fix every one that applies:
   data and split; preprocessing and augmentation; model and init; optimizer and schedule;
@@ -65,7 +65,7 @@ Sub-issues, with the exact `### ` sections of their forms:
   - `### Runs`: one command per line with its config overrides and seed; each line is the
     `<cmd>` that the Run command in AGENTS.md Project wraps. A line may start with options of
     that command before `--`, e.g. `--gpus 4 -- python train.py seed=1`. Each line runs
-    one arm; the study's run issues together give every arm every value of each `in` line.
+    one arm, each arm an issue runs gets every `in` value; the study's run issues run every arm.
   - `### Budget`: GPU hours.
   - `### Report`: metric names, space-separated.
 
@@ -116,5 +116,5 @@ Then report the three lines of AGENTS.md Report in Chinese, with links, and stop
 or start any sub-issue unless the instruction names a target beyond publishing.
 
 Changing a published task's Goal, Scope, Acceptance or Merge, or a study's Arms, Controlled or
-Adaptable, is gate 1 as well: edit it with `gh issue edit <N> --body "..."` only on the human's
-explicit instruction, then record a Decision on that issue.
+Adaptable, is gate 1 as well: edit it (`gh issue edit <N>`, body as in section 5) only on the
+human's explicit instruction, then record a Decision on that issue.
