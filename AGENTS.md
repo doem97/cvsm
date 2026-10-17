@@ -13,7 +13,7 @@
 - Write every state change to GitHub or git as it happens; the session can end at any moment.
 
 ## Gates
-- Each instruction names a target state: "do #12" means merge-ready, "take #10 to analysis" means all its sub-issues closed, "continue" means the next gate.
+- Each instruction names a target state: "do #12" means merged if the task says `Merge: agent` and merge-ready otherwise, "take #10 to analysis" means all its sub-issues closed, "continue" means the next gate.
 - Stop only at the target, at a gate, or at a blocker; otherwise keep going.
 - Stop at these four gates even when everything works:
   1. New or changed approved work: publishing a plan; changing a task's Goal, Scope or Acceptance; changing a protected path.
