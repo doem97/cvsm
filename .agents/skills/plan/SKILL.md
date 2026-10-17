@@ -102,7 +102,8 @@ A=${url##*/}
 url=$(gh issue create --label run --title "<title>" --parent "$P" --blocked-by "$A,$B" --body "...")
 ```
 
-- Use `--label plan` for a development parent. Omit `--blocked-by` in wave 1.
+- Use `--label plan` for a development parent; omit `--blocked-by` in wave 1. Pass every body
+  through a quoted heredoc as in the first example: in double quotes, backticks run as commands.
 - Check: `gh issue view "$P"` lists every sub-issue; `gh issue view <N>` shows each blocked-by.
 
 ## 6. Record and stop

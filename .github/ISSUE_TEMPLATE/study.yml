@@ -20,7 +20,7 @@ body:
     id: controlled
     attributes:
       label: Controlled
-      description: '每行一个所有 run 都要满足的设置，理由必填（论文、记录或之前的结果）：`<key>=<value>  # <理由>` 表示每个 run 都取这个值；`<key> in <v1>,<v2>,...  # <理由>` 表示每组都要跑遍这些值，如 seed 和调参网格。逐项写全常见的混杂因素：数据与划分、预处理与增强、模型与初始化、优化器与调度、有效 batch 与训练长度、精度、调参预算、评测协议与 checkpoint 选择、seed。例如 `train.effective_batch=256  # 论文 X 表 2`、`seed in 1,2,3  # 论文 X 用 3 个 seed`。'
+      description: '每行一个所有 run 都要满足的设置，理由必填（论文、记录或之前的结果）：`<key>=<value>  # <理由>` 表示每个 run 都取这个值；`<key> in <v1>,<v2>,...  # <理由>` 表示每组都要跑遍这些值，如 seed 和调参网格。常见的混杂因素中适用的逐项写上：数据与划分、预处理与增强、模型与初始化、优化器与调度、有效 batch 与训练长度、精度、调参预算、评测协议与 checkpoint 选择、seed。例如 `train.effective_batch=256  # 论文 X 表 2`、`seed in 1,2,3  # 论文 X 用 3 个 seed`。'
     validations:
       required: true
   - type: textarea
