@@ -35,8 +35,9 @@ cfg.<dotted key>: nested objects flatten to dotted keys (an empty one is the val
 are logged as they are and other values as JSON. Keys and values longer than MLflow's limits
 (250 and 6000 characters in MLflow 3) are truncated to them, as MLflow's autologging does. Keys
 MLflow refuses as param names (only alphanumerics, `_ - . / :` and spaces are allowed), and keys
-that repeat an earlier one after flattening or truncation, are skipped and printed to stderr. If logging fails, it is tried once
-more at the end. The file itself is uploaded with the other RUN_DIR files.
+that repeat an earlier one after flattening or truncation, are skipped and printed to stderr.
+If logging fails, it is tried once more at the end. The file itself is uploaded with the other
+RUN_DIR files.
 
 The final status is FINISHED for exit 0, KILLED when a signal stopped the command, and FAILED
 otherwise (127 when it cannot start). The exit status is the command's own; signal S gives
@@ -290,8 +291,9 @@ def log_config(client, run_id, run_dir):
         else:
             ps[k] = Param(k, v[:MAX_PARAM_VAL_LENGTH])
     if skipped:
-        print(f"run.py: config.json keys not logged as params (refused by MLflow, or repeating an "
-              f"earlier key after flattening or truncation; see the config.json artifact): {', '.join(skipped)}", file=sys.stderr)
+        print("run.py: config.json keys not logged as params (refused by MLflow, or repeating an "
+              "earlier key after flattening or truncation; see the config.json artifact): "
+              + ", ".join(skipped), file=sys.stderr)
     ps = list(ps.values())
     try:
         for i in range(0, len(ps), MAX_PARAMS_TAGS_PER_BATCH):

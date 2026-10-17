@@ -83,7 +83,7 @@ git -C <rh clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts 
 再把 `.gitignore` 的几行并进去；`tests/` 里用不上的测试可以删掉。记下复制自 rh 的哪个 commit（`git -C <rh clone> rev-parse HEAD`），写进接入提交的信息，以后好对照 rh 的改进同步。
 - 改 `.github/guard.toml`：`layout` 加上你的目录（如 `src/**`、`configs/**`）和项目会改的根目录文件（如 `pyproject.toml`、`uv.lock` 等锁文件、`.python-version`），漏了的话改依赖的 PR 会被 guard 拒收；`protected` 加上评测和数据路径，`markdown` 按需调整。
 - 改 `scripts/run.toml`：`experiment`、`env_lock`（你的锁文件）、`gpus`。数据目录通常被 git 忽略，数据指纹因此来自一个被跟踪的数据清单：记着各数据文件校验和的文件（例如 `sha256sum` 的输出存成 `data.sha256`）。把它相对仓库根目录的路径写进 `data_manifest`，并加进 guard.toml 的 `layout` 和 `protected`。
-- 让训练代码在启动时把解析后的完整配置写成 JSON 对象，存到 `$RUN_DIR/config.json`（只由一个进程写，例如 rank 0）：所有可能影响结果的设置都要在里面，包括推导出来的，例如有效 batch。研究规格里的键就是这份配置展开后的点号键（如 `optim.lr`），结果命令靠它核对每个 run 是否符合规格。
+- 让训练代码在启动时把解析后的完整配置写成 JSON 对象，存到 `$RUN_DIR/config.json`（只由一个进程写，例如 rank 0）：所有可能影响结果的设置都要在里面，包括推导出来的，例如有效 batch。研究规格里的键就是这份配置展开后的点号键（如 `optim.lr`），结果命令靠它核对每个 run 是否符合规格。只放会影响结果的设置：输出目录、run 名、时间戳这类每个 run 都不同、又不影响结果的值不要写进去，否则每条结果评论都会把它们列为 `未声明的差异`；确实要放的，在研究规格里声明为 Adaptable。
 - 几个用户共用一台机器、`TMPDIR` 又按用户区分时，默认的 GPU 锁目录各在各的 `TMPDIR` 下，互相看不见；把 run.toml 的 `lock_dir` 设成他们都能写的同一个本机目录。
 - 已有的 CLAUDE.md：只把项目事实压缩进 AGENTS.md 的 Project 一节（每个字段一行），其余内容挪到 `docs/` 或代码注释里，然后删掉 CLAUDE.md：harness 只认 AGENTS.md，guard 会拒收别处的 `.md`。
 

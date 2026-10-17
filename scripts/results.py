@@ -19,10 +19,10 @@ config.json. It reads the lines of ### Arms (`<arm>: <key>=<value> ...`), ### Co
 (`<key>=<value>  # <reason>` or `<key> in <v1>,<v2>,...  # <reason>`) and ### Adaptable
 (`<key>  # <rule>`), and lists as facts: problems of the spec itself (unreadable lines,
 Controlled lines without a reason, a missing Arms or Controlled section, keys in several
-sections); runs where a Controlled line
-does not hold or whose config lacks its key (未记录); runs matching no arm or several; arms
-missing values of an `in` line among their running or successful runs; keys in no section whose values differ across the runs that
-recorded a config; arms with no run; and the values each Adaptable key took per arm. Values
+sections); runs where a Controlled line does not hold or whose config lacks its key (未记录);
+runs matching no arm or several; arms missing values of an `in` line among their running or
+successful runs; keys in no section whose values differ across the runs that recorded a
+config; arms with no run; and the values each Adaptable key took per arm. Values
 compare as JSON when they parse as JSON (numbers by value), else as strings. With a spec, the
 table gains each group's arms.
 """
