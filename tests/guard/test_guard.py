@@ -399,10 +399,10 @@ def test_test_workflow():
     wf = load_yaml(".github/workflows/test.yml")
     on = triggers(wf)
     assert {"pull_request", "push"} <= set(on)  # projects may add more triggers
-    assert on["push"]["branches"] == ["main"]
+    assert "main" in ((on["push"] or {}).get("branches") or ["main"])  # a bare `push:` covers main
     assert set(wf["permissions"].values()) == {"read"}
     runs = [s["run"].strip() for s in wf["jobs"]["test"]["steps"] if "run" in s]
-    assert "python -m pytest -q" in runs
+    assert any("pytest" in r for r in runs)  # e.g. `python -m pytest -q`, `uv run pytest -q`
 
 
 def test_code_form():
