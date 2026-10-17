@@ -85,9 +85,10 @@ codex exec review "Review the changes of this branch against origin/main \
 
   Its stdout, saved in that file, is the review: a summary and findings tagged `[P0]`–`[P3]`.
   Any `[P0]` or `[P1]` finding means `changes`, otherwise `pass`. The session that ran it posts
-  the file verbatim under the Verdict line, with the reviewed SHA, in one shell call (agent
-  shells may not keep variables between calls). The post and the `rm` run only if the PR head
-  still equals `$sha`; if the `test` fails, nothing is posted: review the current head instead.
+  the file verbatim under the Verdict line, with the reviewed SHA, in one shell call run in the
+  checkout Codex reviewed (agent shells may not keep variables between calls). The post and the
+  `rm` run only if the PR head still equals `$sha`; if the `test` fails, nothing is posted:
+  review the current head instead.
 
 ```
 sha=$(git rev-parse HEAD)
