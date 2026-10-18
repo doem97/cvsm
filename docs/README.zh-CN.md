@@ -5,7 +5,7 @@
 
 **让编码 agent 推进你的机器学习研究，同时让每个对比都公平。**
 
-rh 是一套模板，复制进研究仓库就能用，不是一个服务。状态放在 GitHub issue 里，步骤写在一个规则文件（`AGENTS.md`）和四个 skill 里，Claude Code 和 Codex 都能用。你在会话里只在四个关口做决定：发布、合并、预算、下结论。每个 run 都按它自己的记录，对照你批准的研究规格核对。
+research-harness（rh）是一套模板，复制进研究仓库就能用，不是一个服务。状态放在 GitHub issue 里，步骤写在一个规则文件（`AGENTS.md`）和四个 skill 里，Claude Code 和 Codex 都能用。你在会话里做决定，固定的关口有四个：发布、合并、预算、下结论。每个 run 都按它自己的记录，对照你批准的研究规格核对。
 
 ![状态：预发布](https://img.shields.io/badge/%E7%8A%B6%E6%80%81-%E9%A2%84%E5%8F%91%E5%B8%83-5C616B?style=flat-square&labelColor=0B0C0F) ![agent：Claude Code 和 Codex](https://img.shields.io/badge/agent-Claude_Code_%C2%B7_Codex-5C616B?style=flat-square&labelColor=0B0C0F) ![安装：无需服务](https://img.shields.io/badge/%E5%AE%89%E8%A3%85-%E6%97%A0%E9%9C%80%E6%9C%8D%E5%8A%A1-5C616B?style=flat-square&labelColor=0B0C0F) ![人的关口：4](https://img.shields.io/badge/%E4%BA%BA%E7%9A%84%E5%85%B3%E5%8F%A3-4-F04A0E?style=flat-square&labelColor=0B0C0F) ![run：按规格核对](https://img.shields.io/badge/run-%E6%8C%89%E8%A7%84%E6%A0%BC%E6%A0%B8%E5%AF%B9-2F6FE0?style=flat-square&labelColor=0B0C0F) ![许可证：Apache-2.0](https://img.shields.io/badge/%E8%AE%B8%E5%8F%AF%E8%AF%81-Apache--2.0-5C616B?style=flat-square&labelColor=0B0C0F)
 
@@ -42,6 +42,7 @@ rh 是一套模板，复制进研究仓库就能用，不是一个服务。状�
 - **指南**：[接入](https://doem97.github.io/research-harness/zh-cn/guides/adopt/) · [计划一个研究](https://doem97.github.io/research-harness/zh-cn/guides/plan-a-study/) · [跑实验](https://doem97.github.io/research-harness/zh-cn/guides/run-experiments/) · [适配自己的环境](https://doem97.github.io/research-harness/zh-cn/guides/adapt-your-environment/) · [Claude Code 和 Codex](https://doem97.github.io/research-harness/zh-cn/guides/claude-code-and-codex/)
 - **参考**：[AGENTS.md](https://doem97.github.io/research-harness/zh-cn/reference/agents-md/) · [skill](https://doem97.github.io/research-harness/zh-cn/reference/skills/) · [issue 表单](https://doem97.github.io/research-harness/zh-cn/reference/issue-forms/) · [guard](https://doem97.github.io/research-harness/zh-cn/reference/guard/) · [merge.py](https://doem97.github.io/research-harness/zh-cn/reference/merge-py/) · [run.py](https://doem97.github.io/research-harness/zh-cn/reference/run-py/) · [results.py](https://doem97.github.io/research-harness/zh-cn/reference/results-py/) · [接口](https://doem97.github.io/research-harness/zh-cn/reference/interfaces/)
 - **项目**：[状态](https://doem97.github.io/research-harness/zh-cn/project/status/) · [用 rh 开发 rh](https://doem97.github.io/research-harness/zh-cn/project/built-with-rh/) · [许可证](https://doem97.github.io/research-harness/zh-cn/project/license/)
+- **设计文档**：[docs/design/2026-10-16-harness-v1.md](design/2026-10-16-harness-v1.md)
 
 rh 处于预发布阶段，接口仍可能变化。文档站点随第一个正式版上线。
 
