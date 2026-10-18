@@ -110,24 +110,26 @@ train.accum  # follows per_device_batch
 > - Adaptable `train.accum`：full 取 4（3 个 run）；lora 取 4（3 个 run）
 
 <details>
-<summary><code>results.py</code> 的完整输出（issue 编号写成代码，免得 GitHub 把它链到真实的 issue）</summary>
+<summary><code>results.py</code> 的完整输出</summary>
 
-> `#12` 的结果：6 个 run，3 组，按去掉 seed 的命令分组。
->
-> | 命令 | arm | n | 失败数 | top1 均值 | top1 标准差 | commit | 环境锁 | 数据 |
-> |---|---|---|---|---|---|---|---|---|
-> | `python train.py arm=full` | full | 3 | 0 | 0.8505 | 0.00358 | 7ac858e | 73cb3858 | 无 |
-> | `python train.py arm=lora` | lora | 2 | 0 | 0.8424 | 0.004648 | 7ac858e | 73cb3858 | 无 |
-> | `python train.py arm=lora batch=32 precision=fp16` | lora | 1 | 0 | 0.8399 | — | 7ac858e | 73cb3858 | 无 |
->
-> 标注：
-> - 无
->
-> 规格核对：
-> - `train.effective_batch=256` 不成立：1 个 run，0330bc8a46094e03a875e72c6dfd0872（128）
-> - 未声明的差异 `train.precision`：bf16（5 个 run）、fp16（1 个 run）
-> - Adaptable `train.per_device_batch`：full 取 64（3 个 run）；lora 取 64（2 个 run）、32（1 个 run）
-> - Adaptable `train.accum`：full 取 4（3 个 run）；lora 取 4（3 个 run）
+```text
+#12 的结果：6 个 run，3 组，按去掉 seed 的命令分组。
+
+| 命令 | arm | n | 失败数 | top1 均值 | top1 标准差 | commit | 环境锁 | 数据 |
+|---|---|---|---|---|---|---|---|---|
+| `python train.py arm=full` | full | 3 | 0 | 0.8505 | 0.00358 | 7ac858e | 73cb3858 | 无 |
+| `python train.py arm=lora` | lora | 2 | 0 | 0.8424 | 0.004648 | 7ac858e | 73cb3858 | 无 |
+| `python train.py arm=lora batch=32 precision=fp16` | lora | 1 | 0 | 0.8399 | — | 7ac858e | 73cb3858 | 无 |
+
+标注：
+- 无
+
+规格核对：
+- `train.effective_batch=256` 不成立：1 个 run，0330bc8a46094e03a875e72c6dfd0872（128）
+- 未声明的差异 `train.precision`：bf16（5 个 run）、fp16（1 个 run）
+- Adaptable `train.per_device_batch`：full 取 64（3 个 run）；lora 取 64（2 个 run）、32（1 个 run）
+- Adaptable `train.accum`：full 取 4（3 个 run）；lora 取 4（3 个 run）
+```
 
 </details>
 
