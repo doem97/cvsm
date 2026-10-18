@@ -618,17 +618,20 @@ def stats(s):
 SESSION = [("you", "let’s plan this study: does LoRA match full fine-tuning?", None),
            ("agent", ["Discusses the spec with you, then drafts study #10 with code #11 and run #12."], None),
            ("you", "publish", "01"),
-           ("agent", ["Done: published #10 with #11 and #12", "Decision: recorded on #10"], None),
+           ("agent", ["Done: published #10 with #11 and #12; Decision on #10", "Waiting for you: nothing",
+                      "Next: #11 is ready"], None),
            ("you", "do #11", None),
            ("agent", ["Done: PR #13 is merge-ready, Verdict: pass @ 3f9c2a1",
                       "Waiting for you: merge PR #13", "Next: run #12"], None),
            ("you", "merge", "02"),
-           ("agent", ["Done: merged PR #13 with merge.py --human; #11 closed", "Decision: recorded on #11"], None),
+           ("agent", ["Done: merged PR #13 with merge.py --human; #11 closed; Decision on #11",
+                      "Waiting for you: nothing", "Next: run #12"], None),
            ("you", "take #10 to analysis", None),
            ("agent", ["Done: #12 closed with its results and spec check; study table on #10",
                       "Waiting for you: conclude #10", "Next: nothing"], None),
            ("you", "what’s waiting for me?", None),
-           ("agent", ["Study #10 awaits your conclusion (gate 04). No blockers, no PRs waiting."], None)]
+           ("agent", ["Done: read the state on GitHub; no blockers, no PRs waiting",
+                      "Waiting for you: conclude #10 (gate 04)", "Next: nothing until you decide"], None)]
 
 
 def session(s):
@@ -680,7 +683,7 @@ ASSETS = {
               "0 services to install; 80 lines of rules, capped by a test; 4 skills of at most 120 lines each; "
               "4 human gates (publish, merge, budget, conclude); 1 merge path for agents, merge.py; 2 agent CLIs "
               "(Claude Code and Codex) sharing one set of skills."),
-    "session": (session, 1300, "Talk, don't click: a session with rh",
+    "session": (session, 1460, "Talk, don't click: a session with rh",
                 "A session transcript: you plan a study, say publish (gate 01), do #11, merge (gate 02), take the "
                 "study to analysis and ask what is waiting; the agent answers each stop with Done, Waiting for "
                 "you and Next."),

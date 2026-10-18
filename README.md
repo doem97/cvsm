@@ -5,9 +5,9 @@
 
 **Let coding agents run your ML research, and keep every comparison fair.**
 
-rh is a template you copy into a research repo. GitHub issues hold the state, one rules file and four skills hold the procedure, and every run is checked against the study spec you approved, from its own record. There is nothing to install.
+rh is a template you copy into a research repo. GitHub issues hold the state, one rules file and four skills hold the procedure, and every run is checked against the study spec you approved, from its own record. There is no service to install or host.
 
-![status: pre-release](https://img.shields.io/badge/status-pre--release-5C616B?style=flat-square&labelColor=0B0C0F) ![agents: Claude Code and Codex](https://img.shields.io/badge/agents-Claude_Code_%C2%B7_Codex-5C616B?style=flat-square&labelColor=0B0C0F) ![install: nothing](https://img.shields.io/badge/install-nothing-5C616B?style=flat-square&labelColor=0B0C0F) ![human gates: 4](https://img.shields.io/badge/human_gates-4-F04A0E?style=flat-square&labelColor=0B0C0F) ![runs: checked against the spec](https://img.shields.io/badge/runs-checked_against_the_spec-2F6FE0?style=flat-square&labelColor=0B0C0F)
+![status: pre-release](https://img.shields.io/badge/status-pre--release-5C616B?style=flat-square&labelColor=0B0C0F) ![agents: Claude Code and Codex](https://img.shields.io/badge/agents-Claude_Code_%C2%B7_Codex-5C616B?style=flat-square&labelColor=0B0C0F) ![install: no service](https://img.shields.io/badge/install-no_service-5C616B?style=flat-square&labelColor=0B0C0F) ![human gates: 4](https://img.shields.io/badge/human_gates-4-F04A0E?style=flat-square&labelColor=0B0C0F) ![runs: checked against the spec](https://img.shields.io/badge/runs-checked_against_the_spec-2F6FE0?style=flat-square&labelColor=0B0C0F)
 
 [中文](docs/README.zh-CN.md) · [Adopt rh](#adopt-rh) · [Design (中文)](docs/design/2026-10-16-harness-v1.md)
 
@@ -44,7 +44,7 @@ Each instruction names a target state. The agent keeps going until it reaches th
 
 | Gate | When | What you say |
 |---|---|---|
-| **01&nbsp;Publish** | New or changed approved work: publishing a plan; changing a task's Goal, Scope, Acceptance or Merge, or a study's Arms, Controlled or Adaptable; changing a protected path | "publish" |
+| **01&nbsp;Publish** | New or changed approved work: publishing a plan; changing a task's Goal, Scope, Acceptance or Merge, or a study's Arms, Controlled or Adaptable; changing a protected path | "publish", or approve the change |
 | **02&nbsp;Merge** | A PR is merge-ready, unless its task says `Merge: agent`. Then the agent merges it itself with `merge.py`, which refuses protected paths and heads without a passing review | "merge", or "merge `#15`" |
 | **03&nbsp;Budget** | The next step would exceed the budget in tokens, time or GPU hours | "continue", with a new budget if you like |
 | **04&nbsp;Conclude** | All of a study's sub-issues are closed and it awaits analysis | your conclusion, e.g. "conclude `#10`: …" |
@@ -101,7 +101,7 @@ The `run` skill checks right after launch and stops runs that break the spec. Ev
 
 When all of a study's run issues close, the same table and check for the whole study is posted on the study.
 
-This is real output of `scripts/results.py` for six toy runs of the spec above. One lora run was launched with a smaller per-device batch and fp16. Results text follows the project's language, and this repo's is Chinese.
+This is the output of `scripts/results.py` for six toy runs of the spec above. One lora run was launched with a smaller per-device batch and fp16. The runs were started with `run.py` directly, not through the `run` skill, which would have stopped that run right after launch. The reference `results.py` writes its text in Chinese; a project that wants another language changes `results.py`.
 
 > 规格核对：
 > - `train.effective_batch=256` 不成立：1 个 run，0330bc8a46094e03a875e72c6dfd0872（128）
@@ -115,7 +115,7 @@ In English, that reads:
 - These are the values each Adaptable key took.
 
 <details>
-<summary>The whole results comment</summary>
+<summary>The whole output of <code>results.py</code> (issue number set as code so GitHub doesn't link it)</summary>
 
 > `#12` 的结果：6 个 run，3 组，按去掉 seed 的命令分组。
 >
@@ -180,12 +180,12 @@ Every stop ends with three lines, with links: `Done:`, `Waiting for you:` and `N
 | `scripts/run.toml` | run.py's config: MLflow experiment name, environment lock, data manifest, seed parameter name, GPU list, GPU lock directory |
 | `scripts/setup.sh` | One-time repo setup: labels, merge settings, branch protection of main |
 | `tests/` | Tests for the scripts and rule files above |
-| `docs/` | Design documents written by people |
+| `docs/` | Design documents written by people, the Chinese README (`README.zh-CN.md`), and the README figures with their generator (`assets/`) |
 | `.gitignore` | Ignores the local MLflow store (`mlflow.db*`, `mlartifacts/`, `mlruns/`) |
 
 ## Principles
 
-- **GitHub-native, nothing to install.** State lives in issues, PRs, checks and branch protection. Nothing is stored anywhere else, and a session can end at any moment without losing anything.
+- **GitHub-native, no service to install.** Workflow state lives in issues, PRs, checks and branch protection, and run records live in MLflow. Sessions keep nothing, so a session can end at any moment without losing anything.
 - **Mechanism, not policy.** rh records facts and shows differences. It doesn't choose seeds, design experiments, decide when to rerun, or judge whether runs are comparable. You set those in the spec and your instructions. It also leaves analysis, visualization and how an agent works inside a task to you.
 - **Written for capable models.** Rules are short and concrete. They assume an agent that follows clearly written rules. Scripts fix the process, but they don't defend against malformed input, forgery or outsiders.
 - **A template, not a framework.** rh ships no adapters for clusters, schedulers, storage or tracking services. `run.py` and `results.py` are a single-machine reference. Each adopter fits its own cluster, scheduler (e.g. SLURM) and tracking backend through its own issues, and keeps the [interfaces that stay fixed](#interfaces-that-stay-fixed).
@@ -416,7 +416,7 @@ guard, merge.py and the skills read bodies by their `### ` headings, so the head
 
 ## Language
 
-This README is in English, and a complete [Chinese version](docs/README.zh-CN.md) sits in `docs/`.
+This README is in English, and a complete [Chinese version](docs/README.zh-CN.md) sits in `docs/`. The two are kept in sync.
 
 In this repo, all other human-facing text is Chinese: PR bodies, issue and PR comments, reports, issue-form descriptions and results comments. The one exception is review comments, which keep the review tool's own text below the Verdict line.
 
@@ -424,4 +424,4 @@ Agent instructions (AGENTS.md, skills), code, PR titles and format keywords (`Cl
 
 ## Status
 
-rh is a pre-release. It runs its own development, and its interfaces may still change before the first release. The licence will come with the first release.
+rh is a pre-release. It runs its own development, and its interfaces may still change before the first release.

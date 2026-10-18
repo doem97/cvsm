@@ -74,7 +74,7 @@
 <!-- Adopters replace this section with their own project's values. -->
 - Layout: this repo is the template itself; there is no src/, and scripts/ holds the reference run and results scripts.
 - Test: `python -m pytest -q`
-- Language: README.md is English, with a Chinese version at docs/README.zh-CN.md; other human-facing text is Chinese (PR bodies, issue and PR comments, reports, issue-form descriptions, the results comment), except review comments, which keep the reviewing tool's own text below the Verdict line; agent instructions (AGENTS.md, skills), code, PR titles and format keywords stay English.
+- Language: README.md is English, with a Chinese version at docs/README.zh-CN.md (keep both in sync); other human-facing text is Chinese (PR bodies, issue and PR comments, reports, issue-form descriptions, the results comment), except review comments, which keep the reviewing tool's own text below the Verdict line; agent instructions (AGENTS.md, skills), code, PR titles and format keywords stay English.
 - Protected eval/data paths: none.
 - Run: `python scripts/run.py --issue N -- <cmd>`; results comment: `python scripts/results.py --issue N`.
 - Run records: MLflow runs in the backend that `MLFLOW_TRACKING_URI` names; if unset, `mlflow.db` at the main clone root. The experiment is set in `scripts/run.toml`.

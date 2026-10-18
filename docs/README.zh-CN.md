@@ -5,9 +5,9 @@
 
 **让编码 agent 推进你的机器学习研究，同时让每个对比都公平。**
 
-rh 是一套模板，复制进研究仓库就能用。状态放在 GitHub issue 里，步骤写在一个规则文件和四个 skill 里；每个 run 都按它自己的记录，对照你批准的研究规格核对。没有要安装的东西。
+rh 是一套模板，复制进研究仓库就能用。状态放在 GitHub issue 里，步骤写在一个规则文件和四个 skill 里；每个 run 都按它自己的记录，对照你批准的研究规格核对。没有要安装或托管的服务。
 
-![状态：预发布](https://img.shields.io/badge/%E7%8A%B6%E6%80%81-%E9%A2%84%E5%8F%91%E5%B8%83-5C616B?style=flat-square&labelColor=0B0C0F) ![agent：Claude Code 和 Codex](https://img.shields.io/badge/agent-Claude_Code_%C2%B7_Codex-5C616B?style=flat-square&labelColor=0B0C0F) ![安装：无](https://img.shields.io/badge/%E5%AE%89%E8%A3%85-%E6%97%A0-5C616B?style=flat-square&labelColor=0B0C0F) ![人的关口：4](https://img.shields.io/badge/%E4%BA%BA%E7%9A%84%E5%85%B3%E5%8F%A3-4-F04A0E?style=flat-square&labelColor=0B0C0F) ![run：按规格核对](https://img.shields.io/badge/run-%E6%8C%89%E8%A7%84%E6%A0%BC%E6%A0%B8%E5%AF%B9-2F6FE0?style=flat-square&labelColor=0B0C0F)
+![状态：预发布](https://img.shields.io/badge/%E7%8A%B6%E6%80%81-%E9%A2%84%E5%8F%91%E5%B8%83-5C616B?style=flat-square&labelColor=0B0C0F) ![agent：Claude Code 和 Codex](https://img.shields.io/badge/agent-Claude_Code_%C2%B7_Codex-5C616B?style=flat-square&labelColor=0B0C0F) ![安装：无需服务](https://img.shields.io/badge/%E5%AE%89%E8%A3%85-%E6%97%A0%E9%9C%80%E6%9C%8D%E5%8A%A1-5C616B?style=flat-square&labelColor=0B0C0F) ![人的关口：4](https://img.shields.io/badge/%E4%BA%BA%E7%9A%84%E5%85%B3%E5%8F%A3-4-F04A0E?style=flat-square&labelColor=0B0C0F) ![run：按规格核对](https://img.shields.io/badge/run-%E6%8C%89%E8%A7%84%E6%A0%BC%E6%A0%B8%E5%AF%B9-2F6FE0?style=flat-square&labelColor=0B0C0F)
 
 [English](../README.md) · [接入 rh](#接入-rh) · [设计文档](design/2026-10-16-harness-v1.md)
 
@@ -44,7 +44,7 @@ rh 本身就是用 rh 开发的。从第一个提交之后，main 上的每次�
 
 | 关口 | 什么时候 | 你说什么 |
 |---|---|---|
-| **01&nbsp;发布** | 新增或改变已批准的工作：发布计划；改任务的 Goal、Scope、Acceptance 或 Merge，或研究的 Arms、Controlled、Adaptable；改受保护路径 | "发布" |
+| **01&nbsp;发布** | 新增或改变已批准的工作：发布计划；改任务的 Goal、Scope、Acceptance 或 Merge，或研究的 Arms、Controlled、Adaptable；改受保护路径 | "发布"，或批准这处改动 |
 | **02&nbsp;合并** | PR 待合并时，除非任务写了 `Merge: agent`。那时 agent 自己用 merge.py 合并；碰了受保护路径、或当前 head 没有审查通过的，merge.py 会拒绝 | "合并"，或"合并 `#15`" |
 | **03&nbsp;预算** | 下一步会超出预算：token、时间或 GPU 小时 | "继续"，也可以给个新预算 |
 | **04&nbsp;下结论** | 研究的子 issue 全部关闭，进入待分析 | 你的结论，例如"`#10` 下结论：……" |
@@ -101,7 +101,7 @@ train.accum  # follows per_device_batch
 
 研究的 run issue 全部关闭后，整个研究的总表和核对也会贴到研究 issue 上。
 
-下面是 `scripts/results.py` 对上面这份规格的六个玩具 run 的真实输出。其中一个 lora run 用了更小的每卡 batch 和 fp16。结果文字跟随项目的语言，本仓库是中文。
+下面是 `scripts/results.py` 对上面这份规格的六个玩具 run 的输出。其中一个 lora run 用了更小的每卡 batch 和 fp16。这些 run 是直接用 `run.py` 启动的，没有经过 `run` skill；按 `run` skill，那个 run 在启动后就会被停掉。参考实现 `results.py` 输出的文字是中文；项目要用别的语言，就改 `results.py`。
 
 > 规格核对：
 > - `train.effective_batch=256` 不成立：1 个 run，0330bc8a46094e03a875e72c6dfd0872（128）
@@ -110,7 +110,7 @@ train.accum  # follows per_device_batch
 > - Adaptable `train.accum`：full 取 4（3 个 run）；lora 取 4（3 个 run）
 
 <details>
-<summary>完整的结果评论</summary>
+<summary><code>results.py</code> 的完整输出（issue 编号写成代码，免得 GitHub 把它链到真实的 issue）</summary>
 
 > `#12` 的结果：6 个 run，3 组，按去掉 seed 的命令分组。
 >
@@ -175,12 +175,12 @@ rh 只报告记录里有什么。这些 run 还能不能比，由你判断。
 | `scripts/run.toml` | run.py 的配置：MLflow 实验名、环境锁、数据清单、seed 参数名、GPU 列表、GPU 锁目录 |
 | `scripts/setup.sh` | 一次性设置仓库：label、合并方式、main 的分支保护 |
 | `tests/` | 以上脚本和规则文件的测试 |
-| `docs/` | 人写的设计文档 |
+| `docs/` | 人写的设计文档、中文版 README（`README.zh-CN.md`），以及 README 的插图和生成它们的脚本（`assets/`） |
 | `.gitignore` | 忽略本地的 MLflow 存储（`mlflow.db*`、`mlartifacts/`、`mlruns/`） |
 
 ## 原则
 
-- **GitHub 原生，没有要安装的东西。** 状态都在 issue、PR、检查和分支保护里，别处什么都不存。会话随时可以断，不会丢东西。
+- **GitHub 原生，没有要安装的服务。** 流程状态都在 issue、PR、检查和分支保护里，运行记录在 MLflow 里。会话本身什么都不存，随时可以断，不会丢东西。
 - **机制，不是策略。** rh 只记录事实、展示差异。它不定 seed 数，不设计实验，不决定何时重跑，也不判断 run 能不能比，这些由你在规格和指令里定。分析、可视化，以及 agent 在任务内部怎么实现，它也都不管。
 - **按高能力模型来写。** 规则短而具体，假定 agent 能遵守写清楚的规则。脚本固化流程，不防御格式错乱、冒充或外人。
 - **是模板，不是框架。** rh 不带集群、调度器、存储或跟踪服务的适配器。`run.py` 和 `results.py` 只是单机参考实现。每个接入的项目通过自己的 issue，把集群、调度器（例如 SLURM）和跟踪后端适配到自己的环境，同时守住[保持不变的接口](#保持不变的接口)。
@@ -411,7 +411,7 @@ guard、merge.py 和 skill 按 `### ` 标题读正文，标题名不能改：
 
 ## 语言
 
-主页 README 用英文，完整的中文版就是本页。
+主页 README 用英文，完整的中文版就是本页，两者保持同步。
 
 本仓库其他面向人的文字都用中文：PR 正文、issue 和 PR 评论、汇报、表单说明、结果评论。审查评论例外，Verdict 行下面保留审查工具的原文。
 
@@ -419,4 +419,4 @@ guard、merge.py 和 skill 按 `### ` 标题读正文，标题名不能改：
 
 ## 状态
 
-rh 处于预发布阶段。它已经用来开发它自己，但在第一个正式版之前接口仍可能变化。许可证随第一个正式版一起发布。
+rh 处于预发布阶段。它已经用来开发它自己，但在第一个正式版之前接口仍可能变化。
