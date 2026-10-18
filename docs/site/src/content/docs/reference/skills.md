@@ -17,7 +17,7 @@ Sources: [`.agents/skills/`](https://github.com/doem97/research-harness/tree/mai
 | Frontmatter | `name` (the directory name) and `description` (when to use it) |
 | Length | at most 120 lines, checked by `tests/skills/test_skills.py` |
 | Commands | `<run>` and `<results>` stand for the Run and results commands on the `Run` line of `AGENTS.md` Project, the part before `--issue N` |
-| Reports | each skill ends its stops with the three lines of `AGENTS.md` Report |
+| Reports | plan, implement and run end every stop with the three lines of `AGENTS.md` Report; review ends with its Verdict comment and reports the link and verdict to the session that asked |
 | Language | as shipped, the skills name Chinese for the discussion, drafts, PR bodies, reports and comment templates; a project whose `Language` line names another language changes them |
 
 | Skill | Takes | From | To | Writes |

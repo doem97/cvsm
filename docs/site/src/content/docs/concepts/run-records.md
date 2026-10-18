@@ -58,7 +58,7 @@ The table groups runs by command with the seed removed. Each group shows:
 - the commit, environment lock and data fingerprints;
 - with a spec, the arm the group belongs to.
 
-It flags groups that differ in commit, environment or data (with `git diff --stat` when commits differ), successful runs without metrics, unfinished runs and deleted runs. A `规格核对` (spec check) section follows; see [The study spec](/research-harness/concepts/study-spec/).
+It flags commits, environments or data that differ across the selected runs (with `git diff --stat` when commits differ), successful runs without metrics, unfinished runs and deleted runs. A `规格核对` (spec check) section follows; see [The study spec](/research-harness/concepts/study-spec/).
 
 When all run issues of a study are closed, the agent posts the same table and spec check over all of them on the study itself: the study table.
 

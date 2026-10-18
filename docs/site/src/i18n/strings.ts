@@ -477,6 +477,7 @@ export const SPEC_LINES: Array<{ kind: 'h' | 'kv'; text: string; note?: string }
 	{ kind: 'kv', text: 'seed in 1,2,3', note: '# three seeds' },
 	{ kind: 'h', text: '### Adaptable' },
 	{ kind: 'kv', text: 'train.per_device_batch', note: '# fit GPU memory' },
+	{ kind: 'kv', text: 'train.accum', note: '# keeps the effective batch' },
 ];
 
 /** results.py's 规格核对 for six toy runs of that spec (README, verbatim; run id shortened). */

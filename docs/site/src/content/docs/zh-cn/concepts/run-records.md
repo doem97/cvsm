@@ -58,7 +58,7 @@ python scripts/run.py --issue 12 --gpus 4 -- python train.py arm=lora seed=2
 - commit、环境锁和数据的指纹；
 - 给了规格时，该组所属的 arm。
 
-它还会标出：组间 commit、环境或数据的不同（commit 不同时附 `git diff --stat`），成功但没有指标的 run，未完成的 run 和已删除的 run。之后是一节 `规格核对`，见[研究规格](/research-harness/zh-cn/concepts/study-spec/)。
+它还会标出：所选 run 之间 commit、环境或数据的不同（commit 不同时附 `git diff --stat`），成功但没有指标的 run，未完成的 run 和已删除的 run。之后是一节 `规格核对`，见[研究规格](/research-harness/zh-cn/concepts/study-spec/)。
 
 研究的 run issue 全部关闭后，agent 把覆盖全部 run 的同一张表和规格核对贴到研究 issue 上，也就是研究总表。
 

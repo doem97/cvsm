@@ -17,7 +17,7 @@ An agent stops only at its target, at one of four gates, or at a blocker; otherw
 | **04 Conclude** | All of a study's sub-issues are closed and it awaits analysis | your conclusion, e.g. "conclude #10: …" |
 
 :::caution[Gates are yours]
-An explicit instruction approves what it names, and the agent records it as `Decision: <choice> — <one-line reason>` on the issue. Without one, the agent does not publish, change the spec, merge a task that needs you, go past a budget or close a study. For merging, `merge.py` and the deny rules enforce this mechanically; the rest rests on AGENTS.md.
+An explicit instruction approves what it names, and the agent records it as `Decision: <choice> — <one-line reason>` on the issue. Without one, the agent does not publish, change the spec, merge a task that needs you, go past a budget or close a study. Mechanically, the deny rules stop agents from running `gh pr merge` directly, and `merge.py` without `--human` refuses protected paths and heads without a passing review. Using `--human` only on your instruction rests on AGENTS.md, like every other gate.
 :::
 
 ### Gate 02 in detail

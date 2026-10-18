@@ -17,7 +17,7 @@ sidebar:
 | frontmatter | `name`（与目录同名）和 `description`（什么时候用） |
 | 长度 | 最多 120 行，由 `tests/skills/test_skills.py` 检查 |
 | 命令 | `<run>` 和 `<results>` 指 `AGENTS.md` Project 里 `Run` 一行给出的 Run 命令和结果命令，即 `--issue N` 之前的部分 |
-| 汇报 | 每次停下都用 `AGENTS.md` Report 的三行汇报 |
+| 汇报 | plan、implement、run 每次停下都用 `AGENTS.md` Report 的三行汇报；review 以 Verdict 评论结束，并把链接和结论报给请它审查的会话 |
 | 语言 | 原样的 skill 规定讨论、草稿、PR 正文、汇报和评论模板用中文；`Language` 一行设了别的语言的项目，要相应改这些地方 |
 
 | skill | 输入 | 从 | 到 | 写什么 |

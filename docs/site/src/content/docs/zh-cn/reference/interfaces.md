@@ -69,7 +69,7 @@ run issue 结束时贴一条评论：一段说明，加上结果命令生成的�
 
 它还会标出：
 
-- 组间 commit、环境或数据的不同，commit 不同时附 `git diff --stat`；
+- 所选 run 之间 commit、环境或数据的不同，commit 不同时附 `git diff --stat`；
 - 成功但没有指标、未完成和已删除的 run。
 
 之后是 `规格核对` 一节，按规格的原话列出所选 run（含还在跑的）的事实：

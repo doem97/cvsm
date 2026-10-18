@@ -69,7 +69,7 @@ The table groups runs by command with the seed removed. Each group shows:
 
 It also flags:
 
-- groups that differ in commit, environment or data, with `git diff --stat` attached when commits differ;
+- commits, environments or data that differ across the selected runs, with `git diff --stat` attached when commits differ;
 - runs that succeeded without metrics, unfinished runs and deleted runs.
 
 A `规格核对` section follows, quoting the spec. It lists facts about the selected runs, running ones included:
