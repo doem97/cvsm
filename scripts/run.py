@@ -11,10 +11,10 @@ experiment keeps its artifacts in mlartifacts/ next to the SQLite file, or in
 <main clone>/mlartifacts for other databases. The run is created before any wait for GPUs, so
 a waiting or killed run shows as RUNNING. If the backend is unreachable, nothing is launched.
 
-Provenance is logged as rh.* params, which MLflow never lets change: rh.issue, rh.command
-(shlex-joined), rh.seed and rh.host at creation; rh.commit, rh.dirty (true or false),
-rh.env_lock_sha, rh.env_lock_missing, rh.data_manifest_sha and rh.gpus right before launch;
-rh.exit_code at the end. Absent values are "" and lists are comma-separated. The tag
+Provenance is logged as cvsm.* params, which MLflow never lets change: cvsm.issue, cvsm.command
+(shlex-joined), cvsm.seed and cvsm.host at creation; cvsm.commit, cvsm.dirty (true or false),
+cvsm.env_lock_sha, cvsm.env_lock_missing, cvsm.data_manifest_sha and cvsm.gpus right before launch;
+cvsm.exit_code at the end. Absent values are "" and lists are comma-separated. The tag
 mlflow.source.git.commit is set too. A dirty tree gets the artifacts diff.patch (git diff
 HEAD) and untracked.txt before launch. env_lock and data_manifest paths resolve against the
 checkout root.
@@ -41,10 +41,10 @@ RUN_DIR files.
 
 The final status is FINISHED for exit 0, KILLED when a signal stopped the command, and FAILED
 otherwise (127 when it cannot start). The exit status is the command's own; signal S gives
-128 + S, and rh.exit_code records -S.
+128 + S, and cvsm.exit_code records -S.
 
 GPU locks are <lock_dir>/<host>/gpu<i>.lock and the command inherits them, so a lease lasts as
-long as the command, even if run.py itself is killed. The default lock_dir, <tmp>/rh-gpu-locks,
+long as the command, even if run.py itself is killed. The default lock_dir, <tmp>/cvsm-gpu-locks,
 is shared by all users of the host only if they share the temp dir (TMPDIR). When several users
 share a machine and TMPDIR is per-user, set lock_dir in run.toml to a directory they can
 all write to; run.py makes the per-host subdirectory it creates there shareable (sticky,
@@ -194,7 +194,7 @@ def lock_dir(configured):
             return path  # an existing one keeps its permissions
         path.chmod(0o1777)  # else another user's O_CREAT fails there, as with the default below
         return path
-    base = Path(tempfile.gettempdir()) / "rh-gpu-locks"
+    base = Path(tempfile.gettempdir()) / "cvsm-gpu-locks"
     for path in (base, base / socket.gethostname()):
         path.mkdir(exist_ok=True)
         if path.stat().st_uid == os.getuid():
@@ -236,12 +236,12 @@ def lease(ids, k, locks, stopped):
 
 
 def params(**kw):
-    """rh.* params as strings: None is "", booleans are true or false, lists are comma-separated."""
+    """cvsm.* params as strings: None is "", booleans are true or false, lists are comma-separated."""
     def enc(v):
         if isinstance(v, list):
             return ",".join(map(str, v))
         return "" if v is None else str(v).lower() if isinstance(v, bool) else str(v)
-    return [Param(f"rh.{k}", enc(v)) for k, v in kw.items()]
+    return [Param(f"cvsm.{k}", enc(v)) for k, v in kw.items()]
 
 
 def experiment_id(client, name, uri):
@@ -386,7 +386,7 @@ def main(argv):
                     paths = b"".join(os.fsencode(p) + b"\n" for p in untracked)
                     Path(d, "untracked.txt").write_bytes(paths)
                     client.log_artifacts(run_id, d)
-            run_dir = Path(tempfile.mkdtemp(prefix="rh-run-"))
+            run_dir = Path(tempfile.mkdtemp(prefix="cvsm-run-"))
     except BaseException:
         client.set_terminated(run_id, "FAILED")
         raise

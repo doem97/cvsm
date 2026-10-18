@@ -1,5 +1,5 @@
-# Builds rh's own docs site (docs/site). Pull requests that touch it only build it; a manual
-# dispatch builds and deploys it to GitHub Pages. Nothing runs outside doem97/research-harness,
+# Builds cvsm's own docs site (docs/site). Pull requests that touch it only build it; a manual
+# dispatch builds and deploys it to GitHub Pages. Nothing runs outside doem97/cvsm,
 # and adopters leave this file out when they copy the template.
 name: pages
 
@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   build:
-    if: github.repository == 'doem97/research-harness'
+    if: github.repository == 'doem97/cvsm'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -42,7 +42,7 @@ jobs:
           path: docs/site/dist
 
   deploy:
-    if: github.repository == 'doem97/research-harness' && github.event_name == 'workflow_dispatch'
+    if: github.repository == 'doem97/cvsm' && github.event_name == 'workflow_dispatch'
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10

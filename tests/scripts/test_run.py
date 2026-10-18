@@ -13,6 +13,7 @@ import subprocess
 import sys
 import threading
 import time
+import tomllib
 
 from pathlib import Path
 
@@ -26,12 +27,12 @@ _spec = importlib.util.spec_from_file_location("run_script", RUN)
 run = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(run)
 
-PARAMS = {"rh.issue", "rh.command", "rh.seed", "rh.host", "rh.commit", "rh.dirty", "rh.env_lock_sha",
-          "rh.env_lock_missing", "rh.data_manifest_sha", "rh.gpus", "rh.exit_code"}
+PARAMS = {"cvsm.issue", "cvsm.command", "cvsm.seed", "cvsm.host", "cvsm.commit", "cvsm.dirty", "cvsm.env_lock_sha",
+          "cvsm.env_lock_missing", "cvsm.data_manifest_sha", "cvsm.gpus", "cvsm.exit_code"}
 
 
-def rh(run_):
-    return {k: v for k, v in run_.data.params.items() if k.startswith("rh.")}
+def cvsm(run_):
+    return {k: v for k, v in run_.data.params.items() if k.startswith("cvsm.")}
 
 
 def test_record_has_every_param_and_the_commit_tag(repo):
@@ -39,14 +40,14 @@ def test_record_has_every_param_and_the_commit_tag(repo):
     p = repo.run("method=a", "seed=2")
     assert p.returncode == 0, p.stderr
     r = repo.only_run()
-    params = rh(r)
+    params = cvsm(r)
     assert set(params) == PARAMS
-    assert params["rh.commit"] == head
+    assert params["cvsm.commit"] == head
     assert r.data.tags["mlflow.source.git.commit"] == head
-    assert params["rh.issue"] == "5" and params["rh.seed"] == "2" and params["rh.dirty"] == "false"
-    assert shlex.split(params["rh.command"])[-3:] == ["fake.py", "method=a", "seed=2"]
-    assert params["rh.host"] == socket.gethostname()
-    assert params["rh.gpus"] == "" and params["rh.exit_code"] == "0"
+    assert params["cvsm.issue"] == "5" and params["cvsm.seed"] == "2" and params["cvsm.dirty"] == "false"
+    assert shlex.split(params["cvsm.command"])[-3:] == ["fake.py", "method=a", "seed=2"]
+    assert params["cvsm.host"] == socket.gethostname()
+    assert params["cvsm.gpus"] == "" and params["cvsm.exit_code"] == "0"
     assert r.info.status == "FINISHED"
     assert r.info.experiment_id == repo.exp_id
     log = repo.artifact(r, "log.txt").read_text()
@@ -60,7 +61,7 @@ def test_params_are_immutable(repo):
     repo.run()
     r = repo.only_run()
     with pytest.raises(Exception, match="(?i)chang"):
-        repo.client.log_param(r.info.run_id, "rh.commit", "0" * 40)
+        repo.client.log_param(r.info.run_id, "cvsm.commit", "0" * 40)
 
 
 def test_experiment_from_env_is_created_and_overrides_config(repo):
@@ -82,9 +83,9 @@ def test_default_store_is_in_the_main_clone_and_outlives_worktrees(repo):
     client = MlflowClient(f"sqlite:///{repo.root / 'mlflow.db'}")
     exp = client.get_experiment_by_name(EXPERIMENT)
     assert local_path(exp.artifact_location) == repo.root / "mlartifacts"
-    runs = {r.data.params["rh.seed"]: r for r in client.search_runs([exp.experiment_id])}
+    runs = {r.data.params["cvsm.seed"]: r for r in client.search_runs([exp.experiment_id])}
     assert set(runs) == {"1", "2"} and not (wt / "mlflow.db").exists()
-    assert {r.data.params["rh.dirty"] for r in runs.values()} == {"false"}  # .gitignore covers them
+    assert {r.data.params["cvsm.dirty"] for r in runs.values()} == {"false"}  # .gitignore covers them
     assert repo.results(cwd=wt).count("| 2 | 0 |") == 1  # results.py finds both from the worktree
     repo.git("worktree", "remove", str(wt))
     log = local_path(runs["1"].info.artifact_uri) / "log.txt"
@@ -101,11 +102,11 @@ def test_concurrent_runs_on_a_fresh_store(repo):
         assert "mlflow.agent.hint" not in err
     client = MlflowClient(uri)
     runs = client.search_runs([client.get_experiment_by_name(EXPERIMENT).experiment_id])
-    assert sorted(r.data.params["rh.seed"] for r in runs) == ["0", "1", "2", "3"]
+    assert sorted(r.data.params["cvsm.seed"] for r in runs) == ["0", "1", "2", "3"]
 
 
 @pytest.mark.parametrize("uri, root", [
-    ("sqlite:////data/rh/mlflow.db", "/data/rh/mlartifacts"),
+    ("sqlite:////data/cvsm/mlflow.db", "/data/cvsm/mlartifacts"),
     ("postgresql://u@db/mlflow", "/clone/mlartifacts"),
     ("postgresql+psycopg2://u@db/mlflow", "/clone/mlartifacts"),
     ("mysql+pymysql://u@db/mlflow", "/clone/mlartifacts"),
@@ -115,6 +116,10 @@ def test_concurrent_runs_on_a_fresh_store(repo):
 ])
 def test_artifact_root_for_database_stores(uri, root):
     assert run.artifact_root(uri, Path("/clone")) == (root and Path(root))
+
+
+def test_shipped_run_toml_names_the_cvsm_experiment():
+    assert tomllib.loads((RUN.parent / "run.toml").read_text())["experiment"] == "cvsm"
 
 
 def test_artifact_root_for_a_relative_sqlite_path(tmp_path, monkeypatch):
@@ -207,6 +212,7 @@ def test_failed_upload_keeps_run_dir(repo):
     assert p.returncode == 0
     [kept] = list(repo.tmpdir.iterdir())
     assert str(kept) in p.stderr and (kept / "log.txt").is_file()
+    assert kept.name.startswith("cvsm-run-")
     assert repo.only_run().info.status == "FINISHED"
 
 
@@ -215,7 +221,7 @@ def test_dirty_tree_with_untracked_file(repo):
     (repo.root / "new_module.py").write_text("x = 1\n")
     repo.run()
     r = repo.only_run()
-    assert r.data.params["rh.dirty"] == "true"
+    assert r.data.params["cvsm.dirty"] == "true"
     assert "# local edit" in repo.artifact(r, "diff.patch").read_text()
     assert repo.artifact(r, "untracked.txt").read_text().split() == ["new_module.py"]
 
@@ -230,19 +236,19 @@ def test_non_utf8_changes_are_recorded_byte_exact(repo):
     p = repo.run()
     assert p.returncode == 0, p.stderr
     r = repo.only_run()
-    assert r.info.status == "FINISHED" and r.data.params["rh.dirty"] == "true"
+    assert r.info.status == "FINISHED" and r.data.params["cvsm.dirty"] == "true"
     diff = repo.artifact(r, "diff.patch").read_bytes()
     assert "naïve".encode("latin-1") in diff and "中文".encode("gbk") in diff
     assert name + b"\n" in repo.artifact(r, "untracked.txt").read_bytes()
 
 
 def test_untracked_only_is_dirty(repo):
-    (repo.root / "rh_untracked").mkdir()
-    (repo.root / "rh_untracked" / "x.csv").write_text("1\n")
+    (repo.root / "cvsm_untracked").mkdir()
+    (repo.root / "cvsm_untracked" / "x.csv").write_text("1\n")
     repo.run()
     r = repo.only_run()
-    assert r.data.params["rh.dirty"] == "true"
-    assert repo.artifact(r, "untracked.txt").read_text().split() == ["rh_untracked/x.csv"]
+    assert r.data.params["cvsm.dirty"] == "true"
+    assert repo.artifact(r, "untracked.txt").read_text().split() == ["cvsm_untracked/x.csv"]
 
 
 @pytest.mark.parametrize("cmd, seed, rest", [
@@ -262,14 +268,14 @@ def test_split_seed_custom_key():
 @pytest.mark.parametrize("args, seed", [(["seed=3"], "3"), (["--seed", "3"], "3"), (["--seed=3"], "3"), ([], "")])
 def test_seed_recorded(repo, args, seed):
     repo.run(*args)
-    assert repo.only_run().data.params["rh.seed"] == seed
+    assert repo.only_run().data.params["cvsm.seed"] == seed
 
 
 def test_nonzero_exit_is_failed_and_returned(repo):
     p = repo.run("exit=3")
     assert p.returncode == 3
     r = repo.only_run()
-    assert r.info.status == "FAILED" and r.data.params["rh.exit_code"] == "3"
+    assert r.info.status == "FAILED" and r.data.params["cvsm.exit_code"] == "3"
 
 
 def test_missing_command_is_a_failed_run(repo):
@@ -277,7 +283,7 @@ def test_missing_command_is_a_failed_run(repo):
     assert p.returncode == 127
     r = repo.only_run()
     assert r.info.status == "FAILED"
-    assert r.data.params["rh.exit_code"] == "127" and r.data.params["rh.issue"] == ""
+    assert r.data.params["cvsm.exit_code"] == "127" and r.data.params["cvsm.issue"] == ""
     assert "no-such-binary-xyz" in repo.artifact(r, "log.txt").read_text()
 
 
@@ -303,16 +309,16 @@ def test_env_lock_and_data_manifest_hashes(make_repo):
     repo.commit("add lock and manifest")
     repo.run()
     params = repo.only_run().data.params
-    assert params["rh.env_lock_sha"] == hashlib.sha256(b"lock v1\n").hexdigest()  # = sha256sum uv.lock
-    assert params["rh.env_lock_missing"] == "requirements.txt"
-    assert params["rh.data_manifest_sha"] == hashlib.sha256(b"abc  train.bin\n").hexdigest()
+    assert params["cvsm.env_lock_sha"] == hashlib.sha256(b"lock v1\n").hexdigest()  # = sha256sum uv.lock
+    assert params["cvsm.env_lock_missing"] == "requirements.txt"
+    assert params["cvsm.data_manifest_sha"] == hashlib.sha256(b"abc  train.bin\n").hexdigest()
 
 
 def test_missing_env_lock_is_recorded(repo):
     repo.run()
     params = repo.only_run().data.params
-    assert params["rh.env_lock_sha"] == "" and params["rh.env_lock_missing"] == "uv.lock"
-    assert params["rh.data_manifest_sha"] == ""
+    assert params["cvsm.env_lock_sha"] == "" and params["cvsm.env_lock_missing"] == "uv.lock"
+    assert params["cvsm.data_manifest_sha"] == ""
 
 
 def test_more_gpus_than_configured_is_an_immediate_error(make_repo):
@@ -321,7 +327,7 @@ def test_more_gpus_than_configured_is_an_immediate_error(make_repo):
     assert p.returncode != 0 and "--gpus" in p.stderr
     assert repo.runs() == []
     assert repo.run().returncode == 0  # without --gpus, one GPU is leased
-    assert repo.only_run().data.params["rh.gpus"] == "0"
+    assert repo.only_run().data.params["cvsm.gpus"] == "0"
 
 
 def test_gpus_with_leasing_off_is_an_error(repo):
@@ -341,10 +347,10 @@ def test_concurrent_runs_lease_different_gpus(make_repo):
         hold.write_text("go")
         first.communicate(timeout=30)
     runs = [repo.client.get_run(r.info.run_id) for r in repo.runs()]
-    gpus = sorted(r.data.params["rh.gpus"] for r in runs)
+    gpus = sorted(r.data.params["cvsm.gpus"] for r in runs)
     assert gpus == ["0", "1"]
     for r in runs:
-        assert repo.artifact(r, "cuda.txt").read_text() == r.data.params["rh.gpus"]
+        assert repo.artifact(r, "cuda.txt").read_text() == r.data.params["cvsm.gpus"]
 
 
 def readonly_lock(lock_dir):
@@ -374,22 +380,22 @@ def test_lock_files_are_created_writable_and_reused(make_repo):
 
 def test_default_lock_dirs_are_sticky_and_world_writable(make_repo):
     repo = make_repo(gpus=[0], lock_dir="")
-    base = repo.tmpdir / "rh-gpu-locks"
+    base = repo.tmpdir / "cvsm-gpu-locks"
     assert repo.run().returncode == 0
     for d in (base, base / socket.gethostname()):
         assert stat.S_IMODE(d.stat().st_mode) == 0o1777
-    assert repo.only_run().data.params["rh.gpus"] == "0"
+    assert repo.only_run().data.params["cvsm.gpus"] == "0"
 
 
 def test_another_users_lock_file_is_used_read_only(make_repo):
     repo = make_repo(gpus=[0], lock_dir="")
-    base = repo.tmpdir / "rh-gpu-locks"
+    base = repo.tmpdir / "cvsm-gpu-locks"
     readonly_lock(base / socket.gethostname())
     os.chmod(base, 0o755)
     os.chmod(base / socket.gethostname(), 0o755)
     p = repo.run()
     assert p.returncode == 0, p.stderr  # the lock file is opened read-only
-    assert repo.only_run().data.params["rh.gpus"] == "0"
+    assert repo.only_run().data.params["cvsm.gpus"] == "0"
     for d in (base, base / socket.gethostname()):
         assert stat.S_IMODE(d.stat().st_mode) == 0o1777
 
@@ -432,7 +438,7 @@ def test_sigterm_is_killed_and_releases_lease(make_repo):
     assert p.returncode == 128 + signal.SIGTERM
     r = repo.only_run()
     assert r.info.status == "KILLED"
-    assert r.data.params["rh.exit_code"] == str(-signal.SIGTERM) and r.data.params["rh.gpus"] == "0"
+    assert r.data.params["cvsm.exit_code"] == str(-signal.SIGTERM) and r.data.params["cvsm.gpus"] == "0"
     assert lock_is_free(lock)
 
 
@@ -510,7 +516,7 @@ def test_ctrl_c_reaches_the_command_once(repo):
     p.communicate(timeout=30)
     r = repo.only_run()
     assert repo.artifact(r, "sigints").read_text() == "1"
-    assert r.data.params["rh.exit_code"] == "0" and r.info.status == "FINISHED"
+    assert r.data.params["cvsm.exit_code"] == "0" and r.info.status == "FINISHED"
 
 
 def test_sighup_is_killed_and_uploads_logs(repo):
@@ -521,7 +527,7 @@ def test_sighup_is_killed_and_uploads_logs(repo):
     p.communicate(timeout=30)
     assert p.returncode == 128 + signal.SIGHUP
     r = repo.only_run()
-    assert r.info.status == "KILLED" and r.data.params["rh.exit_code"] == str(-signal.SIGHUP)
+    assert r.info.status == "KILLED" and r.data.params["cvsm.exit_code"] == str(-signal.SIGHUP)
     assert "hello stderr" in repo.artifact(r, "log.txt").read_text()  # stdout died in its buffer
 
 
@@ -551,8 +557,8 @@ def test_sigkill_leaves_the_run_running(repo):
     child = kill_run_py(repo, repo.start("hold=" + str(hold)), hold)
     os.kill(child, signal.SIGKILL)
     r = repo.only_run()
-    assert r.info.status == "RUNNING" and "rh.exit_code" not in r.data.params
-    assert r.data.params["rh.commit"] == repo.git("rev-parse", "HEAD")
+    assert r.info.status == "RUNNING" and "cvsm.exit_code" not in r.data.params
+    assert r.data.params["cvsm.commit"] == repo.git("rev-parse", "HEAD")
 
 
 def test_lease_outlives_a_killed_run_py(make_repo):

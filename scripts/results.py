@@ -4,7 +4,7 @@
     python scripts/results.py --issue N [N ...] [--metric M ...] [--spec FILE] [--config scripts/run.toml]
     gh issue view P --json body -q .body | python scripts/results.py --issue N --spec -
 
-Reads the runs whose rh.issue param is one of the Ns, deleted ones included, from the experiment run.py
+Reads the runs whose cvsm.issue param is one of the Ns, deleted ones included, from the experiment run.py
 writes to (MLFLOW_EXPERIMENT_NAME, else `experiment` in run.toml) in the store it writes to
 (MLFLOW_TRACKING_URI, else <main clone>/mlflow.db). Runs are grouped by command with the seed
 tokens removed. Per group: n (runs that exited 0, which the statistics use), n_failed (runs
@@ -42,7 +42,7 @@ from mlflow.entities import ViewType
 def fetch(client, exp_id, issue):
     runs, token = [], None
     while True:
-        page = client.search_runs([exp_id], f"params.`rh.issue` = '{issue}'",
+        page = client.search_runs([exp_id], f"params.`cvsm.issue` = '{issue}'",
                                   run_view_type=ViewType.ALL, max_results=1000, page_token=token)
         runs += page
         if not (token := page.token):
@@ -187,8 +187,8 @@ def main():
     issues = list(dict.fromkeys(a.issue))
     found = sorted((r for i in issues for r in fetch(client, exp.experiment_id, i)) if exp else [],
                    key=lambda r: r.info.start_time)
-    # One dict per run: the rh.* params without the prefix, plus status, deletion, metrics and config.
-    runs = [{k[3:]: v for k, v in r.data.params.items() if k.startswith("rh.")}
+    # One dict per run: the cvsm.* params without the prefix, plus status, deletion, metrics and config.
+    runs = [{k[len("cvsm."):]: v for k, v in r.data.params.items() if k.startswith("cvsm.")}
             | {"id": r.info.run_id, "status": r.info.status, "metrics": r.data.metrics,
                "deleted": r.info.lifecycle_stage == "deleted",
                "cfg": {k[4:]: v for k, v in r.data.params.items() if k.startswith("cfg.")}} for r in found]

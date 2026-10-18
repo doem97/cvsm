@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Apply the harness's labels, merge settings and protection of main to a GitHub repo.
+# Apply CVSM's labels, merge settings and protection of main to a GitHub repo.
 # Run once per repo as an admin, from the repo root; it is safe to run again.
 #     bash scripts/setup.sh [owner/repo]    (default: the repo of the current directory)
 set -euo pipefail
