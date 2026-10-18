@@ -1,0 +1,74 @@
+---
+title: Talk, don't click
+description: How you work with rh through agent sessions, and what each instruction asks for.
+sidebar:
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Session from '~/components/figures/Session.astro';
+
+You make decisions only in an agent session, in Claude Code or Codex, and never click around GitHub. Agents create issues, open PRs, review, merge and close on your instruction, and record each of your decisions on the issue it concerns.
+
+<Session lang="en" />
+
+## An instruction is a target state
+
+Each instruction names where the work should end. The agent keeps going until it reaches that target, a [gate](/research-harness/concepts/gates-and-blockers/) or a blocker, and only then stops.
+
+| You say | The agent |
+|---|---|
+| "let's plan this study", "I want to study X" | Discusses it with you through the `plan` skill. It drafts the study, its spec and its sub-issues, and creates nothing until you say "publish". |
+| "publish" | Creates the parent and its sub-issues, wave by wave, and records the Decision. |
+| "do #11" | Takes the code task to merge-ready: checks green and a `Verdict: pass` on the current head. If the task says `Merge: agent`, it goes on to merged. |
+| "merge", or "merge #13" | Squash-merges the current head with `python .github/scripts/merge.py <PR> --human`. |
+| "take #10 to analysis" | Works until every sub-issue of study #10 is closed. |
+| "continue" | Goes on to the next gate. |
+| "what's waiting for me?" | Reads GitHub and lists `needs-decision` issues and merge-ready PRs. |
+
+An explicit instruction approves what it names, so the agent won't ask again. "merge #13" is the approval to merge #13; "conclude #10: …" is the approval to close the study with that conclusion.
+
+## Every decision is recorded
+
+The agent writes each of your decisions to the issue as a comment:
+
+```text
+Decision: <choice> — <one-line reason>
+```
+
+Publishing a study, merging a PR and continuing past a budget each leave a `Decision:` line. Discussion itself is not kept; only decisions and conclusions go to GitHub.
+
+## Every stop ends with three lines
+
+When the agent stops, for any reason, it reports exactly three lines, with links:
+
+```text
+Done: <what was completed>
+Waiting for you: <what the human must do, or nothing>
+Next: <what comes next>
+```
+
+<Aside type="caution">
+"Waiting for you" is where gates and blockers surface. A merge-ready PR needs no extra label: the PR itself is the request, and it shows up when you ask "what's waiting for me?".
+</Aside>
+
+## When you are not in the session
+
+If an agent hits a blocker while you are away, it adds the `needs-decision` label to the issue, posts a four-line blocker comment, and moves on to other ready work. You answer in a session later, and the agent removes the label once you have. See [Gates and blockers](/research-harness/concepts/gates-and-blockers/).
+
+## Several sessions at once
+
+You can run several sessions in parallel, each on its own task. Claiming a task creates a linked branch with `gh issue develop`. Other sessions leave a claimed task alone unless an instruction names it, so two sessions never work on the same task.
+
+Sessions keep nothing. Every state change is written to GitHub or git as it happens, so a session can end at any moment, and a new one picks up with "continue #11".
+
+<Aside type="tip">
+rh's own skills report and discuss in Chinese. An adopting project names the language of its human-facing text on the `Language` line of AGENTS.md's Project section. Format keywords such as `Decision:` and `Verdict:` stay in English.
+</Aside>
+
+## Related
+
+- [Quick start](/research-harness/start/quick-start/)
+- [Gates and blockers](/research-harness/concepts/gates-and-blockers/)
+- [State](/research-harness/concepts/state/)
+- [Claude Code and Codex](/research-harness/guides/claude-code-and-codex/)

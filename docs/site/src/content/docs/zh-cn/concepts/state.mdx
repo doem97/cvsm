@@ -1,0 +1,85 @@
+---
+title: 状态
+description: rh 怎样把全部流程状态放在 GitHub 原生的 issue、PR 和检查里。
+sidebar:
+  order: 1
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Loop from '~/components/figures/Loop.astro';
+
+rh 的流程状态全部放在 GitHub 上：issue、子 issue、依赖、关联分支、PR、检查和关闭状态。仓库里没有计划、进度或笔记文件，会话也不存任何东西，所以哪个会话都可以随时断，下一个会话读一遍就知道进展到哪里。
+
+<Loop lang="zh-cn" />
+
+## 父 issue 和子 issue
+
+父 issue 说明为什么做，子 issue 承载具体的活。
+
+- **`study`**：一个研究问题。正文按[研究表单](/research-harness/zh-cn/reference/issue-forms/)写，规格也在里面。
+- **`plan`**：开发工作，正文有 `### Goal` 和 `### Context`。
+- **`code`**：一次限定在固定 Scope 内的改动，一个分支、一个 PR。
+- **`run`**：一组运行，以一条结果评论收尾。运行任务没有 PR。
+
+另外只有一个 label：`needs-decision`。父子关系和依赖都是 GitHub 原生字段，建 issue 时设置，从不写进正文：
+
+```sh
+gh issue create --label run --title "<标题>" --parent 10 --blocked-by 11 --body "..."
+```
+
+例如研究 #10 下有代码任务 #11 和运行任务 #12；#12 的 run 要用合并后的代码，所以 #12 被 #11 挡住。
+
+## 任务的状态
+
+下面每种状态，GitHub 本来就显示得出来。
+
+| 状态 | 在 GitHub 上怎么看 |
+|---|---|
+| 等依赖 | 被一个还开着的 issue 挡住 |
+| 就绪 | 开着，没被挡住，也没有关联分支 |
+| 进行中 | 有关联分支 |
+| 等你决定 | label `needs-decision`，加一条卡点评论 |
+| 审查中 | PR 已打开，检查或审查还没完成 |
+| 待合并 | `guard` 和 `test` 全绿，最新的审查结论是针对当前 head 的 `Verdict: pass @ <head SHA>` |
+| 完成 | 代码任务的 PR 合并后 issue 自动关闭（`Closes #N`）；运行任务由 agent 贴出结果评论后关闭 |
+| 放弃 | 按人的明确指示关成 not planned |
+
+## 父 issue 的状态
+
+| 状态 | 在 GitHub 上怎么看 |
+|---|---|
+| 进行中 | 开着，还有没关的子 issue |
+| 待分析 | 开着，子 issue 全部关闭 |
+| 结束 | 按人的明确指示关成 completed（附结论），或 not planned |
+
+研究下结论是[关口 04](/research-harness/zh-cn/concepts/gates-and-blockers/)。
+
+## 先读状态
+
+每条指令开始时，agent 都先从 GitHub 读状态，从不凭聊天记忆：开着的 `study` 和 `plan` issue 及其子 issue 概况、打开的 PR 及其检查、带 `needs-decision` 的 issue。
+
+## 认领任务
+
+会话用建关联分支的方式认领一个就绪的 issue，然后再查一次，确认没有别的分支同时关联上：
+
+```sh
+gh issue develop 11 --name t/11-<slug> --base main
+gh issue develop --list 11
+```
+
+如果还有别的分支，就删掉自己的，转去做别的。已经在进行中的 issue，只有指令点名或本会话自己认领的才接着做。并行开几个会话之所以安全，靠的就是这一点。
+
+## 一个任务，一套对应
+
+一个任务 = 一个 issue = 一个分支 `t/<N>-<slug>` = 一个 worktree `../worktrees/<N>-<slug>`（在主 clone 旁边）= 一个 PR。squash 合并之后，main 上的每条 commit 对应一个 issue。
+
+<Aside type="tip">
+状态都在 GitHub 上，所以随时可以开一个新会话问"看看等我的"，得到的答案和干活的那个会话一样。
+</Aside>
+
+## 相关页面
+
+- [关口与卡点](/research-harness/zh-cn/concepts/gates-and-blockers/)
+- [说话，不点页面](/research-harness/zh-cn/start/talk-dont-click/)
+- [issue 表单](/research-harness/zh-cn/reference/issue-forms/)
+- [AGENTS.md](/research-harness/zh-cn/reference/agents-md/)

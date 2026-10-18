@@ -1,43 +1,80 @@
 ---
-title: "概览"
-description: "概览"
+title: 概览
+description: rh 是什么、解决什么问题、往仓库里复制了哪些东西。
 sidebar:
   order: 1
 ---
 
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
 import Harness from '~/components/figures/Harness.astro';
-import Loop from '~/components/figures/Loop.astro';
-import Contract from '~/components/figures/Contract.astro';
-import Session from '~/components/figures/Session.astro';
-import Facts from '~/components/figures/Facts.astro';
-import { Aside } from '@astrojs/starlight/components';
 
-占位页。知识库的正式页面会替换这个文件；这里先展示图组件。
+rh（research-harness）是一套复制进研究仓库就能用的模板：编码 agent 推进机器学习研究，你守住四个关口。每个 run 都按它自己的记录、而不是 agent 的说法，对照你批准的研究规格核对。
 
 <Harness lang="zh-cn" />
 
-<Aside type="caution">Gate 01: publish.</Aside>
+## 问题出在计划以下
 
-<Aside type="note">Checked against the spec.</Aside>
+编码 agent 写代码、启动运行、贴出结果的速度，已经快过人能读完的速度。风险在计划以下的那几层。为了修一次崩溃改了学习率，为了塞进显存把有效 batch 减半。每一处单看都合理，合在一起，对比就成了猜测。而你通常只看到 agent 的总结。
 
-<Aside type="tip">Agent-side advice.</Aside>
+## rh 怎么应对
 
-## Loop
+rh 让人只待在需要人的地方，其余的都能核对。
 
-<Loop lang="zh-cn" />
+- **你批准一份研究规格**：各组之间的不同、固定不变的设置（各带理由）、可以调整的设置。见[研究规格](/research-harness/zh-cn/concepts/study-spec/)。
+- **规格以下的事都由 agent 做**，通过 GitHub issue 和 PR。它们只在[四个关口](/research-harness/zh-cn/concepts/gates-and-blockers/)停下，或者在自己解决不了的卡点停下。
+- **每个 run 都记下解析后的配置**，结果命令拿这些记录对照规格核对。偏差以事实的形式交到你手上，而不是 agent 的说法。见[运行记录](/research-harness/zh-cn/concepts/run-records/)。
 
-## Contract
+## 复制进去的是什么
 
-<Contract lang="zh-cn" />
+rh 是一套围绕 git 和 GitHub 的约定，不是一个服务。除了 GitHub、git 和你自己的机器，不需要别的东西。
 
-```bash
-python scripts/results.py --issue 12 --spec -  # reads the study body
-```
+<CardGrid>
+  <Card title="状态：GitHub issue">
+    `study` 或 `plan` 父 issue，下面挂 `code` 和 `run` 子 issue。仓库里没有计划、进度或笔记文件。见[状态](/research-harness/zh-cn/concepts/state/)。
+  </Card>
+  <Card title="规则：AGENTS.md">
+    状态怎么判断、什么时候停、怎么提问、Git 和文件怎么用。最多 80 行，有测试卡住上限。见 [AGENTS.md](/research-harness/zh-cn/reference/agents-md/)。
+  </Card>
+  <Card title="步骤：四个 skill">
+    `plan`、`implement`、`review`、`run`，每个最多 120 行。Claude Code 和 Codex 读同一套文件。见 [skill](/research-harness/zh-cn/reference/skills/)。
+  </Card>
+  <Card title="检查：guard、test、merge.py">
+    `guard` 检查每个 PR 的格式、文件位置和改动范围；`test` 跑项目测试；`merge.py` 是 agent 唯一的合并入口。见[合并](/research-harness/zh-cn/concepts/merging/)。
+  </Card>
+  <Card title="运行：run.py 和 results.py">
+    Run 命令的参考实现把每次运行记成一个 MLflow run；结果命令生成结果表和规格核对。见 [run.py](/research-harness/zh-cn/reference/run-py/)。
+  </Card>
+  <Card title="审查：新会话">
+    每个 PR 都由一个只拿到 PR 编号的新会话审查。见[审查](/research-harness/zh-cn/concepts/review/)。
+  </Card>
+</CardGrid>
 
-## Session
+## 几个数字
 
-<Session lang="zh-cn" />
+| | |
+|---|---|
+| 要安装的服务 | 0 个 |
+| 规则（AGENTS.md） | 最多 80 行，有测试检查 |
+| skill | 4 个，每个最多 120 行 |
+| 人的关口 | 4 个，是仅有的计划内停点 |
+| agent 的合并入口 | 1 个，`merge.py` |
+| agent 命令行工具 | 2 种，Claude Code 和 Codex，共用一套 skill |
 
-## Facts
+## 留给你的事
 
-<Facts lang="zh-cn" />
+rh 只记录事实、展示差异。它不定 seed 数，不设计实验，不决定何时重跑，也不判断 run 能不能比，这些由你在规格和指令里定。分析、可视化，以及 agent 在任务内部怎么实现，也都由你决定。见[原则](/research-harness/zh-cn/concepts/principles/)。
+
+<Aside type="tip">
+rh 本身就是用 rh 开发的。从第一个提交之后，main 上的每次改动都是一个 squash 合并的 PR，关闭 `plan` 父 issue 下的一个任务 issue。见[用 rh 开发 rh](/research-harness/zh-cn/project/built-with-rh/)。
+</Aside>
+
+## 状态
+
+rh 处于预发布阶段。它已经用来开发它自己，但在第一个正式版之前接口仍可能变化。见[项目状态](/research-harness/zh-cn/project/status/)。
+
+## 相关页面
+
+- [快速上手](/research-harness/zh-cn/start/quick-start/)
+- [说话，不点页面](/research-harness/zh-cn/start/talk-dont-click/)
+- [研究规格](/research-harness/zh-cn/concepts/study-spec/)
+- [接入 rh](/research-harness/zh-cn/guides/adopt/)

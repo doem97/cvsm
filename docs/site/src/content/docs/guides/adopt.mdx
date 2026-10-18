@@ -1,0 +1,142 @@
+---
+title: Adopt rh
+description: Copy the template into your research repo and switch on its checks, in five steps plus an optional machine account.
+sidebar:
+  order: 1
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Adopting rh means copying a set of tracked files into your repo, filling in a few project values, and turning on branch protection once. An agent in your session can do every step; you decide, and you provide an admin account where one is needed.
+
+## Before you start
+
+- A GitHub repo whose default branch is `main`, and an account with admin rights on it.
+- `git`, the GitHub CLI `gh`, and Python 3.11 or later (the scripts read TOML with `tomllib`; CI uses 3.12).
+- A local clone of rh, written `<rh clone>` below.
+- Branch protection on a private repo needs a paid GitHub plan (e.g. Pro or Team). Public repos don't.
+
+## The five steps
+
+<Steps>
+
+1. **Copy the template files, then adapt `guard.toml`, `run.toml` and your training code's config output.**
+
+   Copy only tracked files. That way untracked local files in the template clone (tool configs, `__pycache__`) stay behind, and the `.claude/skills` symlink survives. The exclusion leaves out `pages.yml`, which builds rh's own docs site:
+
+   ```sh
+   git -C <rh clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts tests ':!.github/workflows/pages.yml' | tar -x -C <your repo>
+   ```
+
+   If your repo is published or shared, also keep a copy of rh's licence with these files, e.g. as `.github/RH-LICENSE` (see [License](/research-harness/project/license/)).
+
+   Then merge the lines of rh's `.gitignore` into yours. You can delete tests in `tests/` that you won't use. Note which rh commit you copied (`git -C <rh clone> rev-parse HEAD`) in the message of the adoption commit, so you can compare later rh improvements against it.
+
+   - Edit `.github/guard.toml`:
+     - Add your directories to `layout` (e.g. `src/**`, `configs/**`). Also add the root files the project changes, such as `pyproject.toml`, lock files like `uv.lock`, and `.python-version`. If you miss one, guard rejects PRs that change dependencies.
+     - Add your eval and data paths to `protected`.
+     - Adjust `markdown` as needed.
+   - Edit `scripts/run.toml`: `experiment`, `env_lock` (your lock files) and `gpus`.
+     - Data directories are usually ignored by git, so the data fingerprint comes from a tracked data manifest: a file listing each data file's checksum, e.g. the output of `sha256sum` saved as `data.sha256`.
+     - Put its path, relative to the repo root, in `data_manifest`, and add it to both `layout` and `protected` in `guard.toml`.
+   - Make your training code write its full resolved config as a JSON object to `$RUN_DIR/config.json` at start, from one process only (e.g. rank 0).
+     - Include every setting that can affect results, derived ones too, such as the effective batch.
+     - The keys in a study spec are this config's flattened dotted keys (e.g. `optim.lr`). The results command uses them to check each run against the spec.
+     - Leave out values that differ per run without affecting results, such as output directories, run names and timestamps. Otherwise every results comment lists them as `未声明的差异` (undeclared differences). If you must include one, declare it Adaptable in the spec.
+   - If several users share one machine and `TMPDIR` is per user, each user's default GPU lock directory sits in their own `TMPDIR`, and they can't see each other's locks. Set `lock_dir` in `run.toml` to one local directory they can all write to.
+   - If you have a `CLAUDE.md`, condense the project facts into the Project section of `AGENTS.md` (one line per field). Move the rest into `docs/` or code comments, then delete `CLAUDE.md`. The harness reads only `AGENTS.md`, and guard rejects `.md` files elsewhere.
+
+2. **Fill in the Project section of `AGENTS.md`, one line per field.**
+
+   Leave the other sections as they are. `AGENTS.md` is at most 80 lines (a test checks this), and each field is one line:
+
+   - `Layout`: how the code directories divide, and where the shared code and the method modules live.
+   - `Test`: the test command, the same one CI runs.
+   - `Language`: the language of human-facing text (see [Language](/research-harness/reference/agents-md/#project)).
+   - `Protected eval/data paths`: eval and data paths agents may not change at will. These match `protected` in `guard.toml`.
+   - `Run`: the Run command and the results-comment command.
+     - Runs launch in a fresh worktree (`../worktrees/N-<slug>`) that has no ignored `.venv` or data directories. So the commands must work as they are in a new worktree, in an environment with both the project's dependencies and MLflow.
+     - With uv, put `mlflow-skinny`, `sqlalchemy` and `alembic` in the dev dependency group (`uv add --dev`; `uv run` includes the dev group by default).
+     - Then write `uv run python scripts/run.py --issue N -- <cmd>`, and the results command as `uv run python scripts/results.py --issue N` (`results.py` needs MLflow too).
+     - Find data through absolute paths, environment variables or tracked symlinks.
+   - `Run records`: which MLflow backend run records go to.
+
+3. **Install your CI dependencies in `.github/workflows/test.yml`.**
+
+   Edit the `pip install` line in `.github/workflows/test.yml` to install your project's dependencies and test tools, and keep the test command the same as `Test` in `AGENTS.md`. If the project uses uv, CI can still install dependencies with pip and run the same tests.
+
+   - The copied rule, skill and guard tests need `pyyaml`.
+   - If you keep the tests of `scripts/run.py`, install MLflow too. The template installs `mlflow-skinny`, plus `sqlalchemy` and `alembic` for SQLite.
+   - CI runners have no GPU. If your lock file has a CUDA build of torch, install the CPU build in CI instead (`pip install torch --index-url https://download.pytorch.org/whl/cpu`). Install it *before* the project's dependencies, because a CUDA build that is already installed won't be replaced by one installed later.
+   - Don't rename the jobs `guard` and `test`. Branch protection finds the checks by these names.
+
+4. **Push to main, then run `scripts/setup.sh` as an admin.**
+
+   The default branch must be called `main`; `setup.sh`, guard and the skills all assume it. If an older repo uses `master`, rename it on GitHub first.
+
+   Push the changes above to main directly, as one adoption commit. Two things make this necessary:
+
+   - guard runs on `pull_request_target`, so it uses the version on main.
+   - Until main has both the `guard` and `test` workflows, the required checks would block every PR.
+
+   This is the only exception to "never push to main" in `AGENTS.md`, and you do it once, before protection is on. After the push, the `test` workflow runs once on main; confirm on the Actions page that CI passes.
+
+   Then, from the repo root and logged in to gh as the human admin (not the machine account), run:
+
+   ```sh
+   bash scripts/setup.sh            # defaults to the repo of the current directory
+   bash scripts/setup.sh owner/repo
+   ```
+
+   It does the following:
+
+   - Creates five labels: `study`, `plan`, `code`, `run` and `needs-decision`.
+   - Allows only squash merges, with the PR title as the commit title and an empty body, and deletes branches after merge.
+   - Protects main: changes go through PRs, `guard` and `test` must pass, 0 approvals, no bypass even for admins, and no force pushes or deletion.
+
+   Running it again is safe, and it keeps other labels you already have. Branch protection, though, is overwritten as a whole: protection settings the project added later (e.g. required approvals) are reverted on a rerun.
+
+5. **Check that both agents load the rules: Codex and Claude Code.**
+
+   - **Codex** reads `AGENTS.md`, skills from `.agents/skills` and rules from `.codex/rules`.
+     - Codex reads the project's `.codex/` only once it trusts the project. Run `codex` interactively once at the repo root and accept the trust prompt. (`codex exec -s danger-full-access` marks the project trusted without a prompt.)
+     - `codex execpolicy check --rules .codex/rules/harness.rules gh pr merge 1` checks only the rules file itself, and should print `forbidden`.
+     - To confirm a session really loaded the rules, open a Codex session in the repo and ask it to run `gh pr merge --help`. The rule should block it; even if allowed, this command merges nothing. Also confirm that all four skills are listed.
+   - **Claude Code** reads `AGENTS.md`, reads skills through the `.claude/skills` symlink, and `.claude/settings.json` denies `gh pr merge`. Open a session in the repo and confirm that all four skills are listed.
+
+</Steps>
+
+<Aside type="caution" title="Admin steps stay with you">
+Pushing the adoption commit to main and running `setup.sh` need admin rights. They are the human's decisions; once protection is on, every later change goes through a PR.
+</Aside>
+
+## Optional: a machine account for the agents
+
+If you want GitHub to separate your actions from the agents', let all agents share one machine account:
+
+- Add it as a repo collaborator with write access, not admin.
+- Create a classic token for it with the scopes `repo`, `workflow` and `read:org`. A fine-grained token can't act as a collaborator on a repo someone else owns.
+- Log it in to a separate directory with `GH_CONFIG_DIR=<dir> gh auth login`, and have agents use it in this repo only.
+  - Two local files point `GH_CONFIG_DIR` at `<dir>`. List both paths in `.git/info/exclude` so they stay out of the repo.
+  - Both files live only in the main clone, not in worktrees. A session started from the main clone passes the setting to the agents it starts. If you open a session directly in a worktree, put copies there first.
+  - `.claude/settings.local.json`: `{"env": {"GH_CONFIG_DIR": "<dir>"}}`
+  - `.codex/config.toml`:
+
+    ```toml
+    [shell_environment_policy]
+    set = { GH_CONFIG_DIR = "<dir>" }
+    ```
+- Commit as that account too.
+  - In the repo, run `git config user.name <account>` and `git config user.email <id>+<account>@users.noreply.github.com`. Look up `<id>` with `gh api users/<account> -q .id`.
+  - Use an HTTPS remote and run `gh auth setup-git` once, so pushes go through gh's login. It writes the global git config, so the account it uses depends on the `GH_CONFIG_DIR` set at the time.
+- If an agent runs on another machine, log in with this token there too.
+- Admin tasks (running `setup.sh`, changing branch protection) still use your own account.
+
+## Related
+
+- [Quick start](/research-harness/start/quick-start/)
+- [Adapt rh to your environment](/research-harness/guides/adapt-your-environment/)
+- [Claude Code and Codex](/research-harness/guides/claude-code-and-codex/)
+- [AGENTS.md reference](/research-harness/reference/agents-md/)
+- [guard reference](/research-harness/reference/guard/)
+- [Interfaces that stay fixed](/research-harness/reference/interfaces/)

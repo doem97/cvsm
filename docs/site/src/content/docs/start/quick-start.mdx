@@ -1,0 +1,82 @@
+---
+title: Quick start
+description: The shortest path from an empty adoption to a first study taken to analysis.
+sidebar:
+  order: 2
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+This page is the shortest path in: copy rh into your repo, turn it on, and take a first study through all four gates. Every step can be done by an agent in your session; you decide, and you provide an admin account where one is needed.
+
+## Before you start
+
+- A GitHub repo whose default branch is `main`. setup.sh, guard and the skills all assume that name.
+- The `gh` CLI, logged in. Running setup.sh needs an admin account.
+- Claude Code or Codex.
+- Python and MLflow on the machines that launch runs. The reference `run.py` and `results.py` use MLflow; `mlflow-skinny` with `sqlalchemy` and `alembic` is enough for the default SQLite store.
+
+<Aside type="caution">
+Branch protection on a private repo needs a paid GitHub plan (for example Pro or Team). Public repos don't.
+</Aside>
+
+## Adopt rh
+
+<Steps>
+
+1. **Copy the template files.** Copy only tracked files, so untracked local files stay behind and the `.claude/skills` symlink survives:
+
+   ```sh
+   git -C <rh clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts tests ':!.github/workflows/pages.yml' | tar -x -C <your repo>
+   ```
+
+   `pages.yml` builds rh's own docs site, so it stays out. Merge the lines of rh's `.gitignore` into yours, and note the rh commit you copied (`git -C <rh clone> rev-parse HEAD`) in the adoption commit message.
+
+2. **Adapt three things.** In `.github/guard.toml`, add your directories and root files to `layout` and your eval and data paths to `protected`. In `scripts/run.toml`, set `experiment`, `env_lock` and `gpus`. Make your training code write its full resolved config as JSON to `$RUN_DIR/config.json` at start, from one process.
+
+3. **Fill in the Project section of AGENTS.md**, one line per field: `Layout`, `Test`, `Language`, `Protected eval/data paths`, `Run` and `Run records`.
+
+4. **Install your CI dependencies** on the `pip install` line of `.github/workflows/test.yml`. Keep the job names `guard` and `test`; branch protection finds the checks by these names.
+
+5. **Push to main once, then run setup.sh as an admin.** guard runs from main, so the adoption commit goes to main directly; this is the only exception to "never push to main". Then:
+
+   ```sh
+   bash scripts/setup.sh
+   ```
+
+   It creates the five labels, allows only squash merges, and protects main so that `guard` and `test` must pass.
+
+6. **Check that both agents load the rules.** Open a session in the repo and confirm that all four skills are listed.
+
+</Steps>
+
+Each step has details and pitfalls in [Adopt rh](/research-harness/guides/adopt/) and [Adapt to your environment](/research-harness/guides/adapt-your-environment/).
+
+## Run a first study
+
+Everything below happens in one session, in plain words. The issue numbers are examples: study #10, its code task #11 and its run task #12.
+
+<Steps>
+
+1. **Plan.** Say "let's plan this study". The agent discusses it with you through the `plan` skill and drafts the study, its spec and its sub-issues. It creates nothing yet.
+
+2. **Publish (gate 01).** Say "publish". The agent creates study #10, then code task #11 and run task #12, which is blocked by #11, and records your Decision on #10.
+
+3. **Implement.** Say "do #11". The agent claims the task, implements it, gets fresh reviews, and stops when the PR is merge-ready: checks green and a `Verdict: pass` on the current head.
+
+4. **Merge (gate 02).** Say "merge". The agent squash-merges with `merge.py --human`, and #11 closes.
+
+5. **Run.** Say "take #10 to analysis". The agent launches #12's runs, checks them against the spec right after launch, posts the results comment, and closes #12. With all sub-issues closed, it posts the study-wide table and spec check on #10. If the runs would exceed their GPU budget, it stops first at gate 03.
+
+6. **Conclude (gate 04).** Read the results and the spec check, then say "conclude #10: …". The agent closes the study with your conclusion.
+
+</Steps>
+
+At every stop the agent reports three lines, `Done:`, `Waiting for you:` and `Next:`, with links. Ask "what's waiting for me?" at any time.
+
+## Related
+
+- [Talk, don't click](/research-harness/start/talk-dont-click/)
+- [Plan a study](/research-harness/guides/plan-a-study/)
+- [Run experiments](/research-harness/guides/run-experiments/)
+- [Gates and blockers](/research-harness/concepts/gates-and-blockers/)

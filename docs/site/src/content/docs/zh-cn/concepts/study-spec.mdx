@@ -1,0 +1,107 @@
+---
+title: 研究规格
+description: 你批准的公平对比合同，以及每个 run 怎样对照它核对。
+sidebar:
+  order: 6
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Contract from '~/components/figures/Contract.astro';
+
+研究规格是你发布研究时批准的那张公平对比表：各组在哪些设置上不同，每个 run 固定什么，什么可以调整。它是你能真正读懂的最后一层，所以 rh 按每个 run 自己的记录对照它核对。
+
+<Contract lang="zh-cn" />
+
+## 为什么要规格
+
+研究批准之后，规格下面的代码、配置和启动越来越多，多到没人读得完，设置上的差异也正是从这里冒出来的。规格只有几个变量，人一眼就能核对。把它当成合同，问题就从"agent 说它保证了公平吗？"变成了"记录和我批准的对得上吗？"。
+
+## 三节
+
+规格是 `study` issue 里的三节，每行一项，行尾可加 `  # <注释>`。
+
+```text
+### Arms
+full: model.adapter=none
+lora: model.adapter=lora model.lora.rank=8
+
+### Controlled
+data.split=val  # held-out split from data.sha256
+model.backbone=vit_b16  # paper X, Table 2
+optim.lr=3e-4  # paper X, Table 2
+train.epochs=30  # paper X, Table 2
+train.effective_batch=256  # paper X, Table 2
+seed in 1,2,3  # three seeds, as in paper X
+
+### Adaptable
+train.per_device_batch  # fit to GPU memory; effective batch stays 256
+train.accum  # follows per_device_batch
+```
+
+- **Arms**（各组）：各组之间仅有的不同。每行 `<arm>: <键>=<值> ...`。
+- **Controlled**（受控）：每个 run 都要满足的设置。`key=value  # 理由` 是每个 run 都要取的值；`key in v1,v2,...  # 理由` 是每组都要跑遍的值，例如 seed 和调参网格。理由必填：一篇论文、一条记录或之前的一个结果。
+- **Adaptable**（可调整）：可以因 run 而不同的工程设置，每行 `key  # 规则`，规则保证对比不被破坏。这一节可以留空。
+
+## 键和值
+
+键是每个 run 解析后配置的点号键，也就是训练代码写的 `config.json`，`run.py` 把它记成 `cfg.*` 参数。一个键最多出现在一节里。值能按 JSON 解析（数字、`true`、`false`、`null`、列表）就按 JSON 比较，所以 `1` 和 `1.0` 相等；否则按字符串比较。
+
+## 规格怎么定出来
+
+`plan` skill 在发布前和你一起推出规格，让它一开始就完整、有依据。它逐项过一遍常见的混杂因素，凡是适用的都固定下来：数据与划分、预处理与增强、模型与初始化、优化器与调度、有效 batch 与训练长度、精度、调参预算、评测协议与 checkpoint 选择、seed。代码暂时还不能通过配置设置的项，单开一个代码子 issue。
+
+<Aside type="caution">
+发布规格是关口 01，之后改 Arms、Controlled 或 Adaptable 也是。agent 只在你明确指示时改，并记下 Decision。
+</Aside>
+
+## 各个角色怎么守住规格
+
+- **implement**：规格里的每个键都经配置设置，把解析后的配置写进 `$RUN_DIR/config.json`，从不改 Controlled 设置，也不让各组的差异超出 Arms。
+- **review**：代码改动违反规格，就是阻断问题。
+- **run**：启动前确认 Runs 每行只跑一组，本 issue 跑到的每一组都跑遍每个 `in` 值。启动后马上做规格核对，停掉违反某条 Controlled `key=value`、没记录该键、或不属于任何一组或属于多组的 run。出现未声明的差异是卡点。Adaptable 设置只在规则内调整，每处调整都写下来。
+- 某个 Controlled 设置不改变对比就满足不了，是[卡点](/research-harness/zh-cn/concepts/gates-and-blockers/)：改实现、放宽规格，或放弃这个对比。
+
+## 规格核对
+
+每条结果评论的最后都有一节 `规格核对`，由结果命令从记录生成：
+
+```sh
+gh issue view 10 --json body -q .body | python scripts/results.py --issue 12 --spec -
+```
+
+它对选中的 run（包括还在跑的）按事实列出：
+
+- 不满足某条 Controlled 的 run，或没记录这个键的 run（`未记录`）；
+- 不属于任何一组、或属于多组的 run；
+- 缺了某条 `in` 中某些值的组；
+- 不在任何一节、取值却不同的键（`未声明的差异`）；
+- 没有 run 的组；
+- 规格本身的问题，例如读不懂的行、没写理由的 Controlled 行；
+- 每个 Adaptable 键在各组取过的值。
+
+没给规格或没有偏差时，这一节也会写明。
+
+## 一个例子
+
+下面是上面这份规格的六个玩具 run，直接用 `run.py` 启动。其中一个 lora run 用了更小的每卡 batch 和 fp16；按 `run` skill，它在启动后就会被停掉。
+
+```text
+规格核对：
+- `train.effective_batch=256` 不成立：1 个 run，0330bc8a46094e03a875e72c6dfd0872（128）
+- 未声明的差异 `train.precision`：bf16（5 个 run）、fp16（1 个 run）
+- Adaptable `train.per_device_batch`：full 取 64（3 个 run）；lora 取 64（2 个 run）、32（1 个 run）
+- Adaptable `train.accum`：full 取 4（3 个 run）；lora 取 4（3 个 run）
+```
+
+参考实现 `results.py` 输出的文字是中文；项目要用别的语言，就改 `results.py`。
+
+<Aside type="note">
+rh 只报告记录里有什么。这些 run 还能不能比，由你判断。
+</Aside>
+
+## 相关页面
+
+- [运行记录](/research-harness/zh-cn/concepts/run-records/)
+- [计划一个研究](/research-harness/zh-cn/guides/plan-a-study/)
+- [issue 表单](/research-harness/zh-cn/reference/issue-forms/)
+- [results.py](/research-harness/zh-cn/reference/results-py/)
