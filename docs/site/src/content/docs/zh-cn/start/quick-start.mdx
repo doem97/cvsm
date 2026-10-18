@@ -16,7 +16,7 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 - Claude Code 或 Codex。
 - 启动运行的机器上有 Python 和 MLflow。参考实现 `run.py` 和 `results.py` 用 MLflow；默认的 SQLite 存储装 `mlflow-skinny` 加 `sqlalchemy` 和 `alembic` 就够了。
 
-<Aside type="caution">
+<Aside type="tip" title="私有仓库">
 私有仓库的分支保护需要 GitHub 付费套餐（例如 Pro 或 Team），公开仓库不需要。
 </Aside>
 
@@ -38,7 +38,7 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 4. **安装 CI 依赖**：改 `.github/workflows/test.yml` 里的 `pip install` 一行。job 名 `guard` 和 `test` 不要改，分支保护按这两个名字认检查。
 
-5. **推一次 main，再以管理员身份运行 setup.sh。** guard 跑的是 main 上的版本，所以接入提交直接推到 main；这是"never push to main"唯一的例外。然后：
+5. **推一次 main，再以管理员身份运行 setup.sh。** guard 跑的是 main 上的版本，所以接入提交直接推到 main；这是“never push to main”唯一的例外。然后：
 
    ```sh
    bash scripts/setup.sh
@@ -58,21 +58,21 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 <Steps>
 
-1. **计划。** 说"我们计划一下这个研究"。agent 按 `plan` skill 和你讨论，起草研究、它的规格和子 issue，这时还不建任何东西。
+1. **计划。** 说“我们计划一下这个研究”。agent 按 `plan` skill 和你讨论，起草研究、它的规格和子 issue，这时还不建任何东西。
 
-2. **发布（关口 01）。** 说"发布"。agent 先建研究 #10，再建代码任务 #11 和被 #11 挡住的运行任务 #12，并在 #10 上记下你的 Decision。
+2. **发布（关口 01）。** 说“发布”。agent 先建研究 #10，再建代码任务 #11 和被 #11 挡住的运行任务 #12，并在 #10 上记下你的 Decision。
 
-3. **实现。** 说"做 #11"。agent 认领任务、实现、请新会话审查，到 PR 待合并时停下：检查全绿，当前 head 有 `Verdict: pass`。
+3. **实现。** 说“做 #11”。agent 认领任务、实现、请新会话审查，到 PR 待合并时停下：检查全绿，当前 head 有 `Verdict: pass`。
 
-4. **合并（关口 02）。** 说"合并"。agent 用 `merge.py --human` squash 合并，#11 随之关闭。
+4. **合并（关口 02）。** 说“合并”。agent 用 `merge.py --human` squash 合并，#11 随之关闭。
 
-5. **运行。** 说"把 #10 推到待分析"。agent 启动 #12 的各个 run，启动后马上对照规格核对，贴出结果评论并关闭 #12。子 issue 全部关闭后，它把整个研究的总表和规格核对贴到 #10 上。如果这些 run 会超出 GPU 预算，它会先在关口 03 停下。
+5. **运行。** 说“把 #10 推到待分析”。agent 启动 #12 的各个 run，启动后马上对照规格核对，贴出结果评论并关闭 #12。子 issue 全部关闭后，它把整个研究的总表和规格核对贴到 #10 上。如果这些 run 会超出 GPU 预算，它会先在关口 03 停下。
 
-6. **下结论（关口 04）。** 读完结果和规格核对，说"`#10` 下结论：……"。agent 带着你的结论关闭这个研究。
+6. **下结论（关口 04）。** 读完结果和规格核对，说“`#10` 下结论：……”。agent 带着你的结论关闭这个研究。
 
 </Steps>
 
-每次停下，agent 都汇报三行，带链接：`Done:`、`Waiting for you:`、`Next:`。随时可以问一句"看看等我的"。
+每次停下，agent 都汇报三行，带链接：`Done:`、`Waiting for you:`、`Next:`。随时可以问一句“看看等我的”。
 
 ## 相关页面
 

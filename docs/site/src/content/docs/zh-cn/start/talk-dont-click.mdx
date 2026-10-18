@@ -18,15 +18,15 @@ import Session from '~/components/figures/Session.astro';
 
 | 你说 | agent 做什么 |
 |---|---|
-| "我们计划一下这个研究"、"我想研究 X" | 按 `plan` skill 和你讨论，起草研究、它的规格和子 issue；等你说"发布"才建 issue |
-| "发布" | 按波次建父 issue 和子 issue，并记下 Decision |
-| "做 #11" | 把代码任务推进到待合并：检查全绿、当前 head 有 `Verdict: pass`；任务写了 `Merge: agent` 就推进到合并完成 |
-| "合并"，或"合并 #13" | 用 `python .github/scripts/merge.py <PR> --human` squash 合并当前 head |
-| "把 #10 推到待分析" | 一直推进到研究 #10 的子 issue 全部关闭 |
-| "继续" | 推进到下一个关口 |
-| "看看等我的" | 读 GitHub 上的状态，列出带 `needs-decision` 的 issue 和待合并的 PR |
+| “我们计划一下这个研究”、“我想研究 X” | 按 `plan` skill 和你讨论，起草研究、它的规格和子 issue；等你说“发布”才建 issue |
+| “发布” | 按波次建父 issue 和子 issue，并记下 Decision |
+| “做 #11” | 把代码任务推进到待合并：检查全绿、当前 head 有 `Verdict: pass`；任务写了 `Merge: agent` 就推进到合并完成 |
+| “合并”，或“合并 #13” | 用 `python .github/scripts/merge.py <PR> --human` squash 合并当前 head |
+| “把 #10 推到待分析” | 一直推进到研究 #10 的子 issue 全部关闭 |
+| “继续” | 推进到下一个关口 |
+| “看看等我的” | 读 GitHub 上的状态，列出带 `needs-decision` 的 issue 和待合并的 PR |
 
-你明确下的指令本身就算批准，agent 不会再问一遍。"合并 #13"就是批准合并 #13；"`#10` 下结论：……"就是批准带着这个结论关闭研究。
+你明确下的指令本身就算批准，agent 不会再问一遍。“合并 #13”就是批准合并 #13；“`#10` 下结论：……”就是批准带着这个结论关闭研究。
 
 ## 每个决定都有记录
 
@@ -48,8 +48,8 @@ Waiting for you: <等你做什么，没有就写无>
 Next: <接下来做什么>
 ```
 
-<Aside type="caution">
-关口和卡点都出现在 "Waiting for you" 这一行。待合并的 PR 不另打 label：PR 本身就是请求，你问"看看等我的"时它会列出来。
+<Aside type="caution" title="需要你的地方">
+关口和卡点都出现在 “Waiting for you” 这一行。待合并的 PR 不另打 label：PR 本身就是请求，你问“看看等我的”时它会列出来。
 </Aside>
 
 ## 你不在会话里时
@@ -60,7 +60,7 @@ agent 在你不在时遇到卡点，会给 issue 打上 `needs-decision`，贴�
 
 可以同时开几个会话，各做一件事。认领任务就是用 `gh issue develop` 建一个关联分支。已经认领的任务，除非指令点名，别的会话不会接手，所以两个会话不会做同一个任务。
 
-会话本身什么都不存。每次状态变化都当场写回 GitHub 或 git，会话随时可以断；新会话说一句"继续 #11"就能接上。
+会话本身什么都不存。每次状态变化都当场写回 GitHub 或 git，会话随时可以断；新会话说一句“继续 #11”就能接上。
 
 <Aside type="tip">
 rh 自己的 skill 用中文讨论和汇报。接入的项目在 AGENTS.md Project 一节的 `Language` 一行写明面向人的文字用什么语言。`Decision:`、`Verdict:` 这类格式关键字保持英文。

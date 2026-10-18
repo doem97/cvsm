@@ -48,7 +48,7 @@ Verdict: pass @ <完整的 head SHA>
 
 ## 怎么发起审查
 
-- **Claude Code**：开一个新 subagent，提示词是 "Follow `.agents/skills/review/SKILL.md` for PR #13."
+- **Claude Code**：开一个新 subagent，提示词是 “Follow `.agents/skills/review/SKILL.md` for PR #13.”
 - **Codex**：`codex exec -s danger-full-access "Follow .agents/skills/review/SKILL.md for PR #13."`。要加这个参数，因为 `gh` 需要联网。
 - **Codex 内置审查**：在 PR head 的 checkout 里运行 `codex exec review`，把 issue、它的 Decision、父 issue 的规格和审查清单交给它。有 `[P0]` 或 `[P1]` 的问题就记 `changes`，否则记 `pass`；由运行它的会话把输出原样贴在 Verdict 行下面。
 

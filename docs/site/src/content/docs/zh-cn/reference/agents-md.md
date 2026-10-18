@@ -46,7 +46,7 @@ agent 怎么判断当前状态。每条指令开始时都从 GitHub 读状态，
 
 每条指令就是一个目标状态，agent 一直推进，到达目标、关口或卡点才停。
 
-- "做 `#12`"：任务写了 `Merge: agent` 就是合并完成，否则是待合并。"把 `#10` 推到待分析"：它的子 issue 全部关闭。"继续"：推进到下一个关口。
+- “做 `#12`”：任务写了 `Merge: agent` 就是合并完成，否则是待合并。“把 `#10` 推到待分析”：它的子 issue 全部关闭。“继续”：推进到下一个关口。
 - 四个关口，一切顺利也要停：
   1. **新增或改变已批准的工作：** 发布计划；改任务的 Goal、Scope、Acceptance 或 Merge，或研究的 Arms、Controlled、Adaptable；改受保护路径。
   2. **合并**，除非任务写了 `Merge: agent`。那时 agent 在待合并后用 `python .github/scripts/merge.py <PR>` 合并；碰了受保护路径或 head 没审查通过的，它会拒绝。其他情况，或被拒绝时，待合并的 PR 本身就是请求：不打 label，也不贴卡点评论。只有人明确说合并，agent 才用 `python .github/scripts/merge.py <PR> --human` 合并。

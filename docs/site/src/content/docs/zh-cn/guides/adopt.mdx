@@ -79,7 +79,7 @@ import { Steps, Aside } from '@astrojs/starlight/components';
    - guard 用 `pull_request_target`，跑的是 main 上的版本。
    - main 上还没有 `guard` 和 `test` 两个 workflow 时，必过检查会卡住所有 PR。
 
-   这是 `AGENTS.md` 里 "never push to main" 唯一的例外，只在加保护之前做这一次。推上去后 `test` workflow 会在 main 上跑一次，到 Actions 页面确认 CI 通过。
+   这是 `AGENTS.md` 里 “never push to main” 唯一的例外，只在加保护之前做这一次。推上去后 `test` workflow 会在 main 上跑一次，到 Actions 页面确认 CI 通过。
 
    然后在仓库根目录、用人的管理员账号（不是机器账号）登录 gh，运行：
 

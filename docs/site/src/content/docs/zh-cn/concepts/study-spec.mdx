@@ -14,7 +14,7 @@ import Contract from '~/components/figures/Contract.astro';
 
 ## 为什么要规格
 
-研究批准之后，规格下面的代码、配置和启动越来越多，多到没人读得完，设置上的差异也正是从这里冒出来的。规格只有几个变量，人一眼就能核对。把它当成合同，问题就从"agent 说它保证了公平吗？"变成了"记录和我批准的对得上吗？"。
+研究批准之后，规格下面的代码、配置和启动越来越多，多到没人读得完，设置上的差异也正是从这里冒出来的。规格只有几个变量，人一眼就能核对。把它当成合同，问题就从“agent 说它保证了公平吗？”变成了“记录和我批准的对得上吗？”。
 
 ## 三节
 
@@ -50,7 +50,7 @@ train.accum  # follows per_device_batch
 
 `plan` skill 在发布前和你一起推出规格，让它一开始就完整、有依据。它逐项过一遍常见的混杂因素，凡是适用的都固定下来：数据与划分、预处理与增强、模型与初始化、优化器与调度、有效 batch 与训练长度、精度、调参预算、评测协议与 checkpoint 选择、seed。代码暂时还不能通过配置设置的项，单开一个代码子 issue。
 
-<Aside type="caution">
+<Aside type="caution" title="改规格也是关口 01">
 发布规格是关口 01，之后改 Arms、Controlled 或 Adaptable 也是。agent 只在你明确指示时改，并记下 Decision。
 </Aside>
 

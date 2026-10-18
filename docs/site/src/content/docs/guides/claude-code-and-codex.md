@@ -25,7 +25,7 @@ rh works with Claude Code and Codex from one set of files: both read `AGENTS.md`
 3. **Codex: check a live session.** Open a Codex session in the repo and ask it to run `gh pr merge --help`. The rule should block it; even if allowed, this command merges nothing. Confirm that all four skills (`plan`, `implement`, `review`, `run`) are listed.
 4. **Claude Code: check a live session.** Open a session in the repo and confirm that all four skills are listed.
 
-:::caution
+:::caution[Only merge.py merges]
 Agents merge only through `.github/scripts/merge.py`. Codex applies its rules before it chooses a sandbox, so the ban holds even in a full-permission session; Claude Code does the same job with `permissions.deny`.
 :::
 

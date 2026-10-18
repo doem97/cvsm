@@ -62,7 +62,7 @@ python scripts/run.py --issue 12 --gpus 4 -- python train.py arm=lora seed=2
 
 研究的 run issue 全部关闭后，agent 把覆盖全部 run 的同一张表和规格核对贴到研究 issue 上，也就是研究总表。
 
-:::caution
+:::caution[能不能比，由你判断]
 结果评论只陈述事实。这些 run 还能不能比、要不要重跑，由你决定。
 :::
 

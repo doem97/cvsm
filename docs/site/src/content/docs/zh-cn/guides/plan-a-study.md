@@ -5,11 +5,11 @@ sidebar:
   order: 2
 ---
 
-计划研究的方式，是和按 `plan` skill 工作的 agent 把它谈清楚。你说"发布"之前，GitHub 上什么都不会建；"发布"就是关口 01。
+计划研究的方式，是和按 `plan` skill 工作的 agent 把它谈清楚。你说“发布”之前，GitHub 上什么都不会建；“发布”就是关口 01。
 
 ## 1. 开始讨论
 
-说出你想研究什么，例如"我们计划一下这个研究"或"我想研究 X"，再告诉 agent 要参考哪些论文、记录和之前的结果。
+说出你想研究什么，例如“我们计划一下这个研究”或“我想研究 X”，再告诉 agent 要参考哪些论文、记录和之前的结果。
 
 agent 先读状态：开着的 `study`、`plan` 和 `needs-decision` issue，打开的 PR，你提到的以往研究和任务，以及它们的结果评论和 Decision。它也会读这次要动的代码。讨论期间，它不往 GitHub 或文件里写任何东西。
 
@@ -82,10 +82,10 @@ Wave 2: C run <title>  blocked by A, B
 ## 4. 发布
 
 :::caution[关口 01：发布]
-规格和每个子 issue 都是你想要的，再说"发布"。发布就是批准：之后的每个 run 都要按它核对。
+规格和每个子 issue 都是你想要的，再说“发布”。发布就是批准：之后的每个 run 都要按它核对。
 :::
 
-你说"发布"后，agent 先建父 issue，再按波次建子 issue，保证每个依赖在被引用时已经存在。父子关系和依赖用 `gh issue create --parent P --blocked-by M` 设置，不写进正文。它检查父 issue 列出了所有子 issue、每个 blocked-by 都已设好，在父 issue 上记一条 `Decision: 发布 ... — <理由>`，汇报三行（`Done:`、`Waiting for you:`、`Next:`）后停下。除非你的指令给了发布之后的目标，它不会认领或开始任何子 issue。
+你说“发布”后，agent 先建父 issue，再按波次建子 issue，保证每个依赖在被引用时已经存在。父子关系和依赖用 `gh issue create --parent P --blocked-by M` 设置，不写进正文。它检查父 issue 列出了所有子 issue、每个 blocked-by 都已设好，在父 issue 上记一条 `Decision: 发布 ... — <理由>`，汇报三行（`Done:`、`Waiting for you:`、`Next:`）后停下。除非你的指令给了发布之后的目标，它不会认领或开始任何子 issue。
 
 ## 修改已发布的研究
 

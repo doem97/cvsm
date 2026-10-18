@@ -62,7 +62,7 @@ It flags groups that differ in commit, environment or data (with `git diff --sta
 
 When all run issues of a study are closed, the agent posts the same table and spec check over all of them on the study itself: the study table.
 
-:::caution
+:::caution[Comparability is your call]
 The results comment states facts. Whether runs are still comparable, and whether to rerun, is your decision.
 :::
 
