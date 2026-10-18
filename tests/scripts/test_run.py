@@ -1,6 +1,7 @@
 import fcntl
 import hashlib
 import importlib.util
+import json
 import os
 import select
 import shlex
@@ -127,6 +128,55 @@ def test_files_in_run_dir_become_artifacts(repo):
     assert repo.artifact(r, "config.json").is_file()
     assert repo.artifact(r, "metrics.json").is_file()
     assert r.data.metrics == {"acc": 1, "loss": 0.5}  # the metrics.json fallback
+    assert r.data.params["cfg.config"] == "1"  # written just before the command exits
+
+
+CONFIG = {"model": {"name": "vit", "depth": 12, "opt": {"lr": 0.001}}, "amp": True, "tags": ["a", "中"],
+          "none": None, "extra": {}, "path": "x" * 7000, "k" * 300: 1, **{f"n{i}": i for i in range(120)}}
+
+
+def test_config_is_logged_as_cfg_params(repo):
+    write = f"import json, os; json.dump({CONFIG!r}, open(os.environ['RUN_DIR'] + '/config.json', 'w'))"
+    assert repo.run(cmd=[sys.executable, "-c", write]).returncode == 0
+    r = repo.only_run()
+    cfg = {k[4:]: v for k, v in r.data.params.items() if k.startswith("cfg.")}
+    assert {k: cfg[k] for k in ("model.name", "model.depth", "model.opt.lr", "amp", "tags", "none", "extra")} == {
+        "model.name": "vit", "model.depth": "12", "model.opt.lr": "0.001", "amp": "true",
+        "tags": '["a", "中"]', "none": "null", "extra": "{}"}
+    assert cfg["path"] == "x" * run.MAX_PARAM_VAL_LENGTH  # truncated to MLflow's limit
+    assert ("cfg." + "k" * 300)[:run.MAX_ENTITY_KEY_LENGTH] in r.data.params
+    assert len(cfg) == 7 + 2 + 120  # more than one log_batch
+    assert len(json.loads(repo.artifact(r, "config.json").read_text())["path"]) == 7000
+
+
+def test_config_keys_mlflow_refuses_are_skipped(repo):
+    config = {"lr": 0.1, "seed": 1, "class_weights": {"cat (x)": 2.0}, "k" * 300: 1, "k" * 301: 2}
+    write = f"import json, os; json.dump({config!r}, open(os.environ['RUN_DIR'] + '/config.json', 'w'))"
+    p = repo.run(cmd=[sys.executable, "-c", write])
+    assert p.returncode == 0
+    r = repo.only_run()
+    long = ("cfg." + "k" * 300)[:run.MAX_ENTITY_KEY_LENGTH]
+    assert {k: v for k, v in r.data.params.items() if k.startswith("cfg.")} == {
+        "cfg.lr": "0.1", "cfg.seed": "1", long: "1"}  # the first of the keys equal after truncation
+    assert f"cfg.class_weights.cat (x), {long}" in p.stderr
+
+
+def test_failed_config_log_is_reported(tmp_path, capsys):
+    class Down:
+        def log_batch(self, *args, **kw):
+            raise RuntimeError("backend down")
+    assert run.log_config(Down(), "r1", tmp_path) is None  # no config.json yet
+    (tmp_path / "config.json").write_text('{"a": 1}')
+    assert run.log_config(Down(), "r1", tmp_path) is False
+    assert "cannot log config.json of run r1: backend down" in capsys.readouterr().err
+
+
+def test_config_that_is_not_an_object_is_only_kept_as_a_file(repo):
+    write = "import os; open(os.environ['RUN_DIR'] + '/config.json', 'w').write('[1, 2]')"
+    assert repo.run(cmd=[sys.executable, "-c", write]).returncode == 0
+    r = repo.only_run()
+    assert not [k for k in r.data.params if k.startswith("cfg.")]
+    assert repo.artifact(r, "config.json").read_text() == "[1, 2]"
 
 
 def test_command_attaching_with_mlflow_logs_into_the_same_run(repo):

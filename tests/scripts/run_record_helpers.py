@@ -138,11 +138,14 @@ class Repo:
         procs = [self.start(*args, **kw) for args in arg_lists]
         return [p.communicate(timeout=30) and p.returncode for p in procs]
 
-    def record(self, start, status="FINISHED", metrics=None, **rh):
-        """Write a run as run.py would, without running it; rh are the rh.* params."""
+    def record(self, start, status="FINISHED", metrics=None, cfg=None, **rh):
+        """Write a run as run.py would, without running it; rh are the rh.* params and cfg the
+        cfg.* params, by dotted key."""
         run_id = self.client.create_run(self.exp_id, start_time=start).info.run_id
         for key, value in rh.items():
             self.client.log_param(run_id, f"rh.{key}", value)
+        for key, value in (cfg or {}).items():
+            self.client.log_param(run_id, f"cfg.{key}", value)
         for key, value in (metrics or {}).items():
             self.client.log_metric(run_id, key, value)
         if status != "RUNNING":
@@ -160,10 +163,12 @@ class Repo:
     def artifact(self, run, name):
         return local_path(run.info.artifact_uri) / name
 
-    def results(self, *args, issue=5, env=None, cwd=None):
-        out = subprocess.run([sys.executable, str(RESULTS), "--issue", str(issue), *args],
+    def results(self, *args, issue=5, env=None, cwd=None, input=None):
+        """results.py's output; issue is a number or a list of them, input goes to stdin."""
+        issues = [str(i) for i in (issue if isinstance(issue, list) else [issue])]
+        out = subprocess.run([sys.executable, str(RESULTS), "--issue", *issues, *args],
                              cwd=cwd or self.root, capture_output=True, text=True, timeout=30,
-                             env={**self.env, **(env or {})})
+                             env={**self.env, **(env or {})}, input=input)
         assert out.returncode == 0, out.stderr
         assert "mlflow.agent.hint" not in out.stderr
         return out.stdout
