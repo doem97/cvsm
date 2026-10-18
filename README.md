@@ -21,10 +21,10 @@ It is a convention around git and GitHub, not a service. You copy in a rules fil
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/stats-dark.svg">
-  <img alt="0 services to install. 80 lines of rules, capped by a test. 4 skills of at most 120 lines each. 4 human gates, the only planned stops. 270 tests in the suite. 16 PRs on main, each closing one task." src="docs/assets/stats-light.svg" width="100%">
+  <img alt="0 services to install. 80 lines of rules, capped by a test. 4 skills of at most 120 lines each. 4 human gates, the only planned stops. 1 merge path for agents, merge.py. 2 agent CLIs, Claude Code and Codex, with one set of skills." src="docs/assets/stats-light.svg" width="100%">
 </picture>
 
-rh is built with rh. Since the initial commit, every change to its `main` has been a squash-merged PR that closes one task issue under a `plan` parent. There are 16 so far.
+rh is built with rh. Since the initial commit, every change to its `main` has been a squash-merged PR that closes one task issue under a `plan` parent.
 
 ## How it works
 
@@ -45,9 +45,9 @@ Each instruction names a target state. The agent keeps going until it reaches th
 | Gate | When | What you say |
 |---|---|---|
 | **01&nbsp;Publish** | New or changed approved work: publishing a plan; changing a task's Goal, Scope, Acceptance or Merge, or a study's Arms, Controlled or Adaptable; changing a protected path | "publish" |
-| **02&nbsp;Merge** | A PR is merge-ready, unless its task says `Merge: agent`. Then the agent merges it itself with `merge.py`, which refuses protected paths and heads without a passing review | "merge", or "merge #15" |
+| **02&nbsp;Merge** | A PR is merge-ready, unless its task says `Merge: agent`. Then the agent merges it itself with `merge.py`, which refuses protected paths and heads without a passing review | "merge", or "merge `#15`" |
 | **03&nbsp;Budget** | The next step would exceed the budget in tokens, time or GPU hours | "continue", with a new budget if you like |
-| **04&nbsp;Conclude** | All of a study's sub-issues are closed and it awaits analysis | your conclusion, e.g. "conclude #10: …" |
+| **04&nbsp;Conclude** | All of a study's sub-issues are closed and it awaits analysis | your conclusion, e.g. "conclude `#10`: …" |
 
 **Blockers.** The agent also stops at a blocker:
 - the same failure 3 times in a row;
@@ -117,7 +117,7 @@ In English, that reads:
 <details>
 <summary>The whole results comment</summary>
 
-> #12 的结果：6 个 run，3 组，按去掉 seed 的命令分组。
+> `#12` 的结果：6 个 run，3 组，按去掉 seed 的命令分组。
 >
 > | 命令 | arm | n | 失败数 | top1 均值 | top1 标准差 | commit | 环境锁 | 数据 |
 > |---|---|---|---|---|---|---|---|---|
@@ -151,9 +151,9 @@ You make decisions only in an agent session (Claude Code or Codex) and never cli
 |---|---|
 | "let's plan this study", "I want to study X" | Discusses it with you through the `plan` skill. It drafts the study, its spec and its sub-issues, and creates nothing until you say "publish". |
 | "publish" | Creates the parent and its sub-issues, wave by wave, and records the Decision |
-| "do #12" | Takes the code task to merge-ready: checks green and a `Verdict: pass` on the current head. If the task says `Merge: agent`, it goes on to merged. |
-| "merge", or "merge #15" | Squash-merges the current head with `python .github/scripts/merge.py <PR> --human` |
-| "take #10 to analysis" | Works until every sub-issue of study #10 is closed |
+| "do `#12`" | Takes the code task to merge-ready: checks green and a `Verdict: pass` on the current head. If the task says `Merge: agent`, it goes on to merged. |
+| "merge", or "merge `#15`" | Squash-merges the current head with `python .github/scripts/merge.py <PR> --human` |
+| "take `#10` to analysis" | Works until every sub-issue of study `#10` is closed |
 | "continue" | Goes on to the next gate |
 | "what's waiting for me?" | Reads GitHub and lists `needs-decision` issues and merge-ready PRs |
 

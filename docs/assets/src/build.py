@@ -305,24 +305,32 @@ def hero(s):
     samples = bezier_points(hp)
     fr = [arc_fraction(samples, g) * 1000 for g in gx]
     dash, period = 22, 11.0
-    stops, tcur = [(0, f"stroke-dashoffset:{dash + 8}")], 0.0
     travel, hold = 6.6, 0.55
     speed = 1000 / travel
-    pos = -dash
-    for k, p in enumerate(fr + [1000 + dash]):
+    # The pulse starts invisible where the trajectory has faded in (not at the canvas edge), fades in,
+    # holds at each gate, and fades out as it runs into its table row. Hidden when not animating.
+    start = arc_fraction(samples, gx[0] * .4) * 1000
+
+    def at(p):
+        return f"stroke-dashoffset:{f(-(p - dash / 2))}"
+
+    stops, tcur, pos = [(0, at(start) + ";opacity:0")], 0.0, start
+    stops.append(((tcur + 50 / speed) / period * 100, at(start + 50) + ";opacity:1"))
+    for k, p in enumerate(fr):
         tcur += (p - pos) / speed
-        stops.append((tcur / period * 100, f"stroke-dashoffset:{f(-(p - dash / 2) if k < 4 else -p)}"))
-        if k < 4:
-            tcur += hold
-            stops.append((tcur / period * 100, f"stroke-dashoffset:{f(-(p - dash / 2))}"))
+        stops.append((tcur / period * 100, at(p)))
+        tcur += hold
+        stops.append((tcur / period * 100, at(p) + ";opacity:1"))
         pos = p
-    stops.append((100, f"stroke-dashoffset:{f(-(1000 + dash))}"))
+    end = 1000 - dash / 2
+    tcur += (end - pos) / speed
+    stops.append((tcur / period * 100, at(end) + ";opacity:0"))
+    stops.append((100, at(end) + ";opacity:0"))
     s.css.append(keyframes("pulse", stops))
-    s.css.append(f".pulse{{stroke-dasharray:{dash} 2000;stroke-dashoffset:{dash + 8};animation:pulse {period}s linear infinite}}")
+    s.css.append(f".pulse{{stroke-dasharray:{dash} 2000;stroke-dashoffset:{f(-(start - dash / 2))};opacity:0;animation:pulse {period}s linear infinite}}")
     s.add(f'<path class="k-accent pulse anim" pathLength="1000" stroke-width="4" stroke-linecap="round" d="{d}"/>')
     # Each gate's crossing point rings while the pulse holds there.
-    t0 = 0.0
-    pos = -dash
+    t0, pos = 0.0, start
     for k, g in enumerate(gx):
         t0 += (fr[k] - pos) / speed
         a, b = t0 / period * 100, (t0 + hold) / period * 100
@@ -503,12 +511,17 @@ def contract(s):
             if t[1]:
                 s.mono(t[1], L + 40 + 27 * 14.4, y, 24, "faint", upper=False)
         y += lh
-    # Its annotation.
+    # Its annotation, each note on the baseline of the section it explains.
     s.rect(px, top + 34, 14, 14, fill="accent")
-    s.mono("Readable by you", px + 26, top + 50, 22, "accent")
-    for i, ln in enumerate(["The only differences, the", "settings held fixed with a", "reason each, and what may",
-                            "adapt. Approved at gate 01."]):
-        s.text(ln, px, top + 104 + i * 36, 26, "sans", "muted")
+    w = s.mono("Readable by you", px + 26, top + 50, 22, "accent")
+    s.mono("· gate 01", px + 26 + w + 12, top + 50, 22, "faint")
+    heads = [i for i, (kind, *_) in enumerate(SPEC) if kind == "h"]
+    notes = [("Arms", "the only differences"), ("Controlled", "held fixed, each with a reason"),
+             ("Adaptable", "may differ, within its rule")]
+    for i, (name, note) in zip(heads, notes):
+        yb = top + 72 + lh + 4 + i * lh
+        s.mono(name, px, yb, 22, "muted")
+        s.text(note, px, yb + 36, 26, "sans", "text")
 
     # The layers below it: denser, fainter, too deep to read.
     layers = [("Layer 1 · code", 112, 6, (40, 260), .34), ("Layer 2 · config", 112, 9, (14, 70), .26),
@@ -557,8 +570,6 @@ def contract(s):
     s.add(f'<path class="k-verify" stroke-width="2" d="M{f(rx[-1] + 9)} {f(ry)}H{f(ax - 16)}Q{f(ax)} {f(ry)} {f(ax)} {f(ry - 16)}'
           f'V{f(ay + 16)}Q{f(ax)} {f(ay)} {f(ax - 16)} {f(ay)}H{f(Rr + 10)}"/>')
     arrow(s, Rr + 26, ay, Rr + 3, ay, "verify", 2, 10)
-    for i, ln in enumerate(["Checked right after launch", "and in every results comment"]):
-        s.mono(ln, px, bottom - 44 + i * 32, 22, "verify", upper=False)
     # The check result, as results.py reports it (its text follows the project's language).
     l1 = bottom + 96
     cy, chh = l1, 336
@@ -574,8 +585,9 @@ def contract(s):
            ("text", "· adaptable per_device_batch"), ("muted", "  full 64; lora 64, 32")]
     for i, (cls, ln) in enumerate(out):
         s.mono(ln, px + 24, cy + 122 + (i // 2) * 78 + (i % 2) * 32, 22, cls, upper=False)
-    s.mono("From the record, not", px, cy + chh + 44, 22, "muted")
-    s.mono("from an agent's account", px, cy + chh + 76, 22, "muted")
+    for i, (ln, cls) in enumerate([("Checked right after launch", "verify"), ("and in every results comment,", "verify"),
+                                   ("from the record, not from", "muted"), ("an agent's account.", "muted")]):
+        s.mono(ln, px, cy + chh + 44 + i * 32, 22, cls, upper=False)
     legend(s, M, H - 64, [("gate", "Approved by you"), ("agent", "Agent work"), ("verify", "Checked against the spec")])
 
 
@@ -585,13 +597,13 @@ STATS = [("0", "text", ["Services", "to install"]),
          ("80", "text", ["Lines of", "rules, capped", "by a test"]),
          ("4", "text", ["Skills of", "≤ 120 lines", "each"]),
          ("4", "accent", ["Human gates,", "the only", "planned stops"]),
-         ("270", "text", ["Tests in", "the suite"]),
-         ("16", "text", ["PRs on main,", "each closing", "one task"])]
+         ("1", "text", ["Merge path", "for agents:", "merge.py"]),
+         ("2", "text", ["Agent CLIs,", "one set of", "skills"])]
 
 
 def stats(s):
     H = s.h
-    frame(s, 96, H - 56, "02 — Facts", "Counted in this repo, 2026-10-18")
+    frame(s, 96, H - 56, "02 — Facts", "The template in six numbers")
     for k, (num, cls, cap) in enumerate(STATS):
         x = col(2 * k)
         if k:
@@ -660,13 +672,14 @@ ASSETS = {
              "Agents: the plan, implement, review (fresh session) and run skills, merge.py, and the three-line "
              "report. Record: issues, the pull request, the Verdict comment, the squash merge, MLflow runs, and "
              "the results comment with its spec check and the study table."),
-    "contract": (contract, 1300, "The spec is the contract",
+    "contract": (contract, 1340, "The spec is the contract",
                  "A study spec card (arms, controlled settings with reasons, adaptable settings), readable by you and "
                  "approved at gate 01. Below it, denser layers of agent work: code, config, launches and runs. A blue "
                  "arrow runs from six run records back up to the spec, with the spec check those records produced."),
     "stats": (stats, 456, "research-harness in numbers",
               "0 services to install; 80 lines of rules, capped by a test; 4 skills of at most 120 lines each; "
-              "4 human gates (publish, merge, budget, conclude); 270 tests; 16 PRs on main, each closing one task."),
+              "4 human gates (publish, merge, budget, conclude); 1 merge path for agents, merge.py; 2 agent CLIs "
+              "(Claude Code and Codex) sharing one set of skills."),
     "session": (session, 1300, "Talk, don't click: a session with rh",
                 "A session transcript: you plan a study, say publish (gate 01), do #11, merge (gate 02), take the "
                 "study to analysis and ask what is waiting; the agent answers each stop with Done, Waiting for "

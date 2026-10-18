@@ -21,10 +21,10 @@ rh 让人只待在需要人的地方，其余的都能核对。你批准一份�
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/stats-dark.svg">
-  <img alt="0 个要安装的服务。80 行规则，有测试卡住上限。4 个 skill，每个最多 120 行。4 个人的关口，是仅有的计划内停点。测试集里 270 个测试。main 上 16 个 PR，每个关闭一个任务。" src="assets/stats-light.svg" width="100%">
+  <img alt="0 个要安装的服务。80 行规则，有测试卡住上限。4 个 skill，每个最多 120 行。4 个人的关口，是仅有的计划内停点。agent 唯一的合并入口：merge.py。2 种 agent 命令行工具（Claude Code 和 Codex）共用一套 skill。" src="assets/stats-light.svg" width="100%">
 </picture>
 
-rh 本身就是用 rh 开发的。从第一个提交之后，main 上的每次改动都是一个 squash 合并的 PR，关闭 `plan` 父 issue 下的一个任务 issue。目前一共 16 个。
+rh 本身就是用 rh 开发的。从第一个提交之后，main 上的每次改动都是一个 squash 合并的 PR，关闭 `plan` 父 issue 下的一个任务 issue。
 
 ## 怎么运作
 
@@ -45,9 +45,9 @@ rh 本身就是用 rh 开发的。从第一个提交之后，main 上的每次�
 | 关口 | 什么时候 | 你说什么 |
 |---|---|---|
 | **01&nbsp;发布** | 新增或改变已批准的工作：发布计划；改任务的 Goal、Scope、Acceptance 或 Merge，或研究的 Arms、Controlled、Adaptable；改受保护路径 | "发布" |
-| **02&nbsp;合并** | PR 待合并时，除非任务写了 `Merge: agent`。那时 agent 自己用 merge.py 合并；碰了受保护路径、或当前 head 没有审查通过的，merge.py 会拒绝 | "合并"，或"合并 #15" |
+| **02&nbsp;合并** | PR 待合并时，除非任务写了 `Merge: agent`。那时 agent 自己用 merge.py 合并；碰了受保护路径、或当前 head 没有审查通过的，merge.py 会拒绝 | "合并"，或"合并 `#15`" |
 | **03&nbsp;预算** | 下一步会超出预算：token、时间或 GPU 小时 | "继续"，也可以给个新预算 |
-| **04&nbsp;下结论** | 研究的子 issue 全部关闭，进入待分析 | 你的结论，例如"#10 下结论：……" |
+| **04&nbsp;下结论** | 研究的子 issue 全部关闭，进入待分析 | 你的结论，例如"`#10` 下结论：……" |
 
 **卡点。** 遇到以下情况，agent 也会停下：
 - 同一个失败连续 3 次；
@@ -112,7 +112,7 @@ train.accum  # follows per_device_batch
 <details>
 <summary>完整的结果评论</summary>
 
-> #12 的结果：6 个 run，3 组，按去掉 seed 的命令分组。
+> `#12` 的结果：6 个 run，3 组，按去掉 seed 的命令分组。
 >
 > | 命令 | arm | n | 失败数 | top1 均值 | top1 标准差 | commit | 环境锁 | 数据 |
 > |---|---|---|---|---|---|---|---|---|
@@ -146,9 +146,9 @@ rh 只报告记录里有什么。这些 run 还能不能比，由你判断。
 |---|---|
 | "我们计划一下这个研究"、"我想研究 X" | 按 `plan` skill 和你讨论，起草研究、它的规格和子 issue；等你说"发布"才建 issue |
 | "发布" | 按波次建父 issue 和子 issue，并记下 Decision |
-| "做 #12" | 把代码任务推进到待合并：检查全绿、当前 head 有 `Verdict: pass`；任务写了 `Merge: agent` 就推进到合并完成 |
-| "合并"，或"合并 #15" | 用 `python .github/scripts/merge.py <PR> --human` squash 合并当前 head |
-| "把 #10 推到待分析" | 一直推进到研究 #10 的子 issue 全部关闭 |
+| "做 `#12`" | 把代码任务推进到待合并：检查全绿、当前 head 有 `Verdict: pass`；任务写了 `Merge: agent` 就推进到合并完成 |
+| "合并"，或"合并 `#15`" | 用 `python .github/scripts/merge.py <PR> --human` squash 合并当前 head |
+| "把 `#10` 推到待分析" | 一直推进到研究 `#10` 的子 issue 全部关闭 |
 | "继续" | 推进到下一个关口 |
 | "看看等我的" | 读 GitHub 上的状态，列出带 `needs-decision` 的 issue 和待合并的 PR |
 
