@@ -1,5 +1,5 @@
 # Read by .github/scripts/guard.py. Globs: `**` crosses `/`, `*` and `?` do not.
-layout = ["README.md", "AGENTS.md", ".gitignore", ".agents/**", ".claude/**", ".codex/**", ".github/**", "docs/**", "scripts/**", "tests/**"]
+layout = ["README.md", "AGENTS.md", "LICENSE", ".gitignore", ".agents/**", ".claude/**", ".codex/**", ".github/**", "docs/**", "scripts/**", "tests/**"]
 markdown = ["README.md", "AGENTS.md", "docs/**", ".agents/skills/**", ".github/**"]
 forbidden_names = ["TODO", "NOTES", "PLAN", "PROGRESS"]
 protected = ["AGENTS.md", ".agents/**", ".codex/**", ".claude/**", ".github/**"]
