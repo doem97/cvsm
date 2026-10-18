@@ -16,7 +16,7 @@
 - Each instruction names a target state: "do #12" means merged if the task says `Merge: agent` and merge-ready otherwise, "take #10 to analysis" means all its sub-issues closed, "continue" means the next gate.
 - Stop only at the target, at a gate, or at a blocker; otherwise keep going.
 - Stop at these four gates even when everything works:
-  1. New or changed approved work: publishing a plan; changing a task's Goal, Scope, Acceptance or Merge; changing a protected path.
+  1. New or changed approved work: publishing a plan; changing a task's Goal, Scope, Acceptance or Merge, or a study's Arms, Controlled or Adaptable; changing a protected path.
   2. Merging, unless the task says `Merge: agent`. Then merge once merge-ready with `python .github/scripts/merge.py <PR>`, which refuses protected paths and unreviewed heads. Otherwise, or if it refuses, the merge-ready PR is the request: add no label or blocker comment. Merge it only when the human explicitly tells you to, with `python .github/scripts/merge.py <PR> --human`.
   3. Exceeding a budget: tokens, time or GPU hours.
   4. Concluding and closing a study.
@@ -24,8 +24,8 @@
 - Record each decision as an issue comment: `Decision: <choice> — <one-line reason>`.
 
 ## Blockers
-- Stop and ask when a gate is reached, the same failure happens 3 times in a row, three `changes` verdicts come in a row, or an ambiguity would change the deliverable.
-- Handle without asking: test or CI failures, merge conflicts, infra retries, bugs inside Scope, and a `changes` verdict: fix its findings, then get a fresh review of the new head. A pass ends the loop; fix its minor findings inside Scope and, if you pushed fixes, get one more fresh review; then post one PR comment proposing for each remaining minor a new issue, an existing issue or no action. The human's merge instruction approves the proposals (under `Merge: agent`, the instruction naming the task does), and the agent that merges carries them out.
+- Stop and ask when a gate is reached, the same failure happens 3 times in a row, three `changes` verdicts come in a row, an ambiguity would change the deliverable, or a study's Controlled line cannot be met without changing the comparison: `Blocked: 这个对比按规格做不了，因为 <X>`, with the options: change the implementation (optimize or change code), relax the spec (gate 1), or drop the comparison.
+- Handle without asking: test or CI failures, merge conflicts, infra retries, bugs inside Scope, changing an Adaptable setting within its rule (stated in the results comment), and a `changes` verdict: fix its findings, then get a fresh review of the new head. A pass ends the loop; fix its minor findings inside Scope and, if you pushed fixes, get one more fresh review; then post one PR comment proposing for each remaining minor a new issue, an existing issue or no action. The human's merge instruction approves the proposals (under `Merge: agent`, the instruction naming the task does), and the agent that merges carries them out.
 - For a bug outside Scope, open a new issue and keep working; keep the fix out of the current PR.
 - Ask once per blocker, with evidence, at most 3 options and a recommendation.
 - If the user is in the session, ask there. Otherwise add `needs-decision`, post the blocker comment, and move on to other ready work.
@@ -61,7 +61,7 @@
 - Before acting, read your issue, the code in its Scope and the interfaces that code uses; your skill lists the rest.
 - Write only to GitHub (issues, comments, PRs), to files in Scope and to run records; keep no memory, notes, docs or discussion.
 - Record decisions and conclusions on GitHub.
-- Get each review from a fresh session that follows the `review` skill: a pre-PR review gets only the issue and the diff, a PR review only the PR number (the built-in Codex review also gets the issue and its Decisions); never pass it your summary or reasoning.
+- Get each review from a fresh session that follows the `review` skill: a pre-PR review gets only the issue and the diff, a PR review only the PR number (the built-in Codex review also gets the issue, its Decisions and, under a study, the study's spec); never pass it your summary or reasoning.
 
 ## Skills
 - Skills live in `.agents/skills/<name>/SKILL.md`; follow the one for your role.

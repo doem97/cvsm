@@ -31,7 +31,7 @@ git worktree add ../worktrees/N-<slug> t/N-<slug>
 ```
 gh issue view N             # body: Goal, Scope, Acceptance, Merge; parent P
 gh issue view N --comments  # Decisions
-gh issue view P --comments  # project-level Decisions
+gh issue view P && gh issue view P --comments  # parent: body (a study's spec), Decisions
 ```
 
 Read AGENTS.md, the code in Scope and the interfaces that code uses.
@@ -40,9 +40,14 @@ Read AGENTS.md, the code in Scope and the interfaces that code uses.
 
 - Use TDD where it fits: first a failing test that pins the contract, then the code.
 - Change only paths that Scope matches; check with `git diff --name-only origin/main...`.
+- If P is a `study`, its spec (Arms, Controlled, Adaptable) binds the code: set every key it
+  names through config; write the resolved config (every setting that can affect results,
+  derived ones included) to `$RUN_DIR/config.json` from one process; never alter a Controlled
+  setting or make the arms differ beyond Arms.
 - A bug outside Scope: open a new `code` issue with `--parent P` (AGENTS.md Blockers), keep it
   out of this branch, and list it under Out of scope in the PR.
-- A Scope that is too small, or an ambiguity that changes the deliverable, is a blocker.
+- A Scope that is too small, an ambiguity that changes the deliverable, or a Controlled line the
+  code cannot meet without changing the comparison is a blocker (AGENTS.md Blockers).
 - Commit as `<type>(#N): <summary>` and push often: `git push -u origin t/N-<slug>`.
 
 ## 4. Inner loop, before the PR
@@ -56,7 +61,6 @@ Repeat until every Acceptance command passes and a fresh reviewer finds nothing 
 ## 5. Open the PR
 
 Follow `.github/pull_request_template.md` and AGENTS.md Git: an English title, a Chinese body.
-Fix `guard` or `test` failures without asking.
 
 ```
 gh pr create --base main --head t/N-<slug> --title "<type>(#N): <summary>" --body "$(cat <<'EOF'
@@ -69,14 +73,13 @@ Closes #N
 none
 EOF
 )"
-gh pr checks <PR> --watch
+gh pr checks <PR> --watch   # fix guard or test failures without asking
 ```
 
 ## 6. Outer loop: fresh review of the PR
 
-Start a fresh PR review as section 4 of `.agents/skills/review/SKILL.md` says. Then check that
-the newest `Verdict:` comment (`gh pr view <PR> --comments`) names the current head
-(`gh pr view <PR> --json headRefOid -q .headRefOid`).
+Start a fresh PR review (section 4 of `.agents/skills/review/SKILL.md`). Then check that the
+newest `Verdict:` comment names the PR head (`gh pr view <PR> --json headRefOid -q .headRefOid`).
 - `changes`: fix its findings, rerun Acceptance, push, and get a fresh review of the new head.
   Three `changes` in a row is a blocker (AGENTS.md Blockers).
 - `pass` with minor findings: fix the ones inside Scope. If you pushed fixes, get ONE more
@@ -96,18 +99,15 @@ EOF
 
 ## 7. Merge-ready
 
-Once the PR is merge-ready (AGENTS.md State):
-- `Merge: agent`: run `python .github/scripts/merge.py <PR>`. If it refuses (exit 2), the PR
-  is the request: stop and report.
-- Otherwise stop and report; the merge-ready PR is the request. Add no label or blocker comment.
-- If `merge.py` exits 1 (it could not read the PR, or the merge itself failed), read its
-  message, fix the cause (checks not green yet, head moved, ...) and retry; the same failure
-  3 times in a row is a blocker.
+Once the PR is merge-ready (AGENTS.md State), under `Merge: agent` run
+`python .github/scripts/merge.py <PR>`. Otherwise, or if it refuses (exit 2), stop and report:
+the merge-ready PR is the request; add no label or blocker comment. If `merge.py` exits 1 (it
+could not read the PR, or the merge itself failed), read its message, fix the cause (checks not
+green yet, head moved, ...) and retry; the same failure 3 times in a row is a blocker.
 
 When the human explicitly says to merge, run `python .github/scripts/merge.py <PR> --human`
-and record `Decision: 合并 PR #<PR> — <人的指示>` on issue N. The instruction also approves the
-minor proposals; under `Merge: agent`, the instruction naming the task approves them. After
-either kind of merge:
+and record `Decision: 合并 PR #<PR> — <人的指示>` on issue N. That instruction, or under
+`Merge: agent` the one naming the task, approves the minor proposals. After either merge:
 1. Carry out the minor proposals (`gh issue create --label code --parent P ...`, `gh issue comment M`).
 2. Clean up from the main clone; the origin branch is gone if the repo deletes merged branches:
 

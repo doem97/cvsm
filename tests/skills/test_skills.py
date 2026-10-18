@@ -135,3 +135,42 @@ def test_run_uses_project_commands():
     assert "<results> --issue N --metric <Report metrics>" in blocks
     assert "scripts/run.py" not in blocks and "scripts/results.py" not in blocks
     assert not re.search(r"python scripts/run\.py --issue", text)
+
+
+def test_run_checks_runs_against_study_spec():
+    # The study body is the spec; the check runs right after launch, in the results comment,
+    # and over all the study's run issues once the study awaits analysis.
+    text = skill_text("run")
+    blocks = "".join(re.findall(r"^```[^\n]*\n(.*?)^```", text, re.M | re.S))
+    spec = "gh issue view P --json body -q .body | <results> --issue"
+    assert f"`{spec} N --spec -`" in text
+    assert f"{spec} N --metric <Report metrics> --spec -)" in blocks
+    assert f"{spec} $runs --metric <Report metrics> --spec -)" in blocks
+    assert "gh issue comment P --body" in blocks
+
+
+@pytest.mark.parametrize("name", ["implement", "review"])
+def test_code_held_to_study_spec(name):
+    text = skill_text(name)
+    assert "`$RUN_DIR/config.json`" in text and "differ beyond Arms" in text
+
+
+def test_review_gets_study_spec():
+    text = skill_text("review")
+    codex = re.search(r'^codex exec review "(.*?)" >', text, re.M | re.S).group(1)
+    assert "Arms, Controlled" in codex
+    assert "its spec (`gh issue view P`)" in text  # pre-PR review prompt
+
+
+def test_review_worktree_at_head_sha():
+    # FETCH_HEAD can be overwritten by a parallel review in the same clone.
+    text = skill_text("review")
+    assert "git worktree add --detach ../worktrees/review-<PR> <sha>" in text
+    assert not re.search(r"git worktree add .*FETCH_HEAD", text)
+
+
+def test_run_keeps_spec_duties():
+    text = " ".join(skill_text("run").split())  # phrases may wrap
+    assert "check that each Runs line runs exactly one arm" in text  # coverage before launch
+    assert "Stop every running run that `规格核对` lists" in text  # stop on a violation
+    assert "每项 Adaptable 改动" in text  # Adaptable changes stated in the results comment
