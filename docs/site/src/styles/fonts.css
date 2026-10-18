@@ -1,0 +1,5 @@
+/* Self-hosted fonts, split by unicode-range so a page downloads only the subsets its text uses.
+   Geist and Geist Mono (SIL OFL) load everywhere. Noto Sans SC (SIL OFL) is served separately
+   as /fonts/noto-sans-sc.css (src/pages/fonts/) and linked only by Chinese pages. */
+@import '@fontsource-variable/geist/wght.css';
+@import '@fontsource-variable/geist-mono/wght.css';

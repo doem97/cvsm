@@ -1,0 +1,43 @@
+---
+title: "概览"
+description: "概览"
+sidebar:
+  order: 1
+---
+
+import Harness from '~/components/figures/Harness.astro';
+import Loop from '~/components/figures/Loop.astro';
+import Contract from '~/components/figures/Contract.astro';
+import Session from '~/components/figures/Session.astro';
+import Facts from '~/components/figures/Facts.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+占位页。知识库的正式页面会替换这个文件；这里先展示图组件。
+
+<Harness lang="zh-cn" />
+
+<Aside type="caution">Gate 01: publish.</Aside>
+
+<Aside type="note">Checked against the spec.</Aside>
+
+<Aside type="tip">Agent-side advice.</Aside>
+
+## Loop
+
+<Loop lang="zh-cn" />
+
+## Contract
+
+<Contract lang="zh-cn" />
+
+```bash
+python scripts/results.py --issue 12 --spec -  # reads the study body
+```
+
+## Session
+
+<Session lang="zh-cn" />
+
+## Facts
+
+<Facts lang="zh-cn" />

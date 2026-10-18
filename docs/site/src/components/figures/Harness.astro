@@ -1,0 +1,320 @@
+---
+/**
+ * The harness: agent trajectories pass four human gates and resolve into a study table
+ * checked against the spec.
+ *
+ *   <Harness lang="en" />            static figure (SVG), for docs pages
+ *   <Harness lang="zh-cn" live />    the live canvas the landing hero uses
+ *
+ * Colours follow the site tokens, so the figure follows the theme.
+ */
+import { layout, smoothPath, TABLE, type Pt } from '~/lib/harness';
+import { t, type Lang } from '~/i18n/strings';
+
+interface Props {
+	lang?: Lang;
+	live?: boolean;
+	class?: string;
+}
+const { lang = 'en', live = false, class: cls } = Astro.props;
+const s = t(lang);
+
+// Static figure geometry: 880 x 400 user units, which reads well at a 720-780 px column.
+const W = 880, H = 400;
+const L = layout({ w: W, h: H, margin: 8, gutter: 16, seed: 36, lines: 96, vertical: false });
+const id = `h${Math.random().toString(36).slice(2, 8)}`;
+const map = (p: Pt): Pt => p;
+const heroIdx = Math.floor(L.lines.length / 4) * 2 + 9;
+const paths = L.lines.map((ln, i) => ({ d: smoothPath(ln.ctrl, map), hero: i === heroIdx }));
+const g0 = L.gates[0].u;
+const tx = L.tableU, right = L.tableEnd;
+const cols = [tx + 14, tx + 104, tx + 134, right - 12];
+const hy = L.rows[0] - L.pitch / 2 - 34;
+const labelY = L.bot + 46;
+const f = (x: number) => Math.round(x * 10) / 10;
+const check = (x: number, y: number, sz = 14) =>
+	`M${f(x)} ${f(y - sz * 0.45)}L${f(x + sz * 0.36)} ${f(y - sz * 0.08)}L${f(x + sz)} ${f(y - sz * 0.9)}`;
+// Narrow containers (phones): the same harness, flowing downwards into a transposed table.
+const VW = 360, VH = 600;
+const LV = layout({ w: VW, h: VH, margin: 14, gutter: 12, seed: 36, lines: 56, vertical: true });
+const vmap = (p: Pt): Pt => [p[1], p[0]];
+const vHero = Math.floor(LV.lines.length / 4) * 2 + 5;
+const vpaths = LV.lines.map((ln, i) => ({ d: smoothPath(ln.ctrl, vmap), hero: i === vHero }));
+const vty = LV.tableU;
+const liveData = JSON.stringify({
+	gates: s.gates,
+	table: s.harness.table,
+	caption: s.harness.caption,
+	rows: TABLE,
+});
+---
+
+{
+	live ? (
+		<figure class:list={['rh-harness rh-harness--live not-content', cls]} data-harness={liveData}>
+			<canvas role="img" aria-label={s.harness.label} />
+			<noscript>
+				<style>{`.rh-harness--live canvas{display:none}`}</style>
+			</noscript>
+		</figure>
+	) : null
+}
+{
+	!live ? (
+		<figure class:list={['rh-harness rh-harness--figure not-content', cls]}>
+			<svg class="h" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={s.harness.label}>
+				<defs>
+					<linearGradient id={`${id}-fade`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={f(g0)} y2="0">
+						<stop offset="0" class="stop" stop-opacity="0" />
+						<stop offset="1" class="stop" stop-opacity=".3" />
+					</linearGradient>
+					<linearGradient id={`${id}-hero`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={f(g0)} y2="0">
+						<stop offset="0" class="stop" stop-opacity="0" />
+						<stop offset="1" class="stop" stop-opacity=".95" />
+					</linearGradient>
+				</defs>
+				<g fill="none" stroke={`url(#${id}-fade)`} stroke-width="0.8">
+					{paths.filter((p) => !p.hero).map((p) => <path d={p.d} />)}
+				</g>
+				{L.gates.map((g, k) => {
+					const a = L.c - g.half, b = L.c + g.half;
+					return (
+						<g>
+							<path class="wall" d={`M${f(g.u)} ${f(L.top - 26)}V${f(a)}M${f(g.u)} ${f(b)}V${f(L.bot + 26)}`} />
+							<path class="anchor" d={`M${f(g.u)} ${f(a - 28)}V${f(a)}M${f(g.u)} ${f(b + 28)}V${f(b)}`} />
+							<rect class="anchor-fill" x={f(g.u - 4)} y={f(a - 4)} width="8" height="8" />
+							<rect class="anchor-fill" x={f(g.u - 4)} y={f(b - 4)} width="8" height="8" />
+							<text class="mono accent" x={f(g.u - 6)} y={f(labelY)} text-anchor="end">
+								{s.gates[k].num}
+							</text>
+							<text class="mono ink caps" x={f(g.u + 6)} y={f(labelY)}>
+								{s.gates[k].name}
+							</text>
+						</g>
+					);
+				})}
+				{paths.filter((p) => p.hero).map((p) => <path d={p.d} fill="none" stroke={`url(#${id}-hero)`} stroke-width="1.5" />)}
+				<g class="table">
+					<path class="wall" d={`M${f(tx)} ${f(hy)}H${f(right)}M${f(tx)} ${f(hy)}V${f(L.rows[3] + L.pitch / 2)}`} />
+					<text class="mono muted caps" x={cols[0]} y={f(hy + 22)}>{s.harness.table.arm}</text>
+					<text class="mono muted" x={cols[1]} y={f(hy + 22)}>{s.harness.table.n}</text>
+					<text class="mono muted caps" x={cols[2]} y={f(hy + 22)}>{s.harness.table.metric}</text>
+					<text class="mono verify caps" x={cols[3]} y={f(hy + 22)} text-anchor="end">{s.harness.table.spec}</text>
+					{TABLE.map((row, r) => {
+						const y = L.rows[r];
+						return (
+							<g>
+								<path class="hair" d={`M${f(tx)} ${f(y - L.pitch / 2)}H${f(right)}`} />
+								<circle class="dot" cx={f(tx)} cy={f(y)} r="2.5" />
+								<text class="mono ink" x={cols[0]} y={f(y + 5)}>{row.arm}</text>
+								<text class="mono ink" x={cols[1]} y={f(y + 5)}>{row.n}</text>
+								<text class="mono ink" x={cols[2]} y={f(y + 5)}>
+									{row.v}
+									<tspan class="muted"> ± {row.sd}</tspan>
+								</text>
+								<path class="check" d={check(cols[3] - 14, y + 6)} />
+							</g>
+						);
+					})}
+					<path class="wall" d={`M${f(tx)} ${f(L.rows[3] + L.pitch / 2)}H${f(right)}`} />
+					<text class="mono muted caps" x={f(tx)} y={f(L.rows[3] + L.pitch / 2 + 24)}>{s.harness.caption}</text>
+				</g>
+			</svg>
+			<svg class="v" viewBox={`0 0 ${VW} ${VH}`} role="img" aria-label={s.harness.label}>
+				<defs>
+					<linearGradient id={`${id}-vfade`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={f(LV.gates[0].u)}>
+						<stop offset="0" class="stop" stop-opacity="0" />
+						<stop offset="1" class="stop" stop-opacity=".3" />
+					</linearGradient>
+					<linearGradient id={`${id}-vhero`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={f(LV.gates[0].u)}>
+						<stop offset="0" class="stop" stop-opacity="0" />
+						<stop offset="1" class="stop" stop-opacity=".95" />
+					</linearGradient>
+				</defs>
+				<g fill="none" stroke={`url(#${id}-vfade)`} stroke-width="0.8">
+					{vpaths.filter((p) => !p.hero).map((p) => <path d={p.d} />)}
+				</g>
+				{vpaths.filter((p) => p.hero).map((p) => <path d={p.d} fill="none" stroke={`url(#${id}-vhero)`} stroke-width="1.5" />)}
+				{LV.gates.map((g, k) => {
+					const a = LV.c - g.half, b = LV.c + g.half;
+					const lx = a + 14;
+					return (
+						<g>
+							<path class="wall" d={`M0 ${f(g.u)}H${f(a)}M${f(b)} ${f(g.u)}H${VW}`} />
+							<path class="anchor" d={`M${f(a - 22)} ${f(g.u)}H${f(a)}M${f(b + 22)} ${f(g.u)}H${f(b)}`} />
+							<rect class="anchor-fill" x={f(a - 4)} y={f(g.u - 4)} width="8" height="8" />
+							<rect class="anchor-fill" x={f(b - 4)} y={f(g.u - 4)} width="8" height="8" />
+							<rect class="knock" x={f(lx - 5)} y={f(g.u - 10)} width={s.gates[k].name.length * 9 + 42} height="20" />
+							<text class="mono accent" x={f(lx)} y={f(g.u + 4)}>{s.gates[k].num}</text>
+							<text class="mono ink caps" x={f(lx + 24)} y={f(g.u + 4)}>{s.gates[k].name}</text>
+						</g>
+					);
+				})}
+				<path class="wall" d={`M${f(LV.top)} ${f(vty)}H${f(LV.bot)}M${f(LV.top)} ${f(vty + 104)}H${f(LV.bot)}`} />
+				{TABLE.map((row, r) => {
+					const x = LV.rows[r];
+					return (
+						<g>
+							{r > 0 && <path class="hair" d={`M${f(x - LV.pitch / 2)} ${f(vty)}V${f(vty + 104)}`} />}
+							<circle class="dot" cx={f(x)} cy={f(vty)} r="2.5" />
+							<text class="mono ink" x={f(x)} y={f(vty + 26)} text-anchor="middle">{row.arm}</text>
+							<text class="mono ink" x={f(x)} y={f(vty + 50)} text-anchor="middle">{row.v}</text>
+							<text class="mono muted" x={f(x)} y={f(vty + 68)} text-anchor="middle">± {row.sd}</text>
+							<path class="check" d={check(x - 7, vty + 96, 14)} />
+						</g>
+					);
+				})}
+				<text class="mono muted caps" x={f(LV.top)} y={f(vty + 128)}>{s.harness.caption}</text>
+				<text class="mono verify caps" x={f(LV.bot)} y={f(vty + 128)} text-anchor="end">{s.harness.table.spec}</text>
+			</svg>
+			<figcaption class="rh-legend">
+				<span><i class="k-gate" />{s.harness.legend.gate}</span>
+				<span><i class="k-agent" />{s.harness.legend.agent}</span>
+				<span><i class="k-verify" />{s.harness.legend.verify}</span>
+			</figcaption>
+		</figure>
+	) : null
+}
+
+{live && <script src="../../scripts/harness-live.ts"></script>}
+
+<style>
+	.rh-harness {
+		margin: 0;
+		color: var(--rh-text);
+	}
+	.rh-harness--figure {
+		container-type: inline-size;
+		margin-block: 2rem;
+		padding: 1.25rem 0 0;
+		border-top: 1px solid var(--rh-hair);
+		border-bottom: 1px solid var(--rh-hair);
+	}
+	svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+	.stop {
+		stop-color: var(--rh-text);
+	}
+	svg.v {
+		display: none;
+		max-width: 420px;
+		margin-inline: auto;
+	}
+	@container (max-width: 520px) {
+		svg.h {
+			display: none;
+		}
+		svg.v {
+			display: block;
+		}
+	}
+	.knock {
+		fill: var(--rh-bg);
+	}
+
+	.wall {
+		stroke: var(--rh-hair-2);
+		stroke-width: 1;
+		fill: none;
+	}
+	.hair {
+		stroke: var(--rh-hair);
+		stroke-width: 1;
+	}
+	.anchor {
+		stroke: var(--rh-accent);
+		stroke-width: 2;
+	}
+	.anchor-fill {
+		fill: var(--rh-accent);
+	}
+	.dot {
+		fill: var(--rh-text);
+	}
+	.check {
+		fill: none;
+		stroke: var(--rh-verify);
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	text.mono {
+		font-family: var(--rh-font-mono);
+		font-size: 13px;
+	}
+	text.caps {
+		text-transform: var(--rh-caps);
+		letter-spacing: 0.06em;
+	}
+	.ink {
+		fill: var(--rh-text);
+	}
+	.muted,
+	tspan.muted {
+		fill: var(--rh-muted);
+	}
+	.accent {
+		fill: var(--rh-accent-ink);
+		font-weight: 500;
+	}
+	.verify {
+		fill: var(--rh-verify-ink);
+	}
+	.rh-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.75rem;
+		padding: 0.9rem 0;
+		margin-top: 0.75rem;
+		border-top: 1px solid var(--rh-hair);
+		font-family: var(--rh-font-mono);
+		font-size: 0.6875rem;
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-muted);
+	}
+	.rh-legend span {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+	}
+	.rh-legend i {
+		display: inline-block;
+	}
+	.k-gate {
+		width: 9px;
+		height: 9px;
+		background: var(--rh-accent);
+	}
+	.k-agent {
+		width: 22px;
+		height: 1.5px;
+		background: var(--rh-text);
+	}
+	.k-verify {
+		width: 12px;
+		height: 7px;
+		border-left: 2px solid var(--rh-verify);
+		border-bottom: 2px solid var(--rh-verify);
+		transform: rotate(-45deg) translate(1px, -2px);
+	}
+
+	/* Live hero: the canvas fills the band the landing page gives it. */
+	.rh-harness--live {
+		position: relative;
+		width: 100%;
+		height: 100%;
+	}
+	.rh-harness--live canvas {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		display: block;
+		touch-action: pan-y;
+	}
+</style>

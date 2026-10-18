@@ -1,0 +1,119 @@
+---
+/**
+ * The template in six numbers. The human gates are the only orange number.
+ *
+ *   <Facts lang="en" />
+ */
+import { t, type Lang } from '~/i18n/strings';
+
+interface Props {
+	lang?: Lang;
+}
+const { lang = 'en' } = Astro.props;
+const s = t(lang).facts;
+---
+
+<figure class="rh-facts not-content">
+	<ul>
+		{
+			s.items.map((it, i) => (
+				<li style={`--i:${i}`} class:list={{ accent: it.accent }}>
+					<span class="n">{it.n}</span>
+					<span class="cap">{it.cap}</span>
+				</li>
+			))
+		}
+	</ul>
+</figure>
+
+<style>
+	.rh-facts {
+		container-type: inline-size;
+		margin: 2rem 0;
+		color: var(--rh-text);
+	}
+	ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+		border-top: 1px solid var(--rh-hair-2);
+		border-bottom: 1px solid var(--rh-hair);
+	}
+	li {
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+		margin: 0;
+		padding: 1.4rem clamp(0.6rem, 1.6cqi, 1.5rem) 1.6rem;
+		border-inline-start: 1px solid var(--rh-hair);
+	}
+	li:first-child {
+		border-inline-start: 0;
+		padding-inline-start: 0;
+	}
+	.n {
+		font-size: clamp(2.75rem, 1rem + 7cqi, 7rem);
+		font-weight: 500;
+		letter-spacing: -0.045em;
+		line-height: 0.9;
+		font-variant-numeric: tabular-nums;
+	}
+	.accent .n {
+		color: var(--rh-accent);
+	}
+	.cap {
+		font-family: var(--rh-font-mono);
+		font-size: 0.8125rem;
+		line-height: 1.5;
+		color: var(--rh-muted);
+		max-width: 22ch;
+	}
+	:lang(zh-CN) .cap {
+		max-width: 13em;
+	}
+	@supports (animation-timeline: view()) {
+		@media (prefers-reduced-motion: no-preference) {
+			.n {
+				animation: rh-fact-in linear both;
+				animation-timeline: view();
+				animation-range: entry calc(20% + var(--i) * 5%) entry calc(80% + var(--i) * 5%);
+			}
+			@keyframes rh-fact-in {
+				from {
+					opacity: 0;
+					transform: translateY(0.25em);
+				}
+			}
+		}
+	}
+	@container (max-width: 760px) {
+		ul {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+		li:nth-child(3n + 1) {
+			border-inline-start: 0;
+			padding-inline-start: 0;
+		}
+		li:nth-child(n + 4) {
+			border-top: 1px solid var(--rh-hair);
+		}
+	}
+	@container (max-width: 440px) {
+		ul {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		li:nth-child(3n + 1) {
+			border-inline-start: 1px solid var(--rh-hair);
+			padding-inline-start: clamp(0.6rem, 1.6cqi, 1.5rem);
+		}
+		li:nth-child(2n + 1) {
+			border-inline-start: 0;
+			padding-inline-start: 0;
+		}
+		li:nth-child(n + 3) {
+			border-top: 1px solid var(--rh-hair);
+		}
+	}
+</style>

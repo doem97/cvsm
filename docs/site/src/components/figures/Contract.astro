@@ -1,0 +1,433 @@
+---
+/**
+ * The spec is the contract: the study spec you approve (gate 01), and the spec check that
+ * results.py writes from the run records, joined by a blue line from the records back to the
+ * spec. The check lines are results.py's real output for the README's six toy runs.
+ *
+ *   <Contract lang="en" />
+ */
+import { t, SPEC_LINES, CHECK_LINES, type Lang } from '~/i18n/strings';
+
+interface Props {
+	lang?: Lang;
+}
+const { lang = 'en' } = Astro.props;
+const s = t(lang).contract;
+const parts = (text: string) => text.split('`').map((p, i) => ({ code: i % 2 === 1, p }));
+const sectionNote = new Map(s.notes.map((n) => [`### ${n.name}`, n.note]));
+---
+
+<figure class="rh-contract not-content">
+	<div class="pair">
+		<section class="spec" aria-label={s.specTitle}>
+			<header class="card-head">
+				<span class="mark" aria-hidden="true"></span>
+				<span class="card-title">{s.specTitle}</span>
+				<span class="card-aside">{s.approved}</span>
+			</header>
+			<ol class="spec__lines">
+				{
+					SPEC_LINES.map((ln) =>
+						ln.kind === 'h' ? (
+							<li class="h">
+								<code>{ln.text}</code>
+								<span class="note">{sectionNote.get(ln.text)}</span>
+							</li>
+						) : (
+							<li>
+								<code>{ln.text}</code>
+								{ln.note && <code class="c">{ln.note}</code>}
+							</li>
+						),
+					)
+				}
+			</ol>
+		</section>
+
+		<div class="link" aria-hidden="true">
+			<svg class="link__h" viewBox="0 0 100 20" preserveAspectRatio="none">
+				<path class="flow" d="M100 10H6" vector-effect="non-scaling-stroke"></path>
+			</svg>
+			<svg class="link__v" viewBox="0 0 20 100" preserveAspectRatio="none">
+				<path class="flow" d="M10 100V6" vector-effect="non-scaling-stroke"></path>
+			</svg>
+			<span class="link__head"></span>
+		</div>
+
+		<section class="check" aria-label={s.checkTitle}>
+			<header class="card-head">
+				<svg class="tick" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8.8l3.8 3.6L14 3.5"></path></svg>
+				<span class="card-title">{s.checkTitle}</span>
+				<span class="card-aside">{s.checkStatus}</span>
+			</header>
+			<div class="records" aria-hidden="true">
+				{Array.from({ length: 6 }, (_, i) => <span style={`--i:${i}`} />)}
+				<em>{s.records}</em>
+			</div>
+			<p class="check__label"><code>规格核对：</code></p>
+			<ul class="check__lines">
+				{
+					CHECK_LINES.map((ln, i) => (
+						<li style={`--i:${i}`}>
+							<span class="m">{ln.mark}</span>
+							<span>
+								<span class="out">
+									{parts(ln.text).map((p) => (p.code ? <code>{p.p}</code> : p.p))}
+								</span>
+								{s.gloss[i] && <span class="gloss">{s.gloss[i]}</span>}
+							</span>
+						</li>
+					))
+				}
+			</ul>
+		</section>
+	</div>
+
+	<div class="lists">
+		<p class="lists__title">{s.listsTitle}</p>
+		<ol>
+			{s.lists.map((item) => <li>{item}</li>)}
+		</ol>
+		<p class="lists__foot">{s.lang}</p>
+	</div>
+</figure>
+
+<style>
+	.rh-contract {
+		container-type: inline-size;
+		margin: 2rem 0;
+		color: var(--rh-text);
+		--mono: var(--rh-font-mono);
+	}
+	.pair {
+		display: grid;
+		grid-template-columns: minmax(0, 7fr) clamp(48px, 7cqi, 112px) minmax(0, 5fr);
+		align-items: stretch;
+	}
+	.spec,
+	.check {
+		background: var(--rh-surface);
+		border: 1px solid var(--rh-hair-2);
+		padding: 1.1rem 1.25rem 1.25rem;
+		min-width: 0;
+	}
+	.spec {
+		border-left: 4px solid var(--rh-accent);
+	}
+	.check {
+		border-color: var(--rh-verify);
+	}
+	.card-head {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding-bottom: 0.85rem;
+		margin-bottom: 0.9rem;
+		border-bottom: 1px solid var(--rh-hair);
+		font-family: var(--mono);
+		font-size: 0.6875rem;
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+	}
+	.mark {
+		width: 9px;
+		height: 9px;
+		background: var(--rh-accent);
+		flex: none;
+	}
+	.card-title {
+		font-weight: 500;
+	}
+	.check .card-title {
+		color: var(--rh-verify-ink);
+		text-transform: none;
+		letter-spacing: 0.02em;
+	}
+	.card-aside {
+		margin-inline-start: auto;
+		color: var(--rh-muted);
+		text-align: end;
+	}
+	.spec .card-aside {
+		color: var(--rh-accent-ink);
+	}
+	.tick {
+		width: 14px;
+		height: 14px;
+		fill: none;
+		stroke: var(--rh-verify);
+		stroke-width: 2.2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		flex: none;
+	}
+	code {
+		font-family: var(--mono);
+		font-size: inherit;
+		background: none;
+		border: 0;
+		padding: 0;
+		color: inherit;
+	}
+	.spec__lines {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		font-family: var(--mono);
+		font-size: clamp(0.72rem, 0.55rem + 0.6cqi, 0.875rem);
+		line-height: 1.85;
+	}
+	.spec__lines li {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 1rem;
+		margin: 0;
+	}
+	.spec__lines li.h {
+		color: var(--rh-muted);
+		margin-top: 0.4rem;
+	}
+	.spec__lines li.h:first-child {
+		margin-top: 0;
+	}
+	.spec__lines .c {
+		color: var(--rh-muted);
+	}
+	.spec__lines .note {
+		font-family: var(--rh-font-sans);
+		font-size: 0.8125rem;
+		color: var(--rh-muted);
+		text-align: end;
+		align-self: center;
+	}
+
+	/* The blue line runs from the records back to the spec. */
+	.link {
+		position: relative;
+		display: flex;
+		align-items: center;
+	}
+	.link svg {
+		display: block;
+		overflow: visible;
+	}
+	.link__h {
+		width: 100%;
+		height: 20px;
+	}
+	.link__v {
+		display: none !important;
+	}
+	.flow {
+		fill: none;
+		stroke: var(--rh-verify);
+		stroke-width: 2;
+		stroke-dasharray: 6 6;
+		animation: rh-flow 1.2s linear infinite;
+	}
+	@keyframes rh-flow {
+		to {
+			stroke-dashoffset: -12;
+		}
+	}
+	.link__head {
+		position: absolute;
+		left: 2px;
+		top: 50%;
+		width: 9px;
+		height: 9px;
+		border-left: 2px solid var(--rh-verify);
+		border-bottom: 2px solid var(--rh-verify);
+		transform: translateY(-50%) rotate(45deg);
+	}
+
+	.records {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin-bottom: 1rem;
+	}
+	.records span {
+		width: 12px;
+		height: 12px;
+		border: 1.5px solid var(--rh-verify);
+		animation: rh-scan 3.6s var(--rh-ease-io) infinite;
+		animation-delay: calc(var(--i) * 0.18s);
+	}
+	@keyframes rh-scan {
+		0%,
+		40%,
+		100% {
+			background: transparent;
+		}
+		12%,
+		24% {
+			background: var(--rh-verify);
+		}
+	}
+	.records em {
+		font-style: normal;
+		font-family: var(--mono);
+		font-size: 0.75rem;
+		color: var(--rh-verify-ink);
+		margin-inline-start: 0.5rem;
+	}
+	.check__label {
+		margin: 0 0 0.4rem;
+		font-family: var(--mono);
+		font-size: 0.8125rem;
+		color: var(--rh-text);
+	}
+	.check__lines {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		font-family: var(--mono);
+		font-size: clamp(0.72rem, 0.58rem + 0.45cqi, 0.8125rem);
+		line-height: 1.6;
+	}
+	.check__lines li {
+		display: grid;
+		grid-template-columns: 1.1rem 1fr;
+		margin: 0 0 0.7rem;
+	}
+	.check__lines .m {
+		color: var(--rh-muted);
+	}
+	.out {
+		display: block;
+		color: var(--rh-text);
+		overflow-wrap: anywhere;
+	}
+	.gloss {
+		display: block;
+		margin-top: 0.15rem;
+		font-family: var(--rh-font-sans);
+		font-size: 0.8125rem;
+		color: var(--rh-muted);
+	}
+
+	.lists {
+		display: grid;
+		grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+		column-gap: clamp(48px, 7cqi, 112px);
+		margin-top: 1.75rem;
+		padding-top: 1.1rem;
+		border-top: 1px solid var(--rh-hair);
+	}
+	.lists__title {
+		grid-column: 1 / -1;
+		margin: 0 0 0.75rem;
+		font-family: var(--mono);
+		font-size: 0.6875rem;
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-verify-ink);
+	}
+	.lists ol {
+		grid-column: 1 / -1;
+		columns: 2;
+		column-gap: clamp(48px, 7cqi, 112px);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		counter-reset: rh-c;
+	}
+	.lists li {
+		break-inside: avoid;
+		counter-increment: rh-c;
+		display: grid;
+		grid-template-columns: 2rem 1fr;
+		padding: 0.5rem 0;
+		border-bottom: 1px solid var(--rh-hair);
+		font-size: 0.875rem;
+		line-height: 1.5;
+		color: var(--rh-soft);
+		margin: 0;
+	}
+	.lists li::before {
+		content: counter(rh-c, decimal-leading-zero);
+		font-family: var(--mono);
+		font-size: 0.6875rem;
+		color: var(--rh-muted);
+		padding-top: 0.2rem;
+	}
+	.lists__foot {
+		grid-column: 1 / -1;
+		margin: 0.9rem 0 0;
+		font-size: 0.8125rem;
+		color: var(--rh-muted);
+	}
+
+	/* Lines of the check settle in as the card scrolls into view. */
+	@supports (animation-timeline: view()) {
+		@media (prefers-reduced-motion: no-preference) {
+			.check__lines li {
+				animation: rh-line-in linear both;
+				animation-timeline: view();
+				animation-range: entry calc(10% + var(--i) * 6%) entry calc(45% + var(--i) * 6%);
+			}
+			@keyframes rh-line-in {
+				from {
+					opacity: 0;
+					transform: translateX(-8px);
+				}
+			}
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flow,
+		.records span {
+			animation: none;
+		}
+		.records span:nth-child(-n + 6) {
+			background: var(--rh-verify-wash);
+		}
+	}
+
+	/* A docs column or less: stack, and the blue line runs upward. */
+	@container (max-width: 900px) {
+		.pair {
+			grid-template-columns: 1fr;
+		}
+		.link {
+			height: 56px;
+			justify-content: center;
+		}
+		.link .link__h {
+			display: none;
+		}
+		.link__v {
+			display: block !important;
+			width: 20px;
+			height: 100%;
+		}
+		.link__head {
+			left: 50%;
+			top: 2px;
+			transform: translateX(-50%) rotate(135deg);
+		}
+		.lists ol {
+			columns: 1;
+		}
+	}
+	@container (max-width: 480px) {
+		.spec,
+		.check {
+			padding: 0.9rem 0.9rem 1rem;
+		}
+		.spec__lines li {
+			grid-template-columns: 1fr;
+			gap: 0;
+		}
+		.spec__lines .c {
+			padding-inline-start: 1.5em;
+		}
+		.spec__lines .note {
+			text-align: start;
+		}
+		.card-head {
+			flex-wrap: wrap;
+		}
+	}
+</style>

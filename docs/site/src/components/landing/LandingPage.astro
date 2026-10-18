@@ -1,0 +1,200 @@
+---
+import Landing from '~/layouts/Landing.astro';
+import Harness from '~/components/figures/Harness.astro';
+import Loop from '~/components/figures/Loop.astro';
+import Contract from '~/components/figures/Contract.astro';
+import Session from '~/components/figures/Session.astro';
+import Facts from '~/components/figures/Facts.astro';
+import Depth from '~/components/landing/Depth.astro';
+import { t, url, GITHUB, COPY_COMMAND, type Lang } from '~/i18n/strings';
+
+interface Props {
+	lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const zh = lang === 'zh-cn';
+---
+
+<Landing lang={lang}>
+	<section class="hero" aria-labelledby="hero-title">
+		<div class="wrap">
+			<div class="rule"><i></i><i></i></div>
+			<div class="head-row">
+				<p class="index">{s.hero.index}</p>
+				<p class="aside">{s.hero.tag}</p>
+			</div>
+			<h1 id="hero-title" class:list={['display hero__title', { zh }]}>
+				<span class="l1">{s.hero.line1}</span>
+				<span class="l2">{s.hero.line2}</span>
+			</h1>
+			<div class="g12 hero__copy">
+				<p class="hero__promise">{s.hero.promise}</p>
+				<div class="hero__side">
+					<p class="hero__body">{s.hero.body}</p>
+					<div class="hero__cta">
+						<a class="btn btn--solid" href={url(s.links.docs)}>{s.hero.ctaDocs}<span aria-hidden="true">→</span></a>
+						<a class="btn" href={url(s.links.quick)}>{s.hero.ctaQuick}</a>
+						<a class="btn btn--text" href={GITHUB} rel="noopener">{s.hero.ctaGithub}<span aria-hidden="true">↗</span></a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="hero__band">
+			<Harness lang={lang} live />
+		</div>
+		<div class="wrap">
+			<div class="rule"><i></i><i></i></div>
+			<div class="legend">
+				<span><i class="k-gate"></i>{s.harness.legend.gate}</span>
+				<span><i class="k-agent"></i>{s.harness.legend.agent}</span>
+				<span><i class="k-verify"></i>{s.harness.legend.verify}</span>
+				<span class="legend__repo">doem97/research-harness</span>
+			</div>
+		</div>
+	</section>
+
+	<section class="sec" aria-labelledby="problem-title">
+		<div class="wrap">
+			<div class="rule"><i></i><i></i></div>
+			<div class="head-row">
+				<p class="index">{s.problem.index}</p>
+				<p class="aside">{s.problem.aside}</p>
+			</div>
+			<div class="g12 problem">
+				<div class="problem__copy">
+					<h2 id="problem-title" class:list={['display sec__title reveal', { zh }]}>
+						<span class="l1">{s.problem.title[0]}</span>
+						<span class="l2">{s.problem.title[1]}</span>
+					</h2>
+					{s.problem.body.map((p) => <p class="sec__body">{p}</p>)}
+					<p class="problem__punch">{s.problem.punch}</p>
+				</div>
+				<div class="problem__fig">
+					<Depth lang={lang} />
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="sec" aria-labelledby="loop-title">
+		<div class="wrap">
+			<div class="rule"><i></i><i></i></div>
+			<div class="head-row">
+				<p class="index">{s.loop.index}</p>
+				<p class="aside">{s.loop.aside}</p>
+			</div>
+			<div class="g12 sec__intro">
+				<h2 id="loop-title" class:list={['display sec__title reveal', { zh }]}>
+					<span class="l1">{s.loop.title[0]}</span>
+					<span class="l2">{s.loop.title[1]}</span>
+				</h2>
+				<div class="sec__side">
+					<p class="sec__body">{s.loop.body}</p>
+					<a class="more" href={url(s.links.loop)}>{s.links.readMore}<span aria-hidden="true">→</span></a>
+				</div>
+			</div>
+			<Loop lang={lang} />
+		</div>
+	</section>
+
+	<section class="sec" aria-labelledby="contract-title">
+		<div class="wrap">
+			<div class="rule"><i></i><i></i></div>
+			<div class="head-row">
+				<p class="index">{s.contract.index}</p>
+				<p class="aside">{s.contract.aside}</p>
+			</div>
+			<div class="g12 sec__intro">
+				<h2 id="contract-title" class:list={['display sec__title reveal', { zh }]}>
+					<span class="l1">{s.contract.title[0]}</span>
+					<span class="l2">{s.contract.title[1]}</span>
+				</h2>
+				<div class="sec__side">
+					<p class="sec__body">{s.contract.body}</p>
+					<a class="more" href={url(s.links.spec)}>{s.links.readMore}<span aria-hidden="true">→</span></a>
+				</div>
+			</div>
+			<Contract lang={lang} />
+			<p class="closing">{s.contract.closing}</p>
+		</div>
+	</section>
+
+	<section class="sec" aria-labelledby="session-title">
+		<div class="wrap">
+			<div class="rule"><i></i><i></i></div>
+			<div class="head-row">
+				<p class="index">{s.session.index}</p>
+				<p class="aside">{s.session.aside}</p>
+			</div>
+			<div class="g12 session">
+				<div class="session__copy">
+					<h2 id="session-title" class:list={['display sec__title reveal', { zh }]}>
+						<span class="l1">{s.session.title[0]}</span>
+						<span class="l2">{s.session.title[1]}</span>
+					</h2>
+					<p class="sec__body">{s.session.body}</p>
+					<a class="more" href={url(s.links.session)}>{s.links.readMore}<span aria-hidden="true">→</span></a>
+				</div>
+				<div class="session__fig">
+					<Session lang={lang} animate />
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="sec sec--tight" aria-labelledby="facts-title">
+		<div class="wrap">
+			<div class="rule"><i></i><i></i></div>
+			<div class="head-row">
+				<p class="index" id="facts-title">{s.facts.index}</p>
+				<p class="aside">{s.facts.aside}</p>
+			</div>
+			<Facts lang={lang} />
+		</div>
+	</section>
+
+	<section class="sec cta" aria-labelledby="cta-title">
+		<div class="wrap">
+			<div class="rule"><i></i><i></i></div>
+			<div class="head-row">
+				<p class="index">{s.cta.index}</p>
+				<p class="aside">{s.nav.status}</p>
+			</div>
+			<div class="g12">
+				<h2 id="cta-title" class:list={['display cta__title reveal', { zh }]}>
+					<span class="l1">{s.cta.title[0]}</span>
+					<span class="l2">{s.cta.title[1]}</span>
+				</h2>
+				<div class="cta__side">
+					<p class="sec__body">{s.cta.body}</p>
+					<div class="cmd">
+						<pre><code>{COPY_COMMAND}</code></pre>
+						<button type="button" class="cmd__copy" data-copy={COPY_COMMAND} data-done={s.cta.copied}>{s.cta.copy}</button>
+					</div>
+					<div class="hero__cta">
+						<a class="btn btn--solid" href={url(s.links.adopt)}>{s.cta.adopt}<span aria-hidden="true">→</span></a>
+						<a class="btn" href={url(s.links.quick)}>{s.cta.quick}</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</Landing>
+
+<script>
+	document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((b) => {
+		const label = b.textContent;
+		b.addEventListener('click', async () => {
+			try {
+				await navigator.clipboard.writeText(b.dataset.copy!);
+				b.textContent = b.dataset.done!;
+				b.classList.add('is-done');
+				setTimeout(() => {
+					b.textContent = label;
+					b.classList.remove('is-done');
+				}, 1600);
+			} catch {}
+		});
+	});
+</script>
