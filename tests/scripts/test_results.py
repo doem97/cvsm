@@ -50,13 +50,13 @@ def test_single_seed_shows_dash_for_std(repo):
     assert (row["n"], row["acc 均值"], row["acc 标准差"]) == ("1", "4", "—")
 
 
-def finished(repo, start, cfg=None, status="FINISHED", **rh):
-    """A successful run of `python t.py` recorded directly; rh overrides its rh.* params and cfg
+def finished(repo, start, cfg=None, status="FINISHED", **cvsm):
+    """A successful run of `python t.py` recorded directly; cvsm overrides its cvsm.* params and cfg
     gives its cfg.* params."""
     params = {"issue": "5", "command": "python t.py", "seed": str(start), "host": "h", "commit": "0" * 40,
               "dirty": "false", "env_lock_sha": "e" * 64, "env_lock_missing": "",
               "data_manifest_sha": "", "gpus": "", "exit_code": "0"}
-    return repo.record(start, status, metrics={"acc": 1.0}, cfg=cfg, **(params | rh))
+    return repo.record(start, status, metrics={"acc": 1.0}, cfg=cfg, **(params | cvsm))
 
 
 def spec_check(out):

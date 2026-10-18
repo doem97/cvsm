@@ -61,7 +61,7 @@ def f(name, status="modified", prev=None, add=1, dele=0):
     return d
 
 
-REPO = "doem97/research-harness"
+REPO = "doem97/cvsm"
 
 
 def run(files=None, title="feat(#12): add the thing", body=GOOD_BODY, issue="default", c=None):
@@ -126,13 +126,13 @@ def test_closing_refs(body, refs):
 
 
 @pytest.mark.parametrize("body,refs", [
-    ("Closes doem97/research-harness#5", [5]),
-    ("Closes DOEM97/Research-Harness#5", [5]),
+    ("Closes doem97/cvsm#5", [5]),
+    ("Closes DOEM97/CVSM#5", [5]),
     ("Closes other/repo#5", []),
-    ("Closes #2 and fixes doem97/research-harness#3", [2, 3]),
-    ("Closes https://github.com/doem97/research-harness/issues/5", [5]),
+    ("Closes #2 and fixes doem97/cvsm#3", [2, 3]),
+    ("Closes https://github.com/doem97/cvsm/issues/5", [5]),
     ("Closes https://github.com/other/repo/issues/5", []),
-    ("Closes #5, closes doem97/research-harness#5", [5]),
+    ("Closes #5, closes doem97/cvsm#5", [5]),
 ])
 def test_closing_refs_same_repo(body, refs):
     assert guard.closing_refs(body, REPO) == refs
@@ -223,12 +223,12 @@ def test_fail_no_ref():
 
 
 def test_fail_same_repo_second_ref():
-    body = GOOD_BODY.replace("Closes #12", "Closes #12 and fixes doem97/research-harness#3")
+    body = GOOD_BODY.replace("Closes #12", "Closes #12 and fixes doem97/cvsm#3")
     one(run(body=body), "exactly one", "found 2")
 
 
 def test_pass_full_same_repo_ref():
-    assert run(body=GOOD_BODY.replace("Closes #12", "Closes doem97/research-harness#12")) == []
+    assert run(body=GOOD_BODY.replace("Closes #12", "Closes doem97/cvsm#12")) == []
 
 
 def test_fail_two_refs():

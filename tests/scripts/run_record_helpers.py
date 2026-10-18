@@ -20,7 +20,7 @@ GIT_ENV = {
     "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.com",
     "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1",
 }
-EXPERIMENT = "rh-test"
+EXPERIMENT = "cvsm-test"
 GITIGNORE = "mlflow.db*\nmlartifacts/\nmlruns/\n"  # MLflow's default files in the clone
 
 # A fake training command. key=value args; writes metrics.json into $RUN_DIR (metrics=list writes a
@@ -138,12 +138,12 @@ class Repo:
         procs = [self.start(*args, **kw) for args in arg_lists]
         return [p.communicate(timeout=30) and p.returncode for p in procs]
 
-    def record(self, start, status="FINISHED", metrics=None, cfg=None, **rh):
-        """Write a run as run.py would, without running it; rh are the rh.* params and cfg the
+    def record(self, start, status="FINISHED", metrics=None, cfg=None, **cvsm):
+        """Write a run as run.py would, without running it; cvsm are the cvsm.* params and cfg the
         cfg.* params, by dotted key."""
         run_id = self.client.create_run(self.exp_id, start_time=start).info.run_id
-        for key, value in rh.items():
-            self.client.log_param(run_id, f"rh.{key}", value)
+        for key, value in cvsm.items():
+            self.client.log_param(run_id, f"cvsm.{key}", value)
         for key, value in (cfg or {}).items():
             self.client.log_param(run_id, f"cfg.{key}", value)
         for key, value in (metrics or {}).items():
