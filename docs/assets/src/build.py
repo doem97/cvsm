@@ -295,22 +295,22 @@ def hero(s):
     zh = s.lang == "zh"
     # Header: wordmark and status, on a hairline.
     s.text("CVSM", M, 92, 40, "semi", "text", -0.02)
-    s.mono(s.tr("Pre-release  ·  a template, not a service", "预发布 · 是模板，不是服务"), W - M, 90, 22, "muted",
+    s.mono(s.tr("Pre-release  ·  files you copy, not a service", "预发布 · 是复制进仓库的文件，不是服务"), W - M, 90, 22, "muted",
            anchor="end")
     s.line(M, 124, W - M, 124, "hair")
     for x in (M, W - M):
         s.reg(x, 124)
     # Headline.
-    # The full name, in two lines that break at the phrase boundary. English is set smaller than the
-    # old slogan so that its longer line stays left of the caption column.
+    # The full name, in two lines that break at the phrase boundary. English is set smaller than Chinese
+    # so that its longer line stays left of the caption column.
     hs = 104 if zh else 88
     s.text(s.tr("Controlled-Variable", "控制变量"), M - 4, 248, hs, "display", "muted", -0.02)
     s.text(s.tr("State Machine Protocol", "状态机协议"), M - 4, 360, hs, "display", "text", -0.02)
     # Caption block, right.
     cx = col(9)
     s.mono(s.tr("01 — The protocol", "01 — 总览"), cx, 178, 22, "faint")
-    cap = s.tr(["Wide, fast agent work", "passes four human gates", "and leaves as one table,", "checked against the spec."],
-               ["agent 的工作又快又杂，", "穿过你守的四道关口，", "最后汇成一张表，", "每一行都按规格核对过。"])
+    cap = s.tr(["Agent runs pass four", "human decisions and end", "in a study table checked", "against the spec."],
+               ["agent 的运行要经过", "四次人的决定，", "最后汇成一张结果表，", "按研究规格核对过。"])
     for i, ln in enumerate(cap):
         s.text(ln, cx, 228 + i * (40 if zh else 36), 26, "sans", "muted")
 
@@ -456,8 +456,8 @@ def contract(s):
     H = s.h
     rng = random.Random(7)
     zh = s.lang == "zh"
-    frame(s, 96, H - 112, s.tr("02 — Contract", "02 — 合同"),
-          s.tr("The spec is the last layer you can read", "规格是你能读懂的最后一层"))
+    frame(s, 96, H - 112, s.tr("02 — Study spec", "02 — 研究规格"),
+          "Arms · Controlled · Adaptable")
     L, Rr = M, col(7) - GUT                 # left block: columns 1-7
     px = col(8)                              # right panel: columns 9-12
     spec = [("h", "### Arms"),
