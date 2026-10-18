@@ -57,7 +57,7 @@ const en = {
 	},
 	problem: {
 		index: '02 — Problem',
-		aside: 'Where comparisons break',
+		aside: 'The spec and the layers below it',
 		title: ['Agents change settings', 'that a comparison needs fixed'],
 		body: [
 			'Coding agents now write the code, launch the runs and post the results of an ML study faster than you can read them.',
@@ -77,7 +77,7 @@ const en = {
 	loop: {
 		index: '03 — State machine',
 		aside: 'Four gates · every step on GitHub',
-		title: ['A study is a state machine', 'on GitHub'],
+		title: ['A study is a', 'state machine on GitHub'],
 		body: 'A study moves through plan, implement, review, merge, run and analyze, and each step is recorded on GitHub. Each instruction names a target state. The agent keeps going until it reaches that state, a gate or a blocker, and it stops at the four gates even when everything works.',
 		hint: 'Hover or focus a gate',
 		lanes: [
@@ -141,7 +141,7 @@ const en = {
 	},
 	contract: {
 		index: '04 — Spec check',
-		aside: 'The spec is the last layer you can read',
+		aside: 'Study spec and run records',
 		title: ['Every run is checked', 'against the study spec'],
 		body: 'You approve a study spec at gate 01: the arms, the settings held fixed (each with a reason), and what may adapt. Every run records its resolved config, and the results command checks those records against the spec, right after launch and in every results comment.',
 		specTitle: 'Study #10 · spec',
@@ -282,7 +282,7 @@ const zh: Strings = {
 	},
 	problem: {
 		index: '02 — 问题',
-		aside: '对比在哪里悄悄失效',
+		aside: '规格和它以下的各层',
 		title: ['agent 会改动', '对比需要固定的设置'],
 		body: [
 			'编码 agent 写代码、启动运行、贴出结果的速度，已经快过人能读完的速度。',
@@ -366,7 +366,7 @@ const zh: Strings = {
 	},
 	contract: {
 		index: '04 — 规格核对',
-		aside: '规格是你能读懂的最后一层',
+		aside: '研究规格与运行记录',
 		title: ['每个 run 都', '对照研究规格核对'],
 		body: '你在关口 01 批准研究规格：各组（arm）之间的不同、固定不变的设置（各带理由）、可以调整的设置。每个 run 都记下解析后的配置，结果命令拿这些记录对照规格核对：启动后马上核一次，每条结果评论里再核一次。',
 		specTitle: '研究 #10 · 规格',
@@ -479,10 +479,10 @@ export function specLines(lang: Lang): Array<{ kind: 'h' | 'kv'; text: string; n
 		{ kind: 'h', text: '### Controlled' },
 		{ kind: 'kv', text: 'optim.lr=3e-4', note: zh ? '# 论文 X 表 2' : '# paper X, Table 2' },
 		{ kind: 'kv', text: 'train.effective_batch=256', note: zh ? '# 论文 X 表 2' : '# paper X, Table 2' },
-		{ kind: 'kv', text: 'seed in 1,2,3', note: zh ? '# 论文 X 用 3 个 seed' : '# three seeds' },
+		{ kind: 'kv', text: 'seed in 1,2,3', note: zh ? '# 同论文 X，用 3 个 seed' : '# three seeds, as in paper X' },
 		{ kind: 'h', text: '### Adaptable' },
-		{ kind: 'kv', text: 'train.per_device_batch', note: zh ? '# 按显存调整' : '# fit GPU memory' },
-		{ kind: 'kv', text: 'train.accum', note: zh ? '# 保持有效 batch 不变' : '# keeps the effective batch' },
+		{ kind: 'kv', text: 'train.per_device_batch', note: zh ? '# 按显存调整，有效 batch 固定为 256' : '# fit to GPU memory; effective batch stays 256' },
+		{ kind: 'kv', text: 'train.accum', note: zh ? '# 跟随 per_device_batch' : '# follows per_device_batch' },
 	];
 }
 

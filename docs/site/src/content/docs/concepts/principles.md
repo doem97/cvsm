@@ -36,7 +36,7 @@ Rules are short and concrete: AGENTS.md is at most 80 lines and each skill at mo
 CVSM ships no adapters for clusters, schedulers, storage or tracking services. `run.py` and `results.py` are a single-machine reference. Each adopter fits its own cluster, scheduler (for example SLURM) and tracking backend through its own issues, and keeps the [interfaces that stay fixed](/cvsm/reference/interfaces/).
 
 :::tip
-Every rule in CVSM answers one major failure. The same test works for your own additions: before adding a line to AGENTS.md, name the failure it prevents.
+Each rule in CVSM answers one failure of agent-driven research. Apply the same test to your own additions: before adding a line to AGENTS.md, name the failure it prevents.
 :::
 
 ## Related

@@ -513,8 +513,11 @@ body.cvsm {
 	position: sticky;
 	top: 112px;
 }
-.problem__copy .sec__title {
+.problem__copy .sec__title,
+.problem__copy .sec__title.zh {
 	margin-bottom: clamp(24px, 3vw, 40px);
+	/* The column is five of twelve; sized so the first line fits it and the heading takes three lines. */
+	font-size: clamp(2rem, 3.4vw, 3.4rem);
 }
 .problem__punch {
 	margin-top: 2rem !important;
