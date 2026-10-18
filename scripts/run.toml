@@ -1,4 +1,4 @@
-experiment = "cvsm"             # MLflow experiment for this project; MLFLOW_EXPERIMENT_NAME overrides it
+experiment = "cvsm"              # MLflow experiment for this project; MLFLOW_EXPERIMENT_NAME overrides it
 env_lock = ["uv.lock"]           # hashed into cvsm.env_lock_sha; missing files listed in cvsm.env_lock_missing
 data_manifest = ""               # hashed into cvsm.data_manifest_sha; empty means none
 seed_key = "seed"                # matches seed=N, --seed=N or --seed N in the command

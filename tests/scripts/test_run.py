@@ -13,6 +13,7 @@ import subprocess
 import sys
 import threading
 import time
+import tomllib
 
 from pathlib import Path
 
@@ -117,6 +118,10 @@ def test_artifact_root_for_database_stores(uri, root):
     assert run.artifact_root(uri, Path("/clone")) == (root and Path(root))
 
 
+def test_shipped_run_toml_names_the_cvsm_experiment():
+    assert tomllib.loads((RUN.parent / "run.toml").read_text())["experiment"] == "cvsm"
+
+
 def test_artifact_root_for_a_relative_sqlite_path(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     assert run.artifact_root("sqlite:///sub/mlflow.db", Path("/clone")) == tmp_path / "sub" / "mlartifacts"
@@ -207,6 +212,7 @@ def test_failed_upload_keeps_run_dir(repo):
     assert p.returncode == 0
     [kept] = list(repo.tmpdir.iterdir())
     assert str(kept) in p.stderr and (kept / "log.txt").is_file()
+    assert kept.name.startswith("cvsm-run-")
     assert repo.only_run().info.status == "FINISHED"
 
 
