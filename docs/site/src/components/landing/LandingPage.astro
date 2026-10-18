@@ -24,13 +24,13 @@ const zh = lang === 'zh-cn';
 				<p class="index">{s.hero.index}</p>
 				<p class="aside">{s.hero.tag}</p>
 			</div>
-			<h1 id="hero-title" class:list={['display hero__title', { zh }]}>
-				<span class="l1">{s.hero.line1}</span>
-				<span class="l2">{s.hero.line2}</span>
-			</h1>
-			<div class="g12 hero__copy">
-				<p class="hero__promise">{s.hero.promise}</p>
+			<div class="g12 hero__top">
+				<h1 id="hero-title" class:list={['display hero__title', { zh }]}>
+					<span class="l1">{s.hero.line1}</span>
+					<span class="l2">{s.hero.line2}</span>
+				</h1>
 				<div class="hero__side">
+					<p class="hero__promise">{s.hero.promise}</p>
 					<p class="hero__body">{s.hero.body}</p>
 					<div class="hero__cta">
 						<a class="btn btn--solid" href={url(s.links.docs)}>{s.hero.ctaDocs}<span aria-hidden="true">→</span></a>
@@ -154,7 +154,7 @@ const zh = lang === 'zh-cn';
 		</div>
 	</section>
 
-	<section class="sec cta" aria-labelledby="cta-title">
+	<section class="sec sec--tight cta" aria-labelledby="cta-title">
 		<div class="wrap">
 			<div class="rule"><i></i><i></i></div>
 			<div class="head-row">

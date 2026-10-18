@@ -288,12 +288,33 @@ h1#_top {
 	text-decoration-color: currentColor;
 }
 .sl-markdown-content :not(pre) > code:not(:where(.not-content *)) {
-	font-size: 0.875em;
-	padding: 0.1em 0.35em;
-	border-radius: 0;
-	border: 1px solid var(--rh-hair);
-	background: var(--rh-surface);
+	font-size: 0.85em;
+	padding: 0.12em 0.34em;
+	border: 0;
+	border-radius: 2px;
+	background: color-mix(in srgb, var(--rh-text) 7%, transparent);
 	color: var(--rh-text);
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+}
+/* Break long tokens only when they cannot fit a line of their own: never "ru|n" or "<rh|clone>". */
+.sl-markdown-content li:not(:where(.not-content *)),
+.sl-markdown-content :not(pre) > code {
+	overflow-wrap: break-word;
+}
+/* In tables a code token stays whole; a wide table scrolls inside its own box. */
+.sl-markdown-content :is(td, th) > code:not(:where(.not-content *)) {
+	white-space: nowrap;
+}
+.sl-markdown-content :is(h2, h3, h4) {
+	text-wrap: balance;
+}
+:lang(zh-CN) .sl-markdown-content {
+	line-height: 1.85;
+	line-break: strict;
+}
+:lang(zh-CN) .sl-markdown-content :is(h2, h3, h4) {
+	letter-spacing: 0;
 }
 .sl-markdown-content strong {
 	color: var(--rh-text);
@@ -493,4 +514,9 @@ site-search dialog {
 #starlight__search mark {
 	background: var(--rh-select);
 	color: var(--rh-text);
+}
+
+/* Chinese table cells may break between any two characters; keep short phrases (创建时, 启动前) whole. */
+:lang(zh-CN) .sl-markdown-content :is(th, td):not(:where(.not-content *)) {
+	min-width: 4.5em;
 }

@@ -332,57 +332,60 @@ body.rh {
 .hero {
 	padding-top: clamp(20px, 2.4vw, 36px);
 }
+/* Headline left (columns 1-8), promise, description and actions right (9-12), as the README
+   figure sets its caption; the band below then fits the first viewport with all four gates. */
+.hero__top {
+	margin-top: clamp(20px, 2.4vw, 36px);
+	row-gap: 1.75rem;
+	align-items: start;
+}
 .hero__title {
-	margin-top: clamp(24px, 3vw, 44px);
-	font-size: clamp(2.75rem, 0.5rem + 7.4vw, 8.25rem);
+	grid-column: 1 / span 8;
+	font-size: clamp(2.75rem, 0.4rem + 6.1vw, 7.25rem);
 	margin-inline-start: -0.05em;
 }
 .hero__title.zh {
-	font-size: clamp(2.6rem, 0.5rem + 7vw, 7.5rem);
+	font-size: clamp(2.75rem, 0.4rem + 6.4vw, 7.5rem);
 	margin-inline-start: 0;
 }
-.hero__copy {
-	margin-top: clamp(24px, 2.8vw, 44px);
-	row-gap: 1.5rem;
-	align-items: start;
+.hero__side {
+	grid-column: 9 / span 4;
+	padding-top: 0.35rem;
 }
 .hero__promise {
-	grid-column: 1 / span 5;
-	font-size: clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
+	font-size: clamp(1.125rem, 0.95rem + 0.35vw, 1.3125rem);
 	line-height: 1.3;
-	letter-spacing: -0.02em;
+	letter-spacing: -0.015em;
 	font-weight: 500;
 	color: var(--rh-text);
 	text-wrap: balance;
 }
-.hero__side {
-	grid-column: 7 / span 5;
-}
 .hero__body {
-	font-size: 0.9375rem;
-	line-height: 1.6;
+	margin-top: 0.75rem !important;
+	font-size: 0.875rem;
+	line-height: 1.55;
 	color: var(--rh-muted);
 	max-width: 34em;
 }
-.hero__side .hero__cta {
-	margin-top: 1.5rem;
-}
 .hero__cta {
-	grid-column: 1 / -1;
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.75rem;
-	margin-top: 0.5rem;
+	gap: 0.6rem;
+	margin-top: 1.25rem;
 }
+.hero__cta .btn {
+	height: 44px;
+	padding: 0 1rem;
+	font-size: 0.875rem;
+}
+.hero__cta .btn--text {
+	padding-inline: 0.4rem;
+}
+/* The band takes what the viewport has left, so the gates and the whole table stay in view. */
 .hero__band {
 	position: relative;
-	height: clamp(380px, 34vw, 580px);
-	margin-top: clamp(8px, 1.5vw, 24px);
-}
-@media (max-width: 639px) {
-	.hero__band {
-		height: 640px;
-	}
+	height: clamp(340px, min(34vw, calc(100svh - 400px)), 580px);
+	margin-top: clamp(8px, 1.2vw, 20px);
 }
 .legend {
 	display: flex;
@@ -424,15 +427,33 @@ body.rh {
 	transform: rotate(-45deg) translate(1px, -2px);
 }
 @media (max-width: 960px) {
-	.hero__promise {
-		grid-column: 1 / span 8;
+	.hero__title {
+		grid-column: 1 / -1;
+		font-size: clamp(2.6rem, 0.6rem + 7.4vw, 6rem);
+	}
+	.hero__title.zh {
+		font-size: clamp(2.8rem, 0.6rem + 8vw, 6.5rem);
 	}
 	.hero__side {
 		grid-column: 1 / span 9;
+		padding-top: 0;
+	}
+	.hero__promise {
+		font-size: clamp(1.25rem, 1rem + 0.8vw, 1.5rem);
+	}
+	.hero__body {
+		font-size: 0.9375rem;
+	}
+	.hero__cta .btn {
+		height: 48px;
+		padding: 0 1.25rem;
+		font-size: 0.9375rem;
+	}
+	.hero__band {
+		height: clamp(380px, 52vw, 520px);
 	}
 }
 @media (max-width: 640px) {
-	.hero__promise,
 	.hero__side {
 		grid-column: 1 / -1;
 	}
@@ -447,13 +468,19 @@ body.rh {
 		display: none;
 	}
 }
+/* Phones: the harness turns vertical (below 640 px) and needs the height. */
+@media (max-width: 639px) {
+	.hero__band {
+		height: 640px;
+	}
+}
 
 /* ------------------------------------------------------------ sections */
 .sec {
-	padding-top: clamp(96px, 11vw, 192px);
+	padding-top: clamp(80px, 8.5vw, 152px);
 }
 .sec--tight {
-	padding-top: clamp(80px, 8vw, 144px);
+	padding-top: clamp(64px, 6vw, 112px);
 }
 .sec__title {
 	font-size: clamp(2.5rem, 0.8rem + 4.6vw, 5.75rem);
@@ -520,7 +547,7 @@ body.rh {
 }
 
 .closing {
-	margin-top: 2rem !important;
+	margin-top: 1.75rem !important;
 	font-size: clamp(1.05rem, 0.9rem + 0.5vw, 1.375rem);
 	letter-spacing: -0.015em;
 	font-weight: 500;
@@ -557,7 +584,7 @@ body.rh {
 
 /* Closing call to action. */
 .cta {
-	padding-bottom: clamp(96px, 10vw, 176px);
+	padding-bottom: clamp(80px, 8vw, 144px);
 }
 .cta .g12 {
 	margin-top: clamp(40px, 5vw, 80px);

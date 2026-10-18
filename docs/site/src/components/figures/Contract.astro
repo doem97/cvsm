@@ -14,6 +14,8 @@ interface Props {
 const { lang = 'en' } = Astro.props;
 const s = t(lang).contract;
 const parts = (text: string) => text.split('`').map((p, i) => ({ code: i % 2 === 1, p }));
+// Break results.py's lines only after a separator (：；、，), never inside a phrase like "（3 个 run）".
+const segs = (text: string) => text.split(/(?<=[：；、，])/);
 const sectionNote = new Map(s.notes.map((n) => [`### ${n.name}`, n.note]));
 ---
 
@@ -72,7 +74,9 @@ const sectionNote = new Map(s.notes.map((n) => [`### ${n.name}`, n.note]));
 							<span class="m">{ln.mark}</span>
 							<span>
 								<span class="out">
-									{parts(ln.text).map((p) => (p.code ? <code>{p.p}</code> : p.p))}
+									{segs(ln.text).map((seg) => (
+										<span class="seg">{parts(seg).map((p) => (p.code ? <code>{p.p}</code> : p.p))}</span>
+									))}
 								</span>
 								{s.gloss[i] && <span class="gloss">{s.gloss[i]}</span>}
 							</span>
@@ -297,7 +301,9 @@ const sectionNote = new Map(s.notes.map((n) => [`### ${n.name}`, n.note]));
 	.out {
 		display: block;
 		color: var(--rh-text);
-		overflow-wrap: anywhere;
+	}
+	.seg {
+		white-space: nowrap;
 	}
 	.gloss {
 		display: block;

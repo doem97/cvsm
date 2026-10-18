@@ -238,7 +238,7 @@ type Strings = typeof en;
 const zh: Strings = {
 	htmlLang: 'zh-CN',
 	meta: {
-		title: 'research-harness — Agent 干活，你守关口。',
+		title: 'research-harness — agent 干活，你来把关',
 		description:
 			'让编码 agent 推进你的机器学习研究，同时让每个对比都公平。rh 是一套模板，复制进研究仓库就能用：状态放在 GitHub issue 里，每个 run 都按它自己的记录，对照你批准的研究规格核对。',
 	},
@@ -269,8 +269,8 @@ const zh: Strings = {
 	hero: {
 		index: '01 — 总览',
 		tag: '是模板，不是服务',
-		line1: 'Agent 干活，',
-		line2: '你守关口。',
+		line1: 'agent 干活',
+		line2: '你来把关',
 		promise: '让编码 agent 推进你的机器学习研究，同时让每个对比都公平。',
 		body: 'rh 是一套模板，复制进研究仓库就能用。状态放在 GitHub issue 里，步骤写在一个规则文件和四个 skill 里；每个 run 都按它自己的记录，对照你批准的研究规格核对。',
 		ctaDocs: '阅读文档',
@@ -436,7 +436,7 @@ const zh: Strings = {
 		quick: '快速开始',
 	},
 	footer: {
-		tagline: 'Agent 干活，你守关口。',
+		tagline: 'agent 干活，你来把关',
 		license: 'Apache-2.0',
 		licenseHref: 'zh-cn/project/license/',
 		status: '预发布 · 用 rh 开发',
