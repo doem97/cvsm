@@ -5,16 +5,16 @@ sidebar:
   order: 5
 ---
 
-每次运行是一个 MLflow run，记下它从哪来、实际解析出的配置和它的输出。结果评论由这些记录生成，所以你读到的是 run 自己记下的东西，而不是 agent 写的说法。
+每次运行是一个 MLflow run，记下它从哪来、实际解析出的配置和它的输出。结果评论由这些记录生成，所以你读到的是 run 自己记下的东西。
 
 ## 记录里有什么
 
 Run 命令的参考实现 `scripts/run.py` 在启动命令之前就建好记录。各字段以它开头的说明为准。
 
-- **`rh.*` 参数**，MLflow 不允许写入后再改：
-  - 创建时：`rh.issue`、`rh.command`、`rh.seed`、`rh.host`；
-  - 启动前：`rh.commit`、`rh.dirty`、`rh.env_lock_sha`、`rh.env_lock_missing`、`rh.data_manifest_sha`、`rh.gpus`；
-  - 结束时：`rh.exit_code`。
+- **`cvsm.*` 参数**，MLflow 不允许写入后再改：
+  - 创建时：`cvsm.issue`、`cvsm.command`、`cvsm.seed`、`cvsm.host`；
+  - 启动前：`cvsm.commit`、`cvsm.dirty`、`cvsm.env_lock_sha`、`cvsm.env_lock_missing`、`cvsm.data_manifest_sha`、`cvsm.gpus`；
+  - 结束时：`cvsm.exit_code`。
 - **`cfg.*` 参数**：命令写到 `$RUN_DIR/config.json` 的解析后配置，展开成点号键，例如 `cfg.optim.lr`。文件一能解析成 JSON 对象就记一次，所以还在跑的 run 也能对照规格核对。
 - **产物**：`log.txt`（命令的输出）；命令写进 `$RUN_DIR` 的所有文件，包括 `config.json`；工作区不干净时还有 `diff.patch` 和 `untracked.txt`。
 - **指标**：`$RUN_DIR/metrics.json` 里扁平的 `{名字: 数值}`，或者用 MLflow 的标准 API 记，`MLFLOW_RUN_ID` 让它接到同一个 run。
@@ -58,7 +58,7 @@ python scripts/run.py --issue 12 --gpus 4 -- python train.py arm=lora seed=2
 - commit、环境锁和数据的指纹；
 - 给了规格时，该组所属的 arm。
 
-它还会标出：所选 run 之间 commit、环境或数据的不同（commit 不同时附 `git diff --stat`），成功但没有指标的 run，未完成的 run 和已删除的 run。之后是一节 `规格核对`，见[研究规格](/research-harness/zh-cn/concepts/study-spec/)。
+它还会标出：所选 run 之间 commit、环境或数据的不同（commit 不同时附 `git diff --stat`），成功但没有指标的 run，未完成的 run 和已删除的 run。之后是一节 `规格核对`，见[研究规格](/cvsm/zh-cn/concepts/study-spec/)。
 
 研究的 run issue 全部关闭后，agent 把覆盖全部 run 的同一张表和规格核对贴到研究 issue 上，也就是研究总表。
 
@@ -68,7 +68,7 @@ python scripts/run.py --issue 12 --gpus 4 -- python train.py arm=lora seed=2
 
 ## 相关页面
 
-- [研究规格](/research-harness/zh-cn/concepts/study-spec/)
-- [跑实验](/research-harness/zh-cn/guides/run-experiments/)
-- [run.py](/research-harness/zh-cn/reference/run-py/)
-- [results.py](/research-harness/zh-cn/reference/results-py/)
+- [研究规格](/cvsm/zh-cn/concepts/study-spec/)
+- [跑实验](/cvsm/zh-cn/guides/run-experiments/)
+- [run.py](/cvsm/zh-cn/reference/run-py/)
+- [results.py](/cvsm/zh-cn/reference/results-py/)

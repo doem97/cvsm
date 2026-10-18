@@ -7,7 +7,7 @@ sidebar:
 
 `scripts/results.py` prints a Markdown results table for the runs of one or more issues, with flags for provenance differences and a `规格核对` (spec check) section. Agents paste its output unchanged into results comments; it reports facts and leaves the judgment of comparability to you.
 
-Source: [`scripts/results.py`](https://github.com/doem97/research-harness/blob/main/scripts/results.py).
+Source: [`scripts/results.py`](https://github.com/doem97/cvsm/blob/main/scripts/results.py).
 
 ## Usage
 
@@ -18,7 +18,7 @@ gh issue view P --json body -q .body | python scripts/results.py --issue N --spe
 
 | Option | Meaning |
 |---|---|
-| `--issue N [N ...]` | Required. The issues whose runs to read (`rh.issue` param). Repeats count once. |
+| `--issue N [N ...]` | Required. The issues whose runs to read (`cvsm.issue` param). Repeats count once. |
 | `--metric M [M ...]` | Metrics to show, in this order; may be given more than once. Default: every numeric metric of the runs, sorted. |
 | `--spec FILE` | A study issue's body to check the runs against; `-` reads stdin. Without it, the check says no spec was given. |
 | `--config FILE` | `run.toml` to read `experiment` and `seed_key` from. Default `scripts/run.toml`. |
@@ -97,7 +97,7 @@ Without `--spec`, the section reads `- 没有给出规格（--spec）`.
 
 ## Example
 
-Six toy runs of the [example spec](/research-harness/guides/plan-a-study/#2-work-out-the-fair-comparison), one lora run launched with a smaller per-device batch and fp16:
+Six toy runs of the [example spec](/cvsm/guides/plan-a-study/#2-work-out-the-fair-comparison), one lora run launched with a smaller per-device batch and fp16:
 
 ```text
 #12 的结果：6 个 run，3 组，按去掉 seed 的命令分组。
@@ -122,8 +122,8 @@ In English: the effective batch line fails for one run, which took 128; `train.p
 
 ## Related
 
-- [Study spec](/research-harness/concepts/study-spec/)
-- [Run records](/research-harness/concepts/run-records/)
-- [run.py](/research-harness/reference/run-py/)
-- [Interfaces that stay fixed](/research-harness/reference/interfaces/#results-comment)
-- [Run experiments](/research-harness/guides/run-experiments/)
+- [Study spec](/cvsm/concepts/study-spec/)
+- [Run records](/cvsm/concepts/run-records/)
+- [run.py](/cvsm/reference/run-py/)
+- [Interfaces that stay fixed](/cvsm/reference/interfaces/#results-comment)
+- [Run experiments](/cvsm/guides/run-experiments/)

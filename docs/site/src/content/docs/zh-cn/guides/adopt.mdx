@@ -1,36 +1,36 @@
 ---
-title: 接入 rh
-description: 把模板复制进你的研究仓库并打开各项检查，一共五步，另有一个可选的机器账号。
+title: 接入 CVSM
+description: 把 CVSM 的文件复制进你的研究仓库并打开各项检查，一共五步，另有一个可选的机器账号。
 sidebar:
   order: 1
 ---
 
 import { Steps, Aside } from '@astrojs/starlight/components';
 
-接入 rh，就是把一组被跟踪的文件复制进你的仓库、填几个项目参数，再一次性打开分支保护。每一步都可以交给会话里的 agent 去做，你只需要拍板，并在需要时提供管理员账号。
+接入 CVSM，就是把一组被跟踪的文件复制进你的仓库、填几个项目参数，再一次性打开分支保护。每一步都可以交给会话里的 agent 去做，你只需要拍板，并在需要时提供管理员账号。
 
 ## 开始之前
 
 - 一个默认分支叫 `main` 的 GitHub 仓库，以及在它上面有管理员权限的账号。
 - `git`、GitHub 命令行工具 `gh`，以及 Python 3.11 或更高版本（脚本用 `tomllib` 读 TOML；CI 用的是 3.12）。
-- 一份 rh 的本地 clone，下文记作 `<rh clone>`。
+- 一份 CVSM 的本地 clone，下文记作 `<cvsm clone>`。
 - 私有仓库的分支保护需要 GitHub 付费套餐（例如 Pro 或 Team），公开仓库不需要。
 
 ## 五个步骤
 
 <Steps>
 
-1. **复制模板文件，再改 `guard.toml`、`run.toml`，并让训练代码输出配置。**
+1. **复制 CVSM 的文件，再改 `guard.toml`、`run.toml`，并让训练代码输出配置。**
 
-   只复制被跟踪的文件。这样模板 clone 里未跟踪的本地文件（工具配置、`__pycache__`）不会带过去，`.claude/skills` 软链也会保留。命令里排除了 `pages.yml`，它只用来构建 rh 自己的文档站：
+   只复制被跟踪的文件。这样 CVSM clone 里未跟踪的本地文件（工具配置、`__pycache__`）不会带过去，`.claude/skills` 软链也会保留。命令里排除了 `pages.yml`，它只用来构建 CVSM 自己的文档站：
 
    ```sh
-   git -C <rh clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts tests ':!.github/workflows/pages.yml' | tar -x -C <你的仓库>
+   git -C <cvsm clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts tests ':!.github/workflows/pages.yml' | tar -x -C <你的仓库>
    ```
 
-   如果你的仓库会公开或分享出去，还要随这些文件保留一份 rh 的许可证，例如存成 `.github/RH-LICENSE`（见[许可证](/research-harness/zh-cn/project/license/)）。
+   如果你的仓库会公开或分享出去，还要随这些文件保留一份 CVSM 的许可证，例如存成 `.github/CVSM-LICENSE`（见[许可证](/cvsm/zh-cn/project/license/)）。
 
-   再把 rh 的 `.gitignore` 里那几行并进你的 `.gitignore`；`tests/` 里用不上的测试可以删掉。记下复制自 rh 的哪个 commit（`git -C <rh clone> rev-parse HEAD`），写进接入提交的信息里，以后好对照 rh 的改进同步。
+   再把 CVSM 的 `.gitignore` 里那几行并进你的 `.gitignore`；`tests/` 里用不上的测试可以删掉。记下复制自 CVSM 的哪个 commit（`git -C <cvsm clone> rev-parse HEAD`），写进接入提交的信息里，以后好对照 CVSM 的改进同步。
 
    - 改 `.github/guard.toml`：
      - `layout` 加上你的目录（如 `src/**`、`configs/**`），以及项目会改的根目录文件（如 `pyproject.toml`、`uv.lock` 等锁文件、`.python-version`）。漏了的话，改依赖的 PR 会被 guard 拒收。
@@ -44,7 +44,7 @@ import { Steps, Aside } from '@astrojs/starlight/components';
      - 研究规格里的键就是这份配置展开后的点号键（如 `optim.lr`），结果命令靠它核对每个 run 是否符合规格。
      - 输出目录、run 名、时间戳这类每个 run 都不同、又不影响结果的值不要写进去，否则每条结果评论都会把它们列为 `未声明的差异`。确实要放的，在研究规格里声明为 Adaptable。
    - 几个用户共用一台机器、`TMPDIR` 又按用户区分时，默认的 GPU 锁目录各在各的 `TMPDIR` 下，互相看不见。把 `run.toml` 的 `lock_dir` 设成他们都能写的同一个本机目录。
-   - 已有 `CLAUDE.md` 的，只把项目事实压缩进 `AGENTS.md` 的 Project 一节（每个字段一行），其余内容挪到 `docs/` 或代码注释里，然后删掉 `CLAUDE.md`。harness 只认 `AGENTS.md`，guard 会拒收别处的 `.md`。
+   - 已有 `CLAUDE.md` 的，只把项目事实压缩进 `AGENTS.md` 的 Project 一节（每个字段一行），其余内容挪到 `docs/` 或代码注释里，然后删掉 `CLAUDE.md`。CVSM 只认 `AGENTS.md`，guard 会拒收别处的 `.md`。
 
 2. **填写 `AGENTS.md` 的 Project 一节，每个字段一行。**
 
@@ -52,7 +52,7 @@ import { Steps, Aside } from '@astrojs/starlight/components';
 
    - `Layout`：代码目录怎么分，共享代码和方法模块各在哪里。
    - `Test`：测试命令，和 CI 里跑的一致。
-   - `Language`：面向人的文字用什么语言（见[语言](/research-harness/zh-cn/reference/agents-md/#project)）。
+   - `Language`：面向人的文字用什么语言（见[语言](/cvsm/zh-cn/reference/agents-md/#project)）。
    - `Protected eval/data paths`：不许 agent 随意改的评测和数据路径，与 `guard.toml` 的 `protected` 一致。
    - `Run`：Run 命令和结果评论命令。
      - run 在新建的 worktree（`../worktrees/N-<slug>`）里启动，那里没有被忽略的 `.venv` 和数据目录。所以命令要在新 worktree 里直接能用，环境里既有项目依赖又有 MLflow。
@@ -66,7 +66,7 @@ import { Steps, Aside } from '@astrojs/starlight/components';
    改 `.github/workflows/test.yml` 里的 `pip install` 一行，装上你项目的依赖和测试工具，测试命令与 `AGENTS.md` 的 `Test` 保持一致。项目用 uv 时，CI 也可以用 pip 装依赖、跑同一套测试。
 
    - 复制来的规则、skill 和 guard 测试需要 `pyyaml`。
-   - 如果保留 `scripts/run.py` 的测试，还要装 MLflow。模板里装的是 `mlflow-skinny`，加上 SQLite 需要的 `sqlalchemy` 和 `alembic`。
+   - 如果保留 `scripts/run.py` 的测试，还要装 MLflow。参考环境装的是 `mlflow-skinny`，加上 SQLite 需要的 `sqlalchemy` 和 `alembic`。
    - CI 的 runner 没有 GPU。锁文件里是 CUDA 版 torch 时，CI 里改装 CPU 版（`pip install torch --index-url https://download.pytorch.org/whl/cpu`）。而且要在装项目依赖*之前*先装，因为已经装上的 CUDA 版不会被后装的替换。
    - job 名 `guard` 和 `test` 不要改，分支保护按这两个名字认检查。
 
@@ -134,9 +134,9 @@ import { Steps, Aside } from '@astrojs/starlight/components';
 
 ## 相关页面
 
-- [快速上手](/research-harness/zh-cn/start/quick-start/)
-- [适配你的环境](/research-harness/zh-cn/guides/adapt-your-environment/)
-- [Claude Code 和 Codex](/research-harness/zh-cn/guides/claude-code-and-codex/)
-- [AGENTS.md 参考](/research-harness/zh-cn/reference/agents-md/)
-- [guard 参考](/research-harness/zh-cn/reference/guard/)
-- [保持不变的接口](/research-harness/zh-cn/reference/interfaces/)
+- [快速上手](/cvsm/zh-cn/start/quick-start/)
+- [适配你的环境](/cvsm/zh-cn/guides/adapt-your-environment/)
+- [Claude Code 和 Codex](/cvsm/zh-cn/guides/claude-code-and-codex/)
+- [AGENTS.md 参考](/cvsm/zh-cn/reference/agents-md/)
+- [guard 参考](/cvsm/zh-cn/reference/guard/)
+- [保持不变的接口](/cvsm/zh-cn/reference/interfaces/)

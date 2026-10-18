@@ -37,7 +37,7 @@ The spec has three sections. Settle each one:
 Keys are the dotted keys of a run's resolved config (`config.json`). The agent names them from the code. A setting the code can't yet take through config needs a `code` sub-issue.
 
 :::note
-This spec is what every run is checked against, from the run's own record. See [Study spec](/research-harness/concepts/study-spec/) for why it is the layer you approve, and [Issue forms](/research-harness/reference/issue-forms/#study) for the exact line formats.
+This spec is what every run is checked against, from the run's own record. See [Study spec](/cvsm/concepts/study-spec/) for why it is the layer you approve, and [Issue forms](/cvsm/reference/issue-forms/#study) for the exact line formats.
 :::
 
 An example spec:
@@ -93,8 +93,8 @@ Changing a study's Arms, Controlled or Adaptable, or a task's Goal, Scope, Accep
 
 ## Related
 
-- [Study spec](/research-harness/concepts/study-spec/)
-- [Gates and blockers](/research-harness/concepts/gates-and-blockers/)
-- [Run experiments](/research-harness/guides/run-experiments/)
-- [Issue forms](/research-harness/reference/issue-forms/)
-- [Skills: plan](/research-harness/reference/skills/#plan)
+- [Study spec](/cvsm/concepts/study-spec/)
+- [Gates and blockers](/cvsm/concepts/gates-and-blockers/)
+- [Run experiments](/cvsm/guides/run-experiments/)
+- [Issue forms](/cvsm/reference/issue-forms/)
+- [Skills: plan](/cvsm/reference/skills/#plan)

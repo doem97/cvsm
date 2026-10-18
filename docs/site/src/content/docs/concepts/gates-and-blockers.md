@@ -22,7 +22,7 @@ An explicit instruction approves what it names, and the agent records it as `Dec
 
 ### Gate 02 in detail
 
-Under `Merge: agent`, the agent merges a merge-ready PR itself with `python .github/scripts/merge.py <PR>`, which refuses protected paths and heads without a passing review. Otherwise, or if merge.py refuses, the merge-ready PR is the request: the agent adds no label and no blocker comment, and waits for "merge". See [Merging](/research-harness/concepts/merging/).
+Under `Merge: agent`, the agent merges a merge-ready PR itself with `python .github/scripts/merge.py <PR>`, which refuses protected paths and heads without a passing review. Otherwise, or if merge.py refuses, the merge-ready PR is the request: the agent adds no label and no blocker comment, and waits for "merge". See [Merging](/cvsm/concepts/merging/).
 
 ### Gate 03 in detail
 
@@ -70,7 +70,7 @@ A bug outside Scope becomes a new issue; the agent keeps working and keeps the f
 
 ## Related
 
-- [Talk, don't click](/research-harness/start/talk-dont-click/)
-- [Merging](/research-harness/concepts/merging/)
-- [Review](/research-harness/concepts/review/)
-- [The study spec](/research-harness/concepts/study-spec/)
+- [Work in a session](/cvsm/start/talk-dont-click/)
+- [Merging](/cvsm/concepts/merging/)
+- [Review](/cvsm/concepts/review/)
+- [The study spec](/cvsm/concepts/study-spec/)

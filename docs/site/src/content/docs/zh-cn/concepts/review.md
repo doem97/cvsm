@@ -62,7 +62,7 @@ pass 就结束循环。实现者把 Scope 内的 minor 意见当场修掉；推�
 
 ## 相关页面
 
-- [合并](/research-harness/zh-cn/concepts/merging/)
-- [关口与卡点](/research-harness/zh-cn/concepts/gates-and-blockers/)
-- [skill](/research-harness/zh-cn/reference/skills/)
-- [Claude Code 和 Codex](/research-harness/zh-cn/guides/claude-code-and-codex/)
+- [合并](/cvsm/zh-cn/concepts/merging/)
+- [关口与卡点](/cvsm/zh-cn/concepts/gates-and-blockers/)
+- [skill](/cvsm/zh-cn/reference/skills/)
+- [Claude Code 和 Codex](/cvsm/zh-cn/guides/claude-code-and-codex/)

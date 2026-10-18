@@ -1,6 +1,6 @@
 ---
 title: State
-description: How rh keeps all workflow state in native GitHub issues, PRs and checks.
+description: How CVSM keeps all workflow state in native GitHub issues, PRs and checks.
 sidebar:
   order: 1
 ---
@@ -8,7 +8,7 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import Loop from '~/components/figures/Loop.astro';
 
-All of rh's workflow state lives in GitHub: issues, sub-issues, dependencies, linked branches, PRs, checks and closed states. The repo holds no plan, progress or notes files, and a session holds nothing, so any session can end at any moment and the next one reads where things stand.
+All of CVSM's workflow state lives in GitHub: issues, sub-issues, dependencies, linked branches, PRs, checks and closed states. The repo holds no plan, progress or notes files, and a session holds nothing, so any session can end at any moment and the next one reads where things stand.
 
 <Loop lang="en" />
 
@@ -16,7 +16,7 @@ All of rh's workflow state lives in GitHub: issues, sub-issues, dependencies, li
 
 A parent issue holds the why; its sub-issues hold the work.
 
-- **`study`**: a research question. Its body is the [study form](/research-harness/reference/issue-forms/), including the spec.
+- **`study`**: a research question. Its body is the [study form](/cvsm/reference/issue-forms/), including the spec.
 - **`plan`**: development work, with `### Goal` and `### Context`.
 - **`code`**: one change inside a fixed Scope, done in one branch and one PR.
 - **`run`**: a set of runs, closed with a results comment. A run task has no PR.
@@ -52,7 +52,7 @@ Every state below is something GitHub already shows.
 | Awaits analysis | Open, all sub-issues closed |
 | Closed | Completed with the conclusion, or not planned, on the human's explicit instruction |
 
-Concluding a study is [gate 04](/research-harness/concepts/gates-and-blockers/).
+Concluding a study is [gate 04](/cvsm/concepts/gates-and-blockers/).
 
 ## Reading state
 
@@ -79,7 +79,7 @@ Because state is on GitHub, you can always ask a fresh session "what's waiting f
 
 ## Related
 
-- [Gates and blockers](/research-harness/concepts/gates-and-blockers/)
-- [Talk, don't click](/research-harness/start/talk-dont-click/)
-- [Issue forms](/research-harness/reference/issue-forms/)
-- [AGENTS.md](/research-harness/reference/agents-md/)
+- [Gates and blockers](/cvsm/concepts/gates-and-blockers/)
+- [Work in a session](/cvsm/start/talk-dont-click/)
+- [Issue forms](/cvsm/reference/issue-forms/)
+- [AGENTS.md](/cvsm/reference/agents-md/)

@@ -11,7 +11,7 @@ agent 只通过 `.github/scripts/merge.py` 合并，默认还要等你说合并�
 
 每个 `code` issue 都有一节 `### Merge`：
 
-- **`human`**（默认）：PR 待合并时，agent 停在[关口 02](/research-harness/zh-cn/concepts/gates-and-blockers/)。待合并的 PR 本身就是请求，不打 label，也不贴卡点评论。你说“合并”，agent 运行 `merge.py <PR> --human`，并在 issue 上记下 `Decision:`。
+- **`human`**（默认）：PR 待合并时，agent 停在[关口 02](/cvsm/zh-cn/concepts/gates-and-blockers/)。待合并的 PR 本身就是请求，不打 label，也不贴卡点评论。你说“合并”，agent 运行 `merge.py <PR> --human`，并在 issue 上记下 `Decision:`。
 - **`agent`**：用于 Scope 不碰任何受保护路径的低风险任务。PR 待合并后，agent 自己运行 `merge.py <PR>`。
 
 ## merge.py 检查什么
@@ -60,7 +60,7 @@ GitHub 上不要求批准：你在会话里说的合并就是批准。
 
 ## 相关页面
 
-- [审查](/research-harness/zh-cn/concepts/review/)
-- [关口与卡点](/research-harness/zh-cn/concepts/gates-and-blockers/)
-- [merge.py](/research-harness/zh-cn/reference/merge-py/)
-- [guard](/research-harness/zh-cn/reference/guard/)
+- [审查](/cvsm/zh-cn/concepts/review/)
+- [关口与卡点](/cvsm/zh-cn/concepts/gates-and-blockers/)
+- [merge.py](/cvsm/zh-cn/reference/merge-py/)
+- [guard](/cvsm/zh-cn/reference/guard/)

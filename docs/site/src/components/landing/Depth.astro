@@ -2,7 +2,7 @@
 // The problem, drawn: the readable spec on top, and below it denser layers of agent work, where
 // reasonable-looking changes break the comparison without anyone reading them.
 import { rng } from '~/lib/harness';
-import { t, SPEC_LINES, type Lang } from '~/i18n/strings';
+import { t, specLines, type Lang } from '~/i18n/strings';
 
 interface Props {
 	lang: Lang;
@@ -32,7 +32,7 @@ const bars = layers.map((ly, li) => {
 	}
 	return out.join('');
 });
-const controlled = SPEC_LINES.slice(3, 7);
+const controlled = specLines(lang).slice(3, 7);
 ---
 
 <div class="depth" aria-hidden="true">
@@ -77,19 +77,19 @@ const controlled = SPEC_LINES.slice(3, 7);
 <style>
 	.depth {
 		position: relative;
-		color: var(--rh-text);
+		color: var(--cvsm-text);
 	}
 	code {
-		font-family: var(--rh-font-mono);
+		font-family: var(--cvsm-font-mono);
 		background: none;
 		padding: 0;
 	}
 	.d-spec {
 		position: relative;
 		z-index: 2;
-		background: var(--rh-surface);
-		border: 1px solid var(--rh-hair-2);
-		border-left: 4px solid var(--rh-accent);
+		background: var(--cvsm-surface);
+		border: 1px solid var(--cvsm-hair-2);
+		border-left: 4px solid var(--cvsm-accent);
 		padding: 1rem 1.25rem 1.1rem;
 	}
 	.d-head {
@@ -99,26 +99,26 @@ const controlled = SPEC_LINES.slice(3, 7);
 		align-items: center;
 		padding-bottom: 0.75rem;
 		margin-bottom: 0.75rem;
-		border-bottom: 1px solid var(--rh-hair);
-		font-family: var(--rh-font-mono);
+		border-bottom: 1px solid var(--cvsm-hair);
+		font-family: var(--cvsm-font-mono);
 		font-size: 0.6875rem;
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
 	}
 	.d-mark {
 		width: 9px;
 		height: 9px;
-		background: var(--rh-accent);
+		background: var(--cvsm-accent);
 	}
 	.d-aside {
 		margin-inline-start: auto;
-		color: var(--rh-accent-ink);
+		color: var(--cvsm-accent-ink);
 	}
 	.d-spec ol {
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		font-family: var(--rh-font-mono);
+		font-family: var(--cvsm-font-mono);
 		font-size: clamp(0.72rem, 0.6rem + 0.3vw, 0.875rem);
 		line-height: 1.85;
 	}
@@ -128,25 +128,25 @@ const controlled = SPEC_LINES.slice(3, 7);
 		gap: 1rem;
 	}
 	.d-spec li.h {
-		color: var(--rh-muted);
+		color: var(--cvsm-muted);
 	}
 	.d-spec .c {
-		color: var(--rh-muted);
+		color: var(--cvsm-muted);
 	}
 	.depth .d-deep {
 		margin: 2.25rem 0 0.9rem;
-		font-family: var(--rh-font-mono);
+		font-family: var(--cvsm-font-mono);
 		font-size: 0.6875rem;
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		color: var(--rh-muted);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		color: var(--cvsm-muted);
 	}
 	.d-layer {
 		position: relative;
-		border: 1px solid var(--rh-hair);
+		border: 1px solid var(--cvsm-hair);
 		padding: 2.2rem 1.1rem 1rem;
 		margin-bottom: 1rem;
-		background: var(--rh-bg);
+		background: var(--cvsm-bg);
 	}
 	.d-layer:last-child {
 		mask-image: linear-gradient(to bottom, #000 55%, transparent);
@@ -157,18 +157,18 @@ const controlled = SPEC_LINES.slice(3, 7);
 		position: absolute;
 		top: 0.75rem;
 		left: 1.1rem;
-		font-family: var(--rh-font-mono);
+		font-family: var(--cvsm-font-mono);
 		font-size: 0.6875rem;
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		color: var(--rh-muted);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		color: var(--cvsm-muted);
 	}
 	svg {
 		display: block;
 		width: 100%;
 	}
 	svg path {
-		stroke: var(--rh-text);
+		stroke: var(--cvsm-text);
 		fill: none;
 	}
 	.d-drift {
@@ -179,12 +179,12 @@ const controlled = SPEC_LINES.slice(3, 7);
 		align-items: baseline;
 		gap: 0.45rem;
 		padding: 0.35rem 0.6rem;
-		background: var(--rh-bg);
-		border: 1px dashed var(--rh-text);
-		font-family: var(--rh-font-mono);
+		background: var(--cvsm-bg);
+		border: 1px dashed var(--cvsm-text);
+		font-family: var(--cvsm-font-mono);
 		font-size: 0.75rem;
 		white-space: nowrap;
-		color: var(--rh-text);
+		color: var(--cvsm-text);
 		max-width: calc(100% - var(--x) - 0.5rem);
 		overflow: hidden;
 	}
@@ -192,17 +192,17 @@ const controlled = SPEC_LINES.slice(3, 7);
 		font-weight: 500;
 	}
 	.d-from {
-		color: var(--rh-muted);
+		color: var(--cvsm-muted);
 		text-decoration: line-through;
-		text-decoration-color: var(--rh-muted);
+		text-decoration-color: var(--cvsm-muted);
 	}
 	.d-arrow {
-		color: var(--rh-muted);
+		color: var(--cvsm-muted);
 	}
 	.d-drift em {
 		font-style: normal;
-		font-family: var(--rh-font-sans);
-		color: var(--rh-muted);
+		font-family: var(--cvsm-font-sans);
+		color: var(--cvsm-muted);
 		margin-inline-start: 0.2rem;
 	}
 
@@ -210,22 +210,22 @@ const controlled = SPEC_LINES.slice(3, 7);
 		@media (prefers-reduced-motion: no-preference) {
 			/* Each layer settles under the spec as it scrolls in; its drift surfaces after. */
 			.d-layer {
-				animation: rh-settle linear both;
+				animation: cvsm-settle linear both;
 				animation-timeline: view();
 				animation-range: entry 0% cover 38%;
 			}
 			.d-drift {
-				animation: rh-surface linear both;
+				animation: cvsm-surface linear both;
 				animation-timeline: view();
 				animation-range: entry 70% cover 45%;
 			}
-			@keyframes rh-settle {
+			@keyframes cvsm-settle {
 				from {
 					opacity: 0;
 					transform: translateY(calc(-40px - var(--i) * 30px)) scale(0.97);
 				}
 			}
-			@keyframes rh-surface {
+			@keyframes cvsm-surface {
 				from {
 					opacity: 0;
 					transform: translateY(6px);

@@ -4,7 +4,7 @@ import '~/styles/tokens.css';
 import '~/styles/landing.css';
 import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
 import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
-import { t, url, GITHUB, type Lang } from '~/i18n/strings';
+import { t, url, GITHUB, NAME, type Lang } from '~/i18n/strings';
 
 interface Props {
 	lang: Lang;
@@ -45,12 +45,12 @@ const canonical = new URL(home, Astro.site).href;
 			})();
 		</script>
 	</head>
-	<body class="rh">
+	<body class="cvsm">
 		<a class="skip" href="#main">{s.nav.skip}</a>
 		<header class="top">
 			<div class="wrap top__bar">
-				<a class="rh-wordmark" href={home} aria-label="research-harness">
-					<span class="rh-wordmark__name">research-harness</span>
+				<a class="cvsm-wordmark" href={home} aria-label={`CVSM, ${NAME[lang]}`}>
+					<span class="cvsm-wordmark__name">CVSM</span>
 				</a>
 				<span class="top__status mono-cap">{s.nav.status}</span>
 				<nav class="top__nav" aria-label="Site">
@@ -74,7 +74,7 @@ const canonical = new URL(home, Astro.site).href;
 				<div class="rule"><i></i><i></i></div>
 				<div class="foot__grid">
 					<div class="foot__brand">
-						<a class="rh-wordmark" href={home}><span class="rh-wordmark__name">research-harness</span></a>
+						<a class="cvsm-wordmark" href={home}><span class="cvsm-wordmark__name">CVSM</span></a>
 						<p>{s.footer.tagline}</p>
 					</div>
 					<nav class="foot__links" aria-label="Footer">

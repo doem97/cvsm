@@ -1,6 +1,6 @@
 ---
-title: Talk, don't click
-description: How you work with rh through agent sessions, and what each instruction asks for.
+title: Work in a session
+description: How you work with CVSM through agent sessions, and what each instruction asks for.
 sidebar:
   order: 3
 ---
@@ -8,13 +8,13 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import Session from '~/components/figures/Session.astro';
 
-You make decisions only in an agent session, in Claude Code or Codex, and never click around GitHub. Agents create issues, open PRs, review, merge and close on your instruction, and record each of your decisions on the issue it concerns.
+You make decisions only in an agent session, in Claude Code or Codex. Agents create issues, open PRs, review, merge and close on your instruction, and record each of your decisions on the issue it concerns.
 
 <Session lang="en" />
 
 ## An instruction is a target state
 
-Each instruction names where the work should end. The agent keeps going until it reaches that target, a [gate](/research-harness/concepts/gates-and-blockers/) or a blocker, and only then stops.
+Each instruction names where the work should end. The agent keeps going until it reaches that target, a [gate](/cvsm/concepts/gates-and-blockers/) or a blocker, and only then stops.
 
 | You say | The agent |
 |---|---|
@@ -54,7 +54,7 @@ Next: <what comes next>
 
 ## When you are not in the session
 
-If an agent hits a blocker while you are away, it adds the `needs-decision` label to the issue, posts a four-line blocker comment, and moves on to other ready work. You answer in a session later, and the agent removes the label once you have. See [Gates and blockers](/research-harness/concepts/gates-and-blockers/).
+If an agent hits a blocker while you are away, it adds the `needs-decision` label to the issue, posts a four-line blocker comment, and moves on to other ready work. You answer in a session later, and the agent removes the label once you have. See [Gates and blockers](/cvsm/concepts/gates-and-blockers/).
 
 ## Several sessions at once
 
@@ -63,12 +63,12 @@ You can run several sessions in parallel, each on its own task. Claiming a task 
 Sessions keep nothing. Every state change is written to GitHub or git as it happens, so a session can end at any moment, and a new one picks up with "continue #11".
 
 <Aside type="tip">
-rh's own skills report and discuss in Chinese. An adopting project names the language of its human-facing text on the `Language` line of AGENTS.md's Project section. Format keywords such as `Decision:` and `Verdict:` stay in English.
+CVSM's own skills report and discuss in Chinese. An adopting project names the language of its human-facing text on the `Language` line of AGENTS.md's Project section. Format keywords such as `Decision:` and `Verdict:` stay in English.
 </Aside>
 
 ## Related
 
-- [Quick start](/research-harness/start/quick-start/)
-- [Gates and blockers](/research-harness/concepts/gates-and-blockers/)
-- [State](/research-harness/concepts/state/)
-- [Claude Code and Codex](/research-harness/guides/claude-code-and-codex/)
+- [Quick start](/cvsm/start/quick-start/)
+- [Gates and blockers](/cvsm/concepts/gates-and-blockers/)
+- [State](/cvsm/concepts/state/)
+- [Claude Code and Codex](/cvsm/guides/claude-code-and-codex/)

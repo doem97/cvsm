@@ -7,7 +7,7 @@ sidebar:
 
 `merge.py` squash-merges one PR at its current head. Without `--human` it merges only a pre-approved, reviewed task that touches no protected path; with `--human` it carries out a merge the human has decided.
 
-Source: [`.github/scripts/merge.py`](https://github.com/doem97/research-harness/blob/main/.github/scripts/merge.py).
+Source: [`.github/scripts/merge.py`](https://github.com/doem97/cvsm/blob/main/.github/scripts/merge.py).
 
 ## Usage
 
@@ -30,7 +30,7 @@ It merges only when all three hold:
 
 Notes:
 
-- Closing references are parsed as in [guard](/research-harness/reference/guard/#1-closing-reference).
+- Closing references are parsed as in [guard](/cvsm/reference/guard/#1-closing-reference).
 - `protected` is matched as plain globs here: unlike guard, a Scope entry that names a protected path doesn't unlock it. A PR that touches a protected path is always merged by the human.
 - A newer `Verdict: changes`, or a pass for an older head, blocks the merge. Comments whose first line doesn't start with `Verdict:` are ignored, so the comment listing remaining minors must not start with it.
 
@@ -68,8 +68,8 @@ Messages are printed in Chinese, e.g. `不合并 PR #15：` followed by one `- <
 
 ## Related
 
-- [Merging](/research-harness/concepts/merging/)
-- [Review](/research-harness/concepts/review/)
-- [guard](/research-harness/reference/guard/)
-- [AGENTS.md: Gates](/research-harness/reference/agents-md/#gates)
-- [Interfaces that stay fixed](/research-harness/reference/interfaces/)
+- [Merging](/cvsm/concepts/merging/)
+- [Review](/cvsm/concepts/review/)
+- [guard](/cvsm/reference/guard/)
+- [AGENTS.md: Gates](/cvsm/reference/agents-md/#gates)
+- [Interfaces that stay fixed](/cvsm/reference/interfaces/)

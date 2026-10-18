@@ -11,7 +11,7 @@ Agents merge only through `.github/scripts/merge.py`, and by default only when y
 
 Every `code` issue has a `### Merge` field:
 
-- **`human`** (the default): when the PR is merge-ready, the agent stops at [gate 02](/research-harness/concepts/gates-and-blockers/). The merge-ready PR is the request; there is no label or blocker comment. When you say "merge", the agent runs `merge.py <PR> --human` and records `Decision:` on the issue.
+- **`human`** (the default): when the PR is merge-ready, the agent stops at [gate 02](/cvsm/concepts/gates-and-blockers/). The merge-ready PR is the request; there is no label or blocker comment. When you say "merge", the agent runs `merge.py <PR> --human` and records `Decision:` on the issue.
 - **`agent`**: for low-risk tasks whose Scope matches no protected path. The agent runs `merge.py <PR>` itself once the PR is merge-ready.
 
 ## What merge.py checks
@@ -60,7 +60,7 @@ The `code` issue closes through `Closes #N`. The merging agent carries out the a
 
 ## Related
 
-- [Review](/research-harness/concepts/review/)
-- [Gates and blockers](/research-harness/concepts/gates-and-blockers/)
-- [merge.py](/research-harness/reference/merge-py/)
-- [guard](/research-harness/reference/guard/)
+- [Review](/cvsm/concepts/review/)
+- [Gates and blockers](/cvsm/concepts/gates-and-blockers/)
+- [merge.py](/cvsm/reference/merge-py/)
+- [guard](/cvsm/reference/guard/)

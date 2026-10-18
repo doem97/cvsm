@@ -1,12 +1,12 @@
-/* Starlight, themed with the research-harness tokens (tokens.css).
+/* Starlight, themed with the CVSM tokens (tokens.css).
    Unlayered on purpose: it sits above Starlight's cascade layers without !important. */
 
 /* ------------------------------------------------------------ palette mapping */
 :root,
 :root[data-theme='dark'],
 ::backdrop {
-	--sl-font: var(--rh-font-sans);
-	--sl-font-mono: var(--rh-font-mono);
+	--sl-font: var(--cvsm-font-sans);
+	--sl-font-mono: var(--cvsm-font-mono);
 
 	--sl-color-white: #f2f2f0;
 	--sl-color-gray-1: #e2e3e1;
@@ -24,23 +24,23 @@
 	--sl-color-text: var(--sl-color-gray-2);
 	--sl-color-text-accent: var(--sl-color-white);
 	--sl-color-text-invert: var(--sl-color-black);
-	--sl-color-bg: var(--rh-bg);
-	--sl-color-bg-nav: var(--rh-bg);
-	--sl-color-bg-sidebar: var(--rh-bg);
-	--sl-color-bg-inline-code: var(--rh-surface);
+	--sl-color-bg: var(--cvsm-bg);
+	--sl-color-bg-nav: var(--cvsm-bg);
+	--sl-color-bg-sidebar: var(--cvsm-bg);
+	--sl-color-bg-inline-code: var(--cvsm-surface);
 	--sl-color-bg-accent: var(--sl-color-white);
-	--sl-color-hairline-light: var(--rh-hair-2);
-	--sl-color-hairline: var(--rh-hair);
-	--sl-color-hairline-shade: var(--rh-hair);
+	--sl-color-hairline-light: var(--cvsm-hair-2);
+	--sl-color-hairline: var(--cvsm-hair);
+	--sl-color-hairline-shade: var(--cvsm-hair);
 	--sl-color-backdrop-overlay: rgba(11, 12, 15, 0.72);
 
 	/* Semantic hues for asides and badges. */
-	--sl-color-orange-low: var(--rh-accent-wash);
-	--sl-color-orange: var(--rh-accent);
-	--sl-color-orange-high: var(--rh-accent-ink);
-	--sl-color-blue-low: var(--rh-verify-wash);
-	--sl-color-blue: var(--rh-verify);
-	--sl-color-blue-high: var(--rh-verify-ink);
+	--sl-color-orange-low: var(--cvsm-accent-wash);
+	--sl-color-orange: var(--cvsm-accent);
+	--sl-color-orange-high: var(--cvsm-accent-ink);
+	--sl-color-blue-low: var(--cvsm-verify-wash);
+	--sl-color-blue: var(--cvsm-verify);
+	--sl-color-blue-high: var(--cvsm-verify-ink);
 
 	--sl-shadow-sm: none;
 	--sl-shadow-md: none;
@@ -74,11 +74,11 @@
 	--sl-color-accent-high: #0b0c0f;
 	--sl-color-text-accent: var(--sl-color-white);
 	--sl-color-text-invert: #f7f6f2;
-	--sl-color-bg-nav: var(--rh-bg);
-	--sl-color-bg-sidebar: var(--rh-bg);
+	--sl-color-bg-nav: var(--cvsm-bg);
+	--sl-color-bg-sidebar: var(--cvsm-bg);
 	--sl-color-bg-inline-code: #ecebe6;
 	--sl-color-bg-accent: var(--sl-color-white);
-	--sl-color-hairline-light: var(--rh-hair-2);
+	--sl-color-hairline-light: var(--cvsm-hair-2);
 	--sl-color-backdrop-overlay: rgba(247, 246, 242, 0.72);
 	--sl-shadow-lg: 0 24px 48px rgba(10, 12, 15, 0.12);
 }
@@ -101,125 +101,125 @@ body {
 
 /* ------------------------------------------------------------ focus */
 :where(a, button, summary, select, input, [tabindex]):focus-visible {
-	outline: 2px solid var(--rh-text);
+	outline: 2px solid var(--cvsm-text);
 	outline-offset: 3px;
 	border-radius: 0;
 }
 
 /* ------------------------------------------------------------ header */
 header.header {
-	border-bottom: 1px solid var(--rh-hair);
-	background: color-mix(in srgb, var(--rh-bg) 86%, transparent);
+	border-bottom: 1px solid var(--cvsm-hair);
+	background: color-mix(in srgb, var(--cvsm-bg) 86%, transparent);
 	backdrop-filter: saturate(1.2) blur(12px);
 	-webkit-backdrop-filter: saturate(1.2) blur(12px);
 }
-.rh-wordmark {
+.cvsm-wordmark {
 	display: inline-flex;
 	align-items: baseline;
 	gap: 0.75rem;
-	color: var(--rh-text);
+	color: var(--cvsm-text);
 	text-decoration: none;
 	white-space: nowrap;
 }
-.rh-wordmark__name {
-	font-family: var(--rh-font-sans);
+.cvsm-wordmark__name {
+	font-family: var(--cvsm-font-sans);
 	font-weight: 600;
 	font-size: 1.125rem;
 	letter-spacing: -0.02em;
-	view-transition-name: rh-wordmark;
+	view-transition-name: cvsm-wordmark;
 }
-.rh-wordmark__tag {
-	font-family: var(--rh-font-mono);
+.cvsm-wordmark__tag {
+	font-family: var(--cvsm-font-mono);
 	font-size: 0.6875rem;
-	letter-spacing: var(--rh-track-caps);
-	text-transform: var(--rh-caps);
-	color: var(--rh-muted);
+	letter-spacing: var(--cvsm-track-caps);
+	text-transform: var(--cvsm-caps);
+	color: var(--cvsm-muted);
 	padding-inline-start: 0.75rem;
-	border-inline-start: 1px solid var(--rh-hair-2);
+	border-inline-start: 1px solid var(--cvsm-hair-2);
 }
 
 /* Search trigger: a hairline field with a mono shortcut. */
 site-search button[data-open-modal] {
 	border-radius: 0;
-	border-color: var(--rh-hair-2);
+	border-color: var(--cvsm-hair-2);
 	background: transparent;
-	color: var(--rh-muted);
+	color: var(--cvsm-muted);
 	font-size: 0.875rem;
 }
 site-search button[data-open-modal]:hover {
-	border-color: var(--rh-text);
-	color: var(--rh-text);
+	border-color: var(--cvsm-text);
+	color: var(--cvsm-text);
 }
 site-search kbd {
-	font-family: var(--rh-font-mono);
+	font-family: var(--cvsm-font-mono);
 	border-radius: 0;
-	background: var(--rh-surface);
+	background: var(--cvsm-surface);
 }
 starlight-theme-select select,
 starlight-lang-select select {
 	font-size: 0.8125rem;
-	color: var(--rh-muted);
+	color: var(--cvsm-muted);
 }
 starlight-theme-select label,
 starlight-lang-select label {
-	color: var(--rh-muted);
+	color: var(--cvsm-muted);
 }
 starlight-theme-select label:hover,
 starlight-lang-select label:hover {
-	color: var(--rh-text);
+	color: var(--cvsm-text);
 }
 
 /* ------------------------------------------------------------ sidebar */
 .sidebar-pane {
-	border-inline-end: 1px solid var(--rh-hair);
+	border-inline-end: 1px solid var(--cvsm-hair);
 }
 nav.sidebar .top-level {
-	counter-reset: rh-group;
+	counter-reset: cvsm-group;
 }
 nav.sidebar .top-level > li + li {
 	margin-top: 1.25rem;
 }
 nav.sidebar .top-level > li > details > summary {
-	counter-increment: rh-group;
+	counter-increment: cvsm-group;
 	padding-block: 0.25rem 0.5rem;
 }
 nav.sidebar .top-level > li > details > summary .large {
-	font-family: var(--rh-font-mono);
+	font-family: var(--cvsm-font-mono);
 	font-size: 0.6875rem;
 	font-weight: 500;
-	letter-spacing: var(--rh-track-caps);
-	text-transform: var(--rh-caps);
-	color: var(--rh-text);
+	letter-spacing: var(--cvsm-track-caps);
+	text-transform: var(--cvsm-caps);
+	color: var(--cvsm-text);
 }
 nav.sidebar .top-level > li > details > summary .large::before {
-	content: counter(rh-group, decimal-leading-zero) '\2002';
-	color: var(--rh-muted);
+	content: counter(cvsm-group, decimal-leading-zero) '\2002';
+	color: var(--cvsm-muted);
 }
 nav.sidebar .caret {
-	color: var(--rh-muted);
+	color: var(--cvsm-muted);
 	width: 1rem;
 	height: 1rem;
 }
 nav.sidebar ul ul li {
-	border-inline-start-color: var(--rh-hair);
+	border-inline-start-color: var(--cvsm-hair);
 	margin-inline-start: 0.5rem;
 }
 nav.sidebar a {
 	border-radius: 0;
-	color: var(--rh-muted);
+	color: var(--cvsm-muted);
 	font-size: 0.875rem;
-	transition: color 120ms var(--rh-ease);
+	transition: color 120ms var(--cvsm-ease);
 }
 nav.sidebar a:hover {
-	color: var(--rh-text);
+	color: var(--cvsm-text);
 }
 nav.sidebar a[aria-current='page'],
 nav.sidebar a[aria-current='page']:hover,
 nav.sidebar a[aria-current='page']:focus {
-	color: var(--rh-text);
+	color: var(--cvsm-text);
 	background: transparent;
 	font-weight: 500;
-	box-shadow: inset 2px 0 0 var(--rh-text);
+	box-shadow: inset 2px 0 0 var(--cvsm-text);
 	margin-inline-start: calc(-1 * var(--sl-sidebar-item-padding-inline) - 1px);
 	padding-inline-start: calc(2 * var(--sl-sidebar-item-padding-inline) + 1px);
 }
@@ -227,33 +227,33 @@ nav.sidebar a[aria-current='page']:focus {
 /* ------------------------------------------------------------ table of contents */
 starlight-toc h2,
 mobile-starlight-toc .toggle {
-	font-family: var(--rh-font-mono);
+	font-family: var(--cvsm-font-mono);
 	font-size: 0.6875rem;
 	font-weight: 500;
-	letter-spacing: var(--rh-track-caps);
-	text-transform: var(--rh-caps);
-	color: var(--rh-muted);
+	letter-spacing: var(--cvsm-track-caps);
+	text-transform: var(--cvsm-caps);
+	color: var(--cvsm-muted);
 }
 starlight-toc a {
-	color: var(--rh-muted);
+	color: var(--cvsm-muted);
 	font-size: 0.8125rem;
 }
 starlight-toc a[aria-current='true'] {
-	color: var(--rh-text);
+	color: var(--cvsm-text);
 }
 .right-sidebar {
-	border-inline-start: 1px solid var(--rh-hair);
+	border-inline-start: 1px solid var(--cvsm-hair);
 }
 
 /* ------------------------------------------------------------ page title and content */
 .content-panel + .content-panel {
-	border-top: 1px solid var(--rh-hair);
+	border-top: 1px solid var(--cvsm-hair);
 }
 h1#_top {
 	font-weight: 600;
 	letter-spacing: -0.035em;
 	line-height: 1.02;
-	color: var(--rh-text);
+	color: var(--cvsm-text);
 	text-wrap: balance;
 }
 :lang(zh-CN) h1#_top {
@@ -261,28 +261,28 @@ h1#_top {
 	line-height: 1.15;
 }
 .sl-markdown-content {
-	color: var(--rh-soft);
+	color: var(--cvsm-soft);
 }
 .sl-markdown-content :is(h2, h3, h4, h5) {
-	color: var(--rh-text);
+	color: var(--cvsm-text);
 	font-weight: 600;
 	letter-spacing: -0.02em;
 }
 .sl-markdown-content .sl-heading-wrapper.level-h2 {
 	padding-top: 1.5rem;
-	border-top: 1px solid var(--rh-hair);
+	border-top: 1px solid var(--cvsm-hair);
 	margin-top: 3.5rem;
 }
 .sl-markdown-content :is(h2, h3) + * {
 	margin-top: 0.75rem;
 }
 .sl-markdown-content a:not(:where(.not-content *)) {
-	color: var(--rh-text);
+	color: var(--cvsm-text);
 	text-decoration: underline;
-	text-decoration-color: var(--rh-hair-2);
+	text-decoration-color: var(--cvsm-hair-2);
 	text-decoration-thickness: 1px;
 	text-underline-offset: 0.2em;
-	transition: text-decoration-color 120ms var(--rh-ease);
+	transition: text-decoration-color 120ms var(--cvsm-ease);
 }
 .sl-markdown-content a:not(:where(.not-content *)):hover {
 	text-decoration-color: currentColor;
@@ -292,12 +292,12 @@ h1#_top {
 	padding: 0.12em 0.34em;
 	border: 0;
 	border-radius: 2px;
-	background: color-mix(in srgb, var(--rh-text) 7%, transparent);
-	color: var(--rh-text);
+	background: color-mix(in srgb, var(--cvsm-text) 7%, transparent);
+	color: var(--cvsm-text);
 	-webkit-box-decoration-break: clone;
 	box-decoration-break: clone;
 }
-/* Break long tokens only when they cannot fit a line of their own: never "ru|n" or "<rh|clone>". */
+/* Break long tokens only when they cannot fit a line of their own: never "ru|n" or "<cvsm|clone>". */
 .sl-markdown-content li:not(:where(.not-content *)),
 .sl-markdown-content :not(pre) > code {
 	overflow-wrap: break-word;
@@ -317,15 +317,15 @@ h1#_top {
 	letter-spacing: 0;
 }
 .sl-markdown-content strong {
-	color: var(--rh-text);
+	color: var(--cvsm-text);
 	font-weight: 600;
 }
 .sl-markdown-content hr {
-	border-color: var(--rh-hair);
+	border-color: var(--cvsm-hair);
 }
 .sl-markdown-content blockquote {
-	border-inline-start: 2px solid var(--rh-hair-2);
-	color: var(--rh-muted);
+	border-inline-start: 2px solid var(--cvsm-hair-2);
+	color: var(--cvsm-muted);
 }
 
 /* Tables: hairlines only, mono heads. */
@@ -335,18 +335,18 @@ h1#_top {
 }
 .sl-markdown-content :is(th, td) {
 	border: 0;
-	border-bottom: 1px solid var(--rh-hair);
+	border-bottom: 1px solid var(--cvsm-hair);
 	padding: 0.7rem 1rem 0.7rem 0;
 	background: transparent;
 }
 .sl-markdown-content th {
-	font-family: var(--rh-font-mono);
+	font-family: var(--cvsm-font-mono);
 	font-size: 0.6875rem;
 	font-weight: 500;
-	letter-spacing: var(--rh-track-caps);
-	text-transform: var(--rh-caps);
-	color: var(--rh-muted);
-	border-bottom-color: var(--rh-hair-2);
+	letter-spacing: var(--cvsm-track-caps);
+	text-transform: var(--cvsm-caps);
+	color: var(--cvsm-muted);
+	border-bottom-color: var(--cvsm-hair-2);
 }
 .sl-markdown-content tr:nth-child(2n) {
 	background: transparent;
@@ -359,161 +359,161 @@ h1#_top {
 	border-radius: 0;
 	border-inline-start-width: 2px;
 	padding: 1rem 1.25rem;
-	color: var(--rh-soft);
+	color: var(--cvsm-soft);
 }
 .starlight-aside__title {
-	font-family: var(--rh-font-mono);
+	font-family: var(--cvsm-font-mono);
 	font-size: 0.6875rem;
 	font-weight: 500;
-	letter-spacing: var(--rh-track-caps);
-	text-transform: var(--rh-caps);
+	letter-spacing: var(--cvsm-track-caps);
+	text-transform: var(--cvsm-caps);
 }
 .starlight-aside__icon {
 	font-size: 1.25rem;
 }
 .starlight-aside--caution {
-	--sl-color-asides-border: var(--rh-accent);
-	--sl-color-asides-text-accent: var(--rh-accent-ink);
-	background: var(--rh-accent-wash);
+	--sl-color-asides-border: var(--cvsm-accent);
+	--sl-color-asides-text-accent: var(--cvsm-accent-ink);
+	background: var(--cvsm-accent-wash);
 }
 .starlight-aside--note {
-	--sl-color-asides-border: var(--rh-verify);
-	--sl-color-asides-text-accent: var(--rh-verify-ink);
-	background: var(--rh-verify-wash);
+	--sl-color-asides-border: var(--cvsm-verify);
+	--sl-color-asides-text-accent: var(--cvsm-verify-ink);
+	background: var(--cvsm-verify-wash);
 }
 .starlight-aside--tip {
-	--sl-color-asides-border: var(--rh-hair-2);
-	--sl-color-asides-text-accent: var(--rh-text);
-	background: var(--rh-surface);
+	--sl-color-asides-border: var(--cvsm-hair-2);
+	--sl-color-asides-text-accent: var(--cvsm-text);
+	background: var(--cvsm-surface);
 }
 .starlight-aside--danger {
-	--sl-color-asides-border: var(--rh-text);
-	--sl-color-asides-text-accent: var(--rh-text);
-	background: var(--rh-surface);
+	--sl-color-asides-border: var(--cvsm-text);
+	--sl-color-asides-text-accent: var(--cvsm-text);
+	background: var(--cvsm-surface);
 	border-inline-start-width: 4px;
 }
 
 /* ------------------------------------------------------------ built-in components */
 .sl-markdown-content .card {
 	border-radius: 0;
-	border-color: var(--rh-hair-2);
-	background: var(--rh-surface);
+	border-color: var(--cvsm-hair-2);
+	background: var(--cvsm-surface);
 	box-shadow: none;
 }
 .sl-markdown-content .card .icon {
 	border-radius: 0;
 	background: transparent;
-	border: 1px solid var(--rh-hair-2);
-	color: var(--rh-text);
+	border: 1px solid var(--cvsm-hair-2);
+	color: var(--cvsm-text);
 }
 .sl-link-card {
 	border-radius: 0 !important;
-	border-color: var(--rh-hair-2) !important;
+	border-color: var(--cvsm-hair-2) !important;
 	box-shadow: none !important;
-	background: var(--rh-surface);
+	background: var(--cvsm-surface);
 }
 .sl-link-card:hover {
-	border-color: var(--rh-text) !important;
+	border-color: var(--cvsm-text) !important;
 }
 .sl-badge {
 	border-radius: 0;
-	font-family: var(--rh-font-mono);
+	font-family: var(--cvsm-font-mono);
 	letter-spacing: 0.04em;
 }
 .sl-badge.note {
-	background: var(--rh-verify-wash);
-	border-color: var(--rh-verify);
-	color: var(--rh-verify-ink);
+	background: var(--cvsm-verify-wash);
+	border-color: var(--cvsm-verify);
+	color: var(--cvsm-verify-ink);
 }
 .sl-badge.caution {
-	background: var(--rh-accent-wash);
-	border-color: var(--rh-accent);
-	color: var(--rh-accent-ink);
+	background: var(--cvsm-accent-wash);
+	border-color: var(--cvsm-accent);
+	color: var(--cvsm-accent-ink);
 }
 .sl-badge.default,
 .sl-badge.tip,
 .sl-badge.success,
 .sl-badge.danger {
 	background: transparent;
-	border-color: var(--rh-hair-2);
-	color: var(--rh-text);
+	border-color: var(--cvsm-hair-2);
+	color: var(--cvsm-text);
 }
 starlight-tabs [role='tablist'] {
-	border-bottom-color: var(--rh-hair-2);
+	border-bottom-color: var(--cvsm-hair-2);
 }
 starlight-tabs [role='tab'] {
-	font-family: var(--rh-font-mono);
+	font-family: var(--cvsm-font-mono);
 	font-size: 0.75rem;
 	letter-spacing: 0.04em;
-	text-transform: var(--rh-caps);
-	color: var(--rh-muted);
+	text-transform: var(--cvsm-caps);
+	color: var(--cvsm-muted);
 	border-radius: 0;
 }
 starlight-tabs [role='tab'][aria-selected='true'] {
-	color: var(--rh-text);
-	border-color: var(--rh-text);
+	color: var(--cvsm-text);
+	border-color: var(--cvsm-text);
 }
 .sl-steps > li::before {
-	font-family: var(--rh-font-mono);
+	font-family: var(--cvsm-font-mono);
 	font-size: 0.75rem;
 	border-radius: 0;
-	background: var(--rh-bg);
-	border: 1px solid var(--rh-hair-2);
-	color: var(--rh-text);
+	background: var(--cvsm-bg);
+	border: 1px solid var(--cvsm-hair-2);
+	color: var(--cvsm-text);
 	box-shadow: none;
 }
 .sl-steps > li::after {
-	background: var(--rh-hair);
+	background: var(--cvsm-hair);
 }
 starlight-file-tree {
 	border-radius: 0;
-	background: var(--rh-surface);
-	border: 1px solid var(--rh-hair);
-	font-family: var(--rh-font-mono);
+	background: var(--cvsm-surface);
+	border: 1px solid var(--cvsm-hair);
+	font-family: var(--cvsm-font-mono);
 }
 
 /* ------------------------------------------------------------ footer: pagination */
 .pagination-links a {
 	border-radius: 0;
-	border-color: var(--rh-hair-2);
+	border-color: var(--cvsm-hair-2);
 	box-shadow: none;
-	color: var(--rh-muted);
-	font-family: var(--rh-font-mono);
+	color: var(--cvsm-muted);
+	font-family: var(--cvsm-font-mono);
 	font-size: 0.6875rem;
-	letter-spacing: var(--rh-track-caps);
-	text-transform: var(--rh-caps);
-	transition: border-color 150ms var(--rh-ease);
+	letter-spacing: var(--cvsm-track-caps);
+	text-transform: var(--cvsm-caps);
+	transition: border-color 150ms var(--cvsm-ease);
 }
 .pagination-links a:hover {
-	border-color: var(--rh-text);
+	border-color: var(--cvsm-text);
 }
 .pagination-links .link-title {
-	font-family: var(--rh-font-sans);
+	font-family: var(--cvsm-font-sans);
 	text-transform: none;
 	letter-spacing: -0.015em;
 	font-size: 1.25rem;
 	font-weight: 500;
-	color: var(--rh-text);
+	color: var(--cvsm-text);
 }
 
 /* ------------------------------------------------------------ search dialog */
 site-search dialog {
 	border-radius: 0;
-	border-color: var(--rh-hair-2);
-	background: var(--rh-bg);
+	border-color: var(--cvsm-hair-2);
+	background: var(--cvsm-bg);
 }
 #starlight__search {
-	--pagefind-ui-primary: var(--rh-text);
-	--pagefind-ui-text: var(--rh-soft);
-	--pagefind-ui-background: var(--rh-bg);
-	--pagefind-ui-border: var(--rh-hair-2);
-	--pagefind-ui-tag: var(--rh-surface);
+	--pagefind-ui-primary: var(--cvsm-text);
+	--pagefind-ui-text: var(--cvsm-soft);
+	--pagefind-ui-background: var(--cvsm-bg);
+	--pagefind-ui-border: var(--cvsm-hair-2);
+	--pagefind-ui-tag: var(--cvsm-surface);
 	--pagefind-ui-border-radius: 0;
-	--pagefind-ui-font: var(--rh-font-sans);
+	--pagefind-ui-font: var(--cvsm-font-sans);
 }
 #starlight__search mark {
-	background: var(--rh-select);
-	color: var(--rh-text);
+	background: var(--cvsm-select);
+	color: var(--cvsm-text);
 }
 
 /* Chinese table cells may break between any two characters; keep short phrases (创建时, 启动前) whole. */

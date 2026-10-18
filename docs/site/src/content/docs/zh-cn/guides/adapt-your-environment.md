@@ -1,11 +1,11 @@
 ---
 title: 适配你的环境
-description: 通过自己的 issue，把 rh 适配到你的集群、调度器、存储和跟踪后端，同时守住 skill 依赖的接口。
+description: 通过自己的 issue，把 CVSM 适配到你的集群、调度器、存储和跟踪后端，同时守住 skill 依赖的接口。
 sidebar:
   order: 4
 ---
 
-rh 只带一个单机的运行参考实现，不带集群、调度器、存储或跟踪服务的适配器。每个接入方通过自己的 issue 适配自己的环境：换的是实现，不改 skill、guard、`merge.py` 和结果评论所依赖的形状。
+CVSM 只带一个单机的运行参考实现，不带集群、调度器、存储或跟踪服务的适配器。每个接入方通过自己的 issue 适配自己的环境：换的是实现，不改 skill、guard、`merge.py` 和结果评论所依赖的形状。
 
 ## 哪些由你决定
 
@@ -23,18 +23,18 @@ rh 只带一个单机的运行参考实现，不带集群、调度器、存储�
 
 ## 哪些保持不变
 
-这些形状要守住，完整列表见[保持不变的接口](/research-harness/zh-cn/reference/interfaces/)。
+这些形状要守住，完整列表见[保持不变的接口](/cvsm/zh-cn/reference/interfaces/)。
 
 - Run 命令：`<run> --issue N [options] -- <cmd>`。
 - 结果命令：`<results> --issue N [N ...] [--metric M ...] [--spec FILE]`，FILE 为 `-` 时从标准输入读。
-- 运行记录：每次运行是一个 MLflow run，带 `run.py` 写的 `rh.*` 和 `cfg.*` 参数、产物和最终状态。
+- 运行记录：每次运行是一个 MLflow run，带 `run.py` 写的 `cvsm.*` 和 `cfg.*` 参数、产物和最终状态。
 - 结果评论，最后是 `规格核对` 一节。
 - issue 表单的 `### ` 标题、PR 模板、审查评论，以及 `merge.py` 的规则。
 
 ## 怎么适配
 
 1. **为改动开一个 `code` issue。** 适配就是 `plan` 父 issue 下的普通工作：讨论、发布（关口 01），再交给 agent 实现。改受保护路径，需要 Scope 明确列出它，并由人合并。
-2. **只换接口背后的实现。** 例如提交到 SLURM 的 Run 命令，仍然接受 `--issue N [options] -- <cmd>`，仍然建一个带同样 `rh.*` 参数的 MLflow run，仍然把 `$RUN_DIR/config.json` 记成 `cfg.*` 参数。这样 `run` skill 和结果命令不用改就能用。
+2. **只换接口背后的实现。** 例如提交到 SLURM 的 Run 命令，仍然接受 `--issue N [options] -- <cmd>`，仍然建一个带同样 `cvsm.*` 参数的 MLflow run，仍然把 `$RUN_DIR/config.json` 记成 `cfg.*` 参数。这样 `run` skill 和结果命令不用改就能用。
 3. **更新 `AGENTS.md` Project 一节的 `Run` 和 `Run records` 两行**，写成新的命令和后端。skill 调用的就是那里写的命令。
 
 :::tip
@@ -49,7 +49,7 @@ Runs 行可以在 `--` 前带 Run 命令的选项，例如 `--gpus 4 -- python t
 
 ### 几个用户共用一台机器
 
-`run.py` 通过 `<lock_dir>/<host>/` 下的锁文件租用 GPU。`lock_dir` 默认是系统临时目录下的 `rh-gpu-locks`，只有共用 `TMPDIR` 的用户才能互相看见。`TMPDIR` 按用户区分时，把 `scripts/run.toml` 的 `lock_dir` 设成他们都能写的同一个本机目录。
+`run.py` 通过 `<lock_dir>/<host>/` 下的锁文件租用 GPU。`lock_dir` 默认是系统临时目录下的 `cvsm-gpu-locks`，只有共用 `TMPDIR` 的用户才能互相看见。`TMPDIR` 按用户区分时，把 `scripts/run.toml` 的 `lock_dir` 设成他们都能写的同一个本机目录。
 
 ### 在新 worktree 里运行
 
@@ -65,8 +65,8 @@ CI 的 runner 没有 GPU。锁文件固定了 CUDA 版 torch 时，在 `test.yml
 
 ## 相关页面
 
-- [接入 rh](/research-harness/zh-cn/guides/adopt/)
-- [保持不变的接口](/research-harness/zh-cn/reference/interfaces/)
-- [run.py 参考](/research-harness/zh-cn/reference/run-py/)
-- [results.py 参考](/research-harness/zh-cn/reference/results-py/)
-- [原则](/research-harness/zh-cn/concepts/principles/)
+- [接入 CVSM](/cvsm/zh-cn/guides/adopt/)
+- [保持不变的接口](/cvsm/zh-cn/reference/interfaces/)
+- [run.py 参考](/cvsm/zh-cn/reference/run-py/)
+- [results.py 参考](/cvsm/zh-cn/reference/results-py/)
+- [原则](/cvsm/zh-cn/concepts/principles/)

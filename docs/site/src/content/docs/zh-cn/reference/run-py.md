@@ -5,9 +5,9 @@ sidebar:
   order: 6
 ---
 
-`scripts/run.py` 运行一条命令，把它记成一个 MLflow run，带上出处、解析后的配置、输出、产物和指标。它是单机参考实现：项目可以替换它，只要替换后的实现守住 [Run 命令和运行记录的接口](/research-harness/zh-cn/reference/interfaces/)。
+`scripts/run.py` 运行一条命令，把它记成一个 MLflow run，带上出处、解析后的配置、输出、产物和指标。它是单机参考实现：项目可以替换它，只要替换后的实现守住 [Run 命令和运行记录的接口](/cvsm/zh-cn/reference/interfaces/)。
 
-源文件：[`scripts/run.py`](https://github.com/doem97/research-harness/blob/main/scripts/run.py)。记录的字段以它开头的模块说明为准。
+源文件：[`scripts/run.py`](https://github.com/doem97/cvsm/blob/main/scripts/run.py)。记录的字段以它开头的模块说明为准。
 
 ## 用法
 
@@ -17,7 +17,7 @@ python scripts/run.py [--issue N] [--gpus K] [--config scripts/run.toml] -- <cmd
 
 | 选项 | 默认 | 含义 |
 |---|---|---|
-| `--issue N` | 无 | 所属的 run issue，记成 `rh.issue`。`run` skill 总会传它。 |
+| `--issue N` | 无 | 所属的 run issue，记成 `cvsm.issue`。`run` skill 总会传它。 |
 | `--gpus K` | 配了 `gpus` 时为 1，否则为 0 | 要租用的 GPU 数，必须在 0 到已配置的 GPU 数之间。 |
 | `--config FILE` | `scripts/run.toml` | 配置文件。 |
 | `-- <cmd...>` | 必填 | 要运行的命令，原样不动。`--` 之后的全部属于它。 |
@@ -28,9 +28,9 @@ python scripts/run.py [--issue N] [--gpus K] [--config scripts/run.toml] -- <cmd
 
 | 键 | 模板里的值 | 缺省时 | 含义 |
 |---|---|---|---|
-| `experiment` | `"research-harness"` | `"Default"` | MLflow 实验；`MLFLOW_EXPERIMENT_NAME` 优先。不存在时自动创建。 |
-| `env_lock` | `["uv.lock"]` | `[]` | 哈希进 `rh.env_lock_sha` 的锁文件；缺失的列进 `rh.env_lock_missing`。 |
-| `data_manifest` | `""` | `""` | 哈希进 `rh.data_manifest_sha` 的被跟踪数据清单；空表示没有。 |
+| `experiment` | `"cvsm"` | `"Default"` | MLflow 实验；`MLFLOW_EXPERIMENT_NAME` 优先。不存在时自动创建。 |
+| `env_lock` | `["uv.lock"]` | `[]` | 哈希进 `cvsm.env_lock_sha` 的锁文件；缺失的列进 `cvsm.env_lock_missing`。 |
+| `data_manifest` | `""` | `""` | 哈希进 `cvsm.data_manifest_sha` 的被跟踪数据清单；空表示没有。 |
 | `seed_key` | `"seed"` | `"seed"` | 匹配命令里的 `seed=N`、`--seed=N` 或 `--seed N`。 |
 | `gpus` | `[]` | `[]` | 可租用的 GPU 编号；空表示不租用。 |
 | `lock_dir` | `""` | `""` | GPU 锁文件放在 `<lock_dir>/<host>/`；空表示系统临时目录。 |
@@ -39,12 +39,12 @@ python scripts/run.py [--issue N] [--gpus K] [--config scripts/run.toml] -- <cmd
 
 ## 执行过程
 
-1. **建记录。** 连上存储，创建 run，记下 `rh.issue`、`rh.command`、`rh.seed` 和 `rh.host`。后端连不上时，什么都不启动。
+1. **建记录。** 连上存储，创建 run，记下 `cvsm.issue`、`cvsm.command`、`cvsm.seed` 和 `cvsm.host`。后端连不上时，什么都不启动。
 2. **租 GPU。** K > 0 时，等到有 K 个 GPU 锁空闲。run 已经建好，所以等待中的 run 显示为 `RUNNING`。
-3. **记下代码状态**，在启动前、等完 GPU 之后：记 `rh.commit`、`rh.dirty`、`rh.env_lock_sha`、`rh.env_lock_missing`、`rh.data_manifest_sha`、`rh.gpus` 和 tag `mlflow.source.git.commit`。工作区不干净时，另存产物 `diff.patch` 和 `untracked.txt`。
+3. **记下代码状态**，在启动前、等完 GPU 之后：记 `cvsm.commit`、`cvsm.dirty`、`cvsm.env_lock_sha`、`cvsm.env_lock_missing`、`cvsm.data_manifest_sha`、`cvsm.gpus` 和 tag `mlflow.source.git.commit`。工作区不干净时，另存产物 `diff.patch` 和 `untracked.txt`。
 4. **启动**命令，输出写到 `$RUN_DIR/log.txt`。
 5. **记配置。** 命令运行期间每 0.5 秒找一次 `$RUN_DIR/config.json`，一能解析成 JSON 对象就记一次。
-6. **收尾。** 还没记配置就补记，上传指标和 `$RUN_DIR`，记 `rh.exit_code`，设最终状态。
+6. **收尾。** 还没记配置就补记，上传指标和 `$RUN_DIR`，记 `cvsm.exit_code`，设最终状态。
 
 ## 存储
 
@@ -68,21 +68,21 @@ tracking URI 会传给命令，但从不打印，因为里面可能带凭据。
 
 ## 参数
 
-`rh.*` 参数写入后不能改。没有的值写空字符串，布尔值写 `true` 或 `false`，列表用逗号连接。
+`cvsm.*` 参数写入后不能改。没有的值写空字符串，布尔值写 `true` 或 `false`，列表用逗号连接。
 
 | 参数 | 何时写 | 值 |
 |---|---|---|
-| `rh.issue` | 创建时 | `--issue` |
-| `rh.command` | 创建时 | 命令，按 shell 规则拼接 |
-| `rh.seed` | 创建时 | 按 `seed_key` 找到的 seed |
-| `rh.host` | 创建时 | 主机名 |
-| `rh.commit` | 启动前 | `git rev-parse HEAD` |
-| `rh.dirty` | 启动前 | `git status` 是否有改动或未跟踪文件 |
-| `rh.env_lock_sha` | 启动前 | 存在的 `env_lock` 文件按路径排序后的 sha256 |
-| `rh.env_lock_missing` | 启动前 | 没找到的 `env_lock` 文件 |
-| `rh.data_manifest_sha` | 启动前 | `data_manifest` 的 sha256 |
-| `rh.gpus` | 启动前 | 租到的 GPU 编号 |
-| `rh.exit_code` | 结束时 | 命令的退出码；被信号 S 停止时为 `-S` |
+| `cvsm.issue` | 创建时 | `--issue` |
+| `cvsm.command` | 创建时 | 命令，按 shell 规则拼接 |
+| `cvsm.seed` | 创建时 | 按 `seed_key` 找到的 seed |
+| `cvsm.host` | 创建时 | 主机名 |
+| `cvsm.commit` | 启动前 | `git rev-parse HEAD` |
+| `cvsm.dirty` | 启动前 | `git status` 是否有改动或未跟踪文件 |
+| `cvsm.env_lock_sha` | 启动前 | 存在的 `env_lock` 文件按路径排序后的 sha256 |
+| `cvsm.env_lock_missing` | 启动前 | 没找到的 `env_lock` 文件 |
+| `cvsm.data_manifest_sha` | 启动前 | `data_manifest` 的 sha256 |
+| `cvsm.gpus` | 启动前 | 租到的 GPU 编号 |
+| `cvsm.exit_code` | 结束时 | 命令的退出码；被信号 S 停止时为 `-S` |
 
 `cfg.*` 参数来自 `$RUN_DIR/config.json`，即命令启动时由一个进程（例如 rank 0）写下的解析后配置：
 
@@ -114,7 +114,7 @@ run.py 的退出码就是命令自己的；命令被信号 S 停止时为 128 + 
 
 ## GPU 锁
 
-- 锁文件是 `<lock_dir>/<host>/gpu<i>.lock`，用 `flock` 持有。`lock_dir` 默认是系统临时目录下的 `rh-gpu-locks`。
+- 锁文件是 `<lock_dir>/<host>/gpu<i>.lock`，用 `flock` 持有。`lock_dir` 默认是系统临时目录下的 `cvsm-gpu-locks`。
 - run.py 尝试同时持有 K 个已配置的 GPU；拿不齐就全部释放，打印 `run.py: waiting for K free GPU(s) of [...]`，每 30 秒重试一次。
 - 命令继承这些锁，所以租约和命令一样长，即使 run.py 自己被杀掉也一样。
 - 默认目录只有共用 `TMPDIR` 的用户才能共享。`TMPDIR` 按用户区分时，把 `lock_dir` 设成大家都能写的目录。run.py 在那里新建的按主机子目录会设成可共享（sticky、所有人可写）；已经存在的目录保持原有权限。
@@ -131,8 +131,8 @@ run.py 的退出码就是命令自己的；命令被信号 S 停止时为 128 + 
 
 ## 相关页面
 
-- [运行记录](/research-harness/zh-cn/concepts/run-records/)
-- [results.py](/research-harness/zh-cn/reference/results-py/)
-- [保持不变的接口](/research-harness/zh-cn/reference/interfaces/#运行记录)
-- [运行实验](/research-harness/zh-cn/guides/run-experiments/)
-- [适配你的环境](/research-harness/zh-cn/guides/adapt-your-environment/)
+- [运行记录](/cvsm/zh-cn/concepts/run-records/)
+- [results.py](/cvsm/zh-cn/reference/results-py/)
+- [保持不变的接口](/cvsm/zh-cn/reference/interfaces/#运行记录)
+- [运行实验](/cvsm/zh-cn/guides/run-experiments/)
+- [适配你的环境](/cvsm/zh-cn/guides/adapt-your-environment/)

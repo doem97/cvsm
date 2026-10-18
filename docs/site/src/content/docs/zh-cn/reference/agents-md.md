@@ -7,7 +7,7 @@ sidebar:
 
 `AGENTS.md` 用最多 80 行装下 agent 的全部规则。前八节在每个项目里都一样；最后的 Project 一节由各接入方填写自己的值。
 
-源文件：[`AGENTS.md`](https://github.com/doem97/research-harness/blob/main/AGENTS.md)。
+源文件：[`AGENTS.md`](https://github.com/doem97/cvsm/blob/main/AGENTS.md)。
 
 ## 形状
 
@@ -97,27 +97,27 @@ agent 怎么判断当前状态。每条指令开始时都从 GitHub 读状态，
 
 ## Skills
 
-skill 放在 `.agents/skills/<name>/SKILL.md`，每个角色一个：`plan`、`implement`、`review`、`run`。见 [skill](/research-harness/zh-cn/reference/skills/)。
+skill 放在 `.agents/skills/<name>/SKILL.md`，每个角色一个：`plan`、`implement`、`review`、`run`。见 [skill](/cvsm/zh-cn/reference/skills/)。
 
 ## Project
 
-接入方唯一要改的一节，每个字段一行。表中附 rh 自己的值作参考。
+接入方唯一要改的一节，每个字段一行。表中附 CVSM 自己的值作参考。
 
-| 字段 | 含义 | rh 自己的值 |
+| 字段 | 含义 | CVSM 自己的值 |
 |---|---|---|
-| `Layout` | 代码目录怎么分，共享代码和方法模块各在哪里 | 仓库就是模板本身；没有 `src/`；`scripts/` 放运行和结果的参考脚本 |
+| `Layout` | 代码目录怎么分，共享代码和方法模块各在哪里 | 就是本仓库；没有 `src/`；`scripts/` 放运行和结果的参考脚本 |
 | `Test` | 测试命令，和 CI 里跑的一致 | `python -m pytest -q` |
 | `Language` | 面向人的文字用什么语言 | 见下文 |
 | `Protected eval/data paths` | 不许 agent 随意改的评测和数据路径，与 `guard.toml` 的 `protected` 一致 | 无 |
 | `Run` | Run 命令和结果评论命令 | `python scripts/run.py --issue N -- <cmd>`；`python scripts/results.py --issue N` |
 | `Run records` | 运行记录写到哪个 MLflow 后端 | `MLFLOW_TRACKING_URI` 指定的后端；不设时用主 clone 根目录下的 `mlflow.db`；实验在 `scripts/run.toml` 里设 |
 
-rh 的 `Language` 一行：`README.md` 用英文，中文版在 `docs/README.zh-CN.md`，两者保持同步。其他面向人的文字用中文：PR 正文、issue 和 PR 评论、汇报、表单说明、结果评论。审查评论例外，Verdict 行下面保留审查工具的原文。给 agent 的指令（`AGENTS.md`、skill）、代码、PR 标题和格式关键字（`Closes`、`Decision:`、`Blocked:`、`Verdict:` 等）用英文。接入方在这一行设自己的语言。
+CVSM 的 `Language` 一行：`README.md` 用英文，中文版在 `docs/README.zh-CN.md`，两者保持同步。其他面向人的文字用中文：PR 正文、issue 和 PR 评论、汇报、表单说明、结果评论。审查评论例外，Verdict 行下面保留审查工具的原文。给 agent 的指令（`AGENTS.md`、skill）、代码、PR 标题和格式关键字（`Closes`、`Decision:`、`Blocked:`、`Verdict:` 等）用英文。接入方在这一行设自己的语言。
 
 ## 相关页面
 
-- [关口与卡点](/research-harness/zh-cn/concepts/gates-and-blockers/)
-- [状态](/research-harness/zh-cn/concepts/state/)
-- [skill](/research-harness/zh-cn/reference/skills/)
-- [guard](/research-harness/zh-cn/reference/guard/)
-- [接入 rh](/research-harness/zh-cn/guides/adopt/)
+- [关口与卡点](/cvsm/zh-cn/concepts/gates-and-blockers/)
+- [状态](/cvsm/zh-cn/concepts/state/)
+- [skill](/cvsm/zh-cn/reference/skills/)
+- [guard](/cvsm/zh-cn/reference/guard/)
+- [接入 CVSM](/cvsm/zh-cn/guides/adopt/)

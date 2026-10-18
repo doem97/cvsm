@@ -5,16 +5,16 @@ sidebar:
   order: 5
 ---
 
-Each run is one MLflow run that records where it came from, the config it actually resolved, and its outputs. Results comments are generated from these records, so what you read about a run is what the run recorded, not what an agent wrote.
+Each run is one MLflow run that records where it came from, the config it actually resolved, and its outputs. Results comments are generated from these records, so what you read about a run is what the run recorded.
 
 ## What a record holds
 
 The reference Run command, `scripts/run.py`, creates the record before launching the command. Its docstring is the reference for every field.
 
-- **`rh.*` params**, which MLflow never lets change once written:
-  - at creation: `rh.issue`, `rh.command`, `rh.seed`, `rh.host`;
-  - right before launch: `rh.commit`, `rh.dirty`, `rh.env_lock_sha`, `rh.env_lock_missing`, `rh.data_manifest_sha`, `rh.gpus`;
-  - at the end: `rh.exit_code`.
+- **`cvsm.*` params**, which MLflow never lets change once written:
+  - at creation: `cvsm.issue`, `cvsm.command`, `cvsm.seed`, `cvsm.host`;
+  - right before launch: `cvsm.commit`, `cvsm.dirty`, `cvsm.env_lock_sha`, `cvsm.env_lock_missing`, `cvsm.data_manifest_sha`, `cvsm.gpus`;
+  - at the end: `cvsm.exit_code`.
 - **`cfg.*` params**: the resolved config the command writes to `$RUN_DIR/config.json`, flattened to dotted keys such as `cfg.optim.lr`. They are logged once, as soon as the file parses as a JSON object, so a running run can already be checked against its spec.
 - **Artifacts**: `log.txt` (the command's output), every file the command writes to `$RUN_DIR` including `config.json`, and `diff.patch` and `untracked.txt` when the tree is dirty.
 - **Metrics**: a flat `{name: number}` in `$RUN_DIR/metrics.json`, or MLflow's standard API, which `MLFLOW_RUN_ID` attaches to the same run.
@@ -58,7 +58,7 @@ The table groups runs by command with the seed removed. Each group shows:
 - the commit, environment lock and data fingerprints;
 - with a spec, the arm the group belongs to.
 
-It flags commits, environments or data that differ across the selected runs (with `git diff --stat` when commits differ), successful runs without metrics, unfinished runs and deleted runs. A `规格核对` (spec check) section follows; see [The study spec](/research-harness/concepts/study-spec/).
+It flags commits, environments or data that differ across the selected runs (with `git diff --stat` when commits differ), successful runs without metrics, unfinished runs and deleted runs. A `规格核对` (spec check) section follows; see [The study spec](/cvsm/concepts/study-spec/).
 
 When all run issues of a study are closed, the agent posts the same table and spec check over all of them on the study itself: the study table.
 
@@ -68,7 +68,7 @@ The results comment states facts. Whether runs are still comparable, and whether
 
 ## Related
 
-- [The study spec](/research-harness/concepts/study-spec/)
-- [Run experiments](/research-harness/guides/run-experiments/)
-- [run.py](/research-harness/reference/run-py/)
-- [results.py](/research-harness/reference/results-py/)
+- [The study spec](/cvsm/concepts/study-spec/)
+- [Run experiments](/cvsm/guides/run-experiments/)
+- [run.py](/cvsm/reference/run-py/)
+- [results.py](/cvsm/reference/results-py/)

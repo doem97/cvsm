@@ -1,13 +1,13 @@
 ---
 title: 快速上手
-description: 从接入 rh 到把第一个研究推到下结论的最短路径。
+description: 从接入 CVSM 到把第一个研究推到下结论的最短路径。
 sidebar:
   order: 2
 ---
 
 import { Aside, Steps } from '@astrojs/starlight/components';
 
-这一页是最短的上手路径：把 rh 复制进仓库、打开它，再带一个研究走完四个关口。每一步都可以交给会话里的 agent 去做；你只需要拍板，并在需要时提供管理员账号。
+这一页是最短的上手路径：把 CVSM 复制进仓库、打开它，再带一个研究走完四个关口。每一步都可以交给会话里的 agent 去做；你只需要拍板，并在需要时提供管理员账号。
 
 ## 开始之前
 
@@ -20,17 +20,17 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 私有仓库的分支保护需要 GitHub 付费套餐（例如 Pro 或 Team），公开仓库不需要。
 </Aside>
 
-## 接入 rh
+## 接入 CVSM
 
 <Steps>
 
-1. **复制模板文件。** 只复制被跟踪的文件，这样未跟踪的本地文件不会带过去，`.claude/skills` 软链也会保留：
+1. **复制 CVSM 的文件。** 只复制被跟踪的文件，这样未跟踪的本地文件不会带过去，`.claude/skills` 软链也会保留：
 
    ```sh
-   git -C <rh clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts tests ':!.github/workflows/pages.yml' | tar -x -C <你的仓库>
+   git -C <cvsm clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts tests ':!.github/workflows/pages.yml' | tar -x -C <你的仓库>
    ```
 
-   `pages.yml` 构建的是 rh 自己的文档站，所以不复制。再把 rh 的 `.gitignore` 几行并进你的，并在接入提交的信息里记下复制自 rh 的哪个 commit（`git -C <rh clone> rev-parse HEAD`）。
+   `pages.yml` 构建的是 CVSM 自己的文档站，所以不复制。再把 CVSM 的 `.gitignore` 几行并进你的，并在接入提交的信息里记下复制自 CVSM 的哪个 commit（`git -C <cvsm clone> rev-parse HEAD`）。
 
 2. **改三处。** 在 `.github/guard.toml` 里，`layout` 加上你的目录和根目录文件，`protected` 加上评测和数据路径。在 `scripts/run.toml` 里设好 `experiment`、`env_lock` 和 `gpus`。让训练代码在启动时把解析后的完整配置写成 JSON，存到 `$RUN_DIR/config.json`，只由一个进程写。
 
@@ -50,7 +50,7 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 </Steps>
 
-每一步的细节和坑，见[接入 rh](/research-harness/zh-cn/guides/adopt/)和[适配自己的环境](/research-harness/zh-cn/guides/adapt-your-environment/)。
+每一步的细节和坑，见[接入 CVSM](/cvsm/zh-cn/guides/adopt/)和[适配自己的环境](/cvsm/zh-cn/guides/adapt-your-environment/)。
 
 ## 跑第一个研究
 
@@ -76,7 +76,7 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 ## 相关页面
 
-- [说话，不点页面](/research-harness/zh-cn/start/talk-dont-click/)
-- [计划一个研究](/research-harness/zh-cn/guides/plan-a-study/)
-- [跑实验](/research-harness/zh-cn/guides/run-experiments/)
-- [关口与卡点](/research-harness/zh-cn/concepts/gates-and-blockers/)
+- [在会话里工作](/cvsm/zh-cn/start/talk-dont-click/)
+- [计划一个研究](/cvsm/zh-cn/guides/plan-a-study/)
+- [跑实验](/cvsm/zh-cn/guides/run-experiments/)
+- [关口与卡点](/cvsm/zh-cn/concepts/gates-and-blockers/)

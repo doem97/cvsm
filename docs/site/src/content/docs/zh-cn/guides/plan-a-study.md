@@ -37,7 +37,7 @@ agent 和你一直讨论到草稿完整：问题是什么、什么样的结果�
 键是 run 解析后配置（`config.json`）的点号键，由 agent 从代码里取名。代码还不能通过配置设置的项，需要一个 `code` 子 issue。
 
 :::note
-每个 run 都会按它自己的记录对照这份规格核对。为什么你批准的是这一层，见[研究规格](/research-harness/zh-cn/concepts/study-spec/)；各行的确切格式见 [issue 表单](/research-harness/zh-cn/reference/issue-forms/#study)。
+每个 run 都会按它自己的记录对照这份规格核对。为什么你批准的是这一层，见[研究规格](/cvsm/zh-cn/concepts/study-spec/)；各行的确切格式见 [issue 表单](/cvsm/zh-cn/reference/issue-forms/#study)。
 :::
 
 一份规格示例：
@@ -48,16 +48,16 @@ full: model.adapter=none
 lora: model.adapter=lora model.lora.rank=8
 
 ### Controlled
-data.split=val  # held-out split from data.sha256
-model.backbone=vit_b16  # paper X, Table 2
-optim.lr=3e-4  # paper X, Table 2
-train.epochs=30  # paper X, Table 2
-train.effective_batch=256  # paper X, Table 2
-seed in 1,2,3  # three seeds, as in paper X
+data.split=val  # 留出的划分，来自 data.sha256
+model.backbone=vit_b16  # 论文 X 表 2
+optim.lr=3e-4  # 论文 X 表 2
+train.epochs=30  # 论文 X 表 2
+train.effective_batch=256  # 论文 X 表 2
+seed in 1,2,3  # 同论文 X，用 3 个 seed
 
 ### Adaptable
-train.per_device_batch  # fit to GPU memory; effective batch stays 256
-train.accum  # follows per_device_batch
+train.per_device_batch  # 按显存调整，有效 batch 固定为 256
+train.accum  # 跟随 per_device_batch
 ```
 
 ## 3. 审阅 issue 草稿
@@ -93,8 +93,8 @@ Wave 2: C run <title>  blocked by A, B
 
 ## 相关页面
 
-- [研究规格](/research-harness/zh-cn/concepts/study-spec/)
-- [关口与卡点](/research-harness/zh-cn/concepts/gates-and-blockers/)
-- [运行实验](/research-harness/zh-cn/guides/run-experiments/)
-- [issue 表单](/research-harness/zh-cn/reference/issue-forms/)
-- [skill：plan](/research-harness/zh-cn/reference/skills/#plan)
+- [研究规格](/cvsm/zh-cn/concepts/study-spec/)
+- [关口与卡点](/cvsm/zh-cn/concepts/gates-and-blockers/)
+- [运行实验](/cvsm/zh-cn/guides/run-experiments/)
+- [issue 表单](/cvsm/zh-cn/reference/issue-forms/)
+- [skill：plan](/cvsm/zh-cn/reference/skills/#plan)

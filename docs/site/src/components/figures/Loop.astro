@@ -1,6 +1,6 @@
 ---
 /**
- * The rh loop: HUMAN, AGENTS and RECORD lanes across PLAN … ANALYZE.
+ * The CVSM loop: HUMAN, AGENTS and RECORD lanes across PLAN … ANALYZE.
  * Hovering, focusing or pressing a gate (or the blocker) highlights its phase and shows when it
  * applies, what you say and what gets recorded. Lays itself out by container width: six columns
  * when there is room, one phase per row when there is not.
@@ -18,7 +18,7 @@ const uid = `loop-${lang}`;
 const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 ---
 
-<figure class="rh-loop not-content" data-loop data-active="g1">
+<figure class="cvsm-loop not-content" data-loop data-active="g1">
 	<div class="grid" role="group" aria-label={s.aside}>
 		<div class="lane-label" style="grid-row: 2">
 			<b>{s.lanes[0].name}</b><span>{s.lanes[0].note}</span>
@@ -150,12 +150,12 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 </script>
 
 <style>
-	.rh-loop {
+	.cvsm-loop {
 		container-type: inline-size;
 		margin: 2rem 0;
-		color: var(--rh-text);
-		font-family: var(--rh-font-sans);
-		--mono: var(--rh-font-mono);
+		color: var(--cvsm-text);
+		font-family: var(--cvsm-font-sans);
+		--mono: var(--cvsm-font-mono);
 		--cap: 0.6875rem;
 	}
 	.grid {
@@ -163,7 +163,7 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		grid-template-columns: repeat(6, minmax(0, 1fr));
 		grid-template-rows: auto auto auto auto auto auto auto auto;
 		column-gap: clamp(10px, 1.6cqi, 24px);
-		border-top: 1px solid var(--rh-hair-2);
+		border-top: 1px solid var(--cvsm-hair-2);
 		position: relative;
 	}
 	.lane-label {
@@ -172,18 +172,18 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		gap: 0.9rem;
 		align-items: baseline;
 		padding: 1.1rem 0 0.75rem;
-		border-top: 1px solid var(--rh-hair);
+		border-top: 1px solid var(--cvsm-hair);
 		font-family: var(--mono);
 		font-size: var(--cap);
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
 		z-index: 1;
 	}
 	.lane-label b {
 		font-weight: 500;
 	}
 	.lane-label span {
-		color: var(--rh-muted);
+		color: var(--cvsm-muted);
 	}
 	.phase {
 		display: contents;
@@ -197,12 +197,12 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		padding: 0.9rem 0 0.8rem;
 		font-family: var(--mono);
 		font-size: var(--cap);
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		transition: color 160ms var(--rh-ease);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		transition: color 160ms var(--cvsm-ease);
 	}
 	.phase__num {
-		color: var(--rh-muted);
+		color: var(--cvsm-muted);
 		margin-inline-end: 0.35em;
 	}
 	.cell {
@@ -225,9 +225,9 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 	.wash {
 		grid-row: 1 / 9;
 		margin-inline: calc(-0.5 * clamp(10px, 1.6cqi, 24px));
-		background: var(--rh-accent-wash);
+		background: var(--cvsm-accent-wash);
 		opacity: 0;
-		transition: opacity 200ms var(--rh-ease);
+		transition: opacity 200ms var(--cvsm-ease);
 		pointer-events: none;
 	}
 	.lane-tag {
@@ -248,28 +248,28 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		padding: 0.2rem 0;
 	}
 	.stop:focus-visible {
-		outline: 2px solid var(--rh-accent);
+		outline: 2px solid var(--cvsm-accent);
 		outline-offset: 4px;
 	}
 	.stop__mark {
 		width: 10px;
 		height: 10px;
 		margin-top: 0.2rem;
-		background: var(--rh-accent);
-		transition: transform 200ms var(--rh-ease);
+		background: var(--cvsm-accent);
+		transition: transform 200ms var(--cvsm-ease);
 	}
 	.stop--blocker .stop__mark,
 	.mark--blocker {
 		background: transparent;
-		border: 2px solid var(--rh-accent);
+		border: 2px solid var(--cvsm-accent);
 		border-radius: 50%;
 	}
 	.stop__name {
 		font-family: var(--mono);
 		font-size: var(--cap);
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		color: var(--rh-accent-ink);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		color: var(--cvsm-accent-ink);
 		font-weight: 500;
 	}
 	.stop__num {
@@ -279,7 +279,7 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		grid-column: 1 / -1;
 		font-size: clamp(0.95rem, 0.6rem + 1.1cqi, 1.25rem);
 		letter-spacing: -0.01em;
-		color: var(--rh-text);
+		color: var(--cvsm-text);
 		line-height: 1.25;
 	}
 	.cell__empty {
@@ -293,14 +293,14 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		gap: 0.3rem;
 		min-height: 5.25rem;
 		padding: 0.85rem 0.8rem;
-		background: var(--rh-surface);
-		border: 1px solid var(--rh-hair-2);
+		background: var(--cvsm-surface);
+		border: 1px solid var(--cvsm-hair-2);
 		position: relative;
-		transition: border-color 200ms var(--rh-ease);
+		transition: border-color 200ms var(--cvsm-ease);
 	}
 	.card--fresh {
 		border-style: dashed;
-		border-color: color-mix(in srgb, var(--rh-text) 55%, transparent);
+		border-color: color-mix(in srgb, var(--cvsm-text) 55%, transparent);
 	}
 	.card__title {
 		font-size: clamp(0.95rem, 0.55rem + 1.2cqi, 1.3rem);
@@ -315,7 +315,7 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 	}
 	.card__sub {
 		font-size: clamp(0.78rem, 0.6rem + 0.5cqi, 0.95rem);
-		color: var(--rh-muted);
+		color: var(--cvsm-muted);
 		line-height: 1.3;
 	}
 	.arrow {
@@ -324,7 +324,7 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		right: calc(-1 * clamp(10px, 1.6cqi, 24px));
 		width: clamp(10px, 1.6cqi, 24px);
 		height: 1px;
-		background: var(--rh-text);
+		background: var(--cvsm-text);
 	}
 	.arrow::after {
 		content: '';
@@ -333,8 +333,8 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		top: -3px;
 		width: 6px;
 		height: 6px;
-		border-top: 1.5px solid var(--rh-text);
-		border-right: 1.5px solid var(--rh-text);
+		border-top: 1.5px solid var(--cvsm-text);
+		border-right: 1.5px solid var(--cvsm-text);
 		transform: rotate(45deg);
 	}
 	/* The review loop: changes go back to implement. */
@@ -344,7 +344,7 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		right: 50%;
 		bottom: 0.9rem;
 		height: 1.2rem;
-		border: 1.5px solid var(--rh-text);
+		border: 1.5px solid var(--cvsm-text);
 		border-top: 0;
 		display: flex;
 		justify-content: center;
@@ -355,19 +355,19 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		left: -4.5px;
 		top: -2px;
 		border: 4px solid transparent;
-		border-bottom: 6px solid var(--rh-text);
+		border-bottom: 6px solid var(--cvsm-text);
 		border-top: 0;
 	}
 	.changes span {
 		position: relative;
 		top: 0.7rem;
 		padding: 0 0.5rem;
-		background: var(--rh-bg);
+		background: var(--cvsm-bg);
 		font-family: var(--mono);
 		font-size: 0.625rem;
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		color: var(--rh-muted);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		color: var(--cvsm-muted);
 		line-height: 1;
 	}
 
@@ -379,14 +379,14 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		margin: 0 0 0.6rem;
 		font-family: var(--mono);
 		font-size: var(--cap);
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		color: var(--rh-muted);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		color: var(--cvsm-muted);
 	}
 	.rec__box {
 		width: 8px;
 		height: 8px;
-		border: 1.5px solid var(--rh-text);
+		border: 1.5px solid var(--cvsm-text);
 		flex: none;
 	}
 	.rec__lines {
@@ -396,14 +396,14 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		font-family: var(--mono);
 		font-size: clamp(0.7rem, 0.5rem + 0.55cqi, 0.8125rem);
 		line-height: 1.7;
-		color: var(--rh-text);
+		color: var(--cvsm-text);
 	}
 	.rec__lines li {
 		margin: 0;
 		overflow-wrap: anywhere;
 	}
 	.rec__lines .verify {
-		color: var(--rh-verify-ink);
+		color: var(--cvsm-verify-ink);
 		display: flex;
 		align-items: center;
 		gap: 0.35rem;
@@ -412,80 +412,80 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		width: 0.9em;
 		height: 0.9em;
 		fill: none;
-		stroke: var(--rh-verify);
+		stroke: var(--cvsm-verify);
 		stroke-width: 2;
 		stroke-linecap: round;
 		stroke-linejoin: round;
 		flex: none;
 	}
 	.rec__lines .decision {
-		color: var(--rh-accent-ink);
+		color: var(--cvsm-accent-ink);
 		margin-top: 0.4rem;
-		transition: color 200ms var(--rh-ease);
+		transition: color 200ms var(--cvsm-ease);
 	}
 
 	/* Active stop: wash the column, lift its mark, bring out its Decision. */
-	.rh-loop[data-active='g1'] [data-stop='g1'] .wash,
-	.rh-loop[data-active='b'] [data-stop='b'] .wash,
-	.rh-loop[data-active='g2'] [data-stop='g2'] .wash,
-	.rh-loop[data-active='g3'] [data-stop='g3'] .wash,
-	.rh-loop[data-active='g4'] [data-stop='g4'] .wash {
+	.cvsm-loop[data-active='g1'] [data-stop='g1'] .wash,
+	.cvsm-loop[data-active='b'] [data-stop='b'] .wash,
+	.cvsm-loop[data-active='g2'] [data-stop='g2'] .wash,
+	.cvsm-loop[data-active='g3'] [data-stop='g3'] .wash,
+	.cvsm-loop[data-active='g4'] [data-stop='g4'] .wash {
 		opacity: 1;
 	}
-	.rh-loop[data-active='g1'] [data-stop='g1'] .stop__mark,
-	.rh-loop[data-active='b'] [data-stop='b'] .stop__mark,
-	.rh-loop[data-active='g2'] [data-stop='g2'] .stop__mark,
-	.rh-loop[data-active='g3'] [data-stop='g3'] .stop__mark,
-	.rh-loop[data-active='g4'] [data-stop='g4'] .stop__mark {
+	.cvsm-loop[data-active='g1'] [data-stop='g1'] .stop__mark,
+	.cvsm-loop[data-active='b'] [data-stop='b'] .stop__mark,
+	.cvsm-loop[data-active='g2'] [data-stop='g2'] .stop__mark,
+	.cvsm-loop[data-active='g3'] [data-stop='g3'] .stop__mark,
+	.cvsm-loop[data-active='g4'] [data-stop='g4'] .stop__mark {
 		transform: scale(1.35);
 	}
-	.rh-loop[data-active='g1'] [data-stop='g1'] .card,
-	.rh-loop[data-active='b'] [data-stop='b'] .card,
-	.rh-loop[data-active='g2'] [data-stop='g2'] .card,
-	.rh-loop[data-active='g3'] [data-stop='g3'] .card,
-	.rh-loop[data-active='g4'] [data-stop='g4'] .card {
-		border-color: var(--rh-text);
+	.cvsm-loop[data-active='g1'] [data-stop='g1'] .card,
+	.cvsm-loop[data-active='b'] [data-stop='b'] .card,
+	.cvsm-loop[data-active='g2'] [data-stop='g2'] .card,
+	.cvsm-loop[data-active='g3'] [data-stop='g3'] .card,
+	.cvsm-loop[data-active='g4'] [data-stop='g4'] .card {
+		border-color: var(--cvsm-text);
 	}
-	.rh-loop[data-active='g1'] [data-stop='g1'] .phase__head,
-	.rh-loop[data-active='b'] [data-stop='b'] .phase__head,
-	.rh-loop[data-active='g2'] [data-stop='g2'] .phase__head,
-	.rh-loop[data-active='g3'] [data-stop='g3'] .phase__head,
-	.rh-loop[data-active='g4'] [data-stop='g4'] .phase__head {
-		color: var(--rh-accent-ink);
+	.cvsm-loop[data-active='g1'] [data-stop='g1'] .phase__head,
+	.cvsm-loop[data-active='b'] [data-stop='b'] .phase__head,
+	.cvsm-loop[data-active='g2'] [data-stop='g2'] .phase__head,
+	.cvsm-loop[data-active='g3'] [data-stop='g3'] .phase__head,
+	.cvsm-loop[data-active='g4'] [data-stop='g4'] .phase__head {
+		color: var(--cvsm-accent-ink);
 	}
-	.rh-loop[data-active] .rec__lines .decision {
-		color: var(--rh-muted);
+	.cvsm-loop[data-active] .rec__lines .decision {
+		color: var(--cvsm-muted);
 	}
-	.rh-loop[data-active='g1'] [data-stop='g1'] .rec__lines .decision,
-	.rh-loop[data-active='b'] [data-stop='b'] .rec__lines .decision,
-	.rh-loop[data-active='g2'] [data-stop='g2'] .rec__lines .decision,
-	.rh-loop[data-active='g3'] [data-stop='g3'] .rec__lines .decision,
-	.rh-loop[data-active='g4'] [data-stop='g4'] .rec__lines .decision {
-		color: var(--rh-accent-ink);
+	.cvsm-loop[data-active='g1'] [data-stop='g1'] .rec__lines .decision,
+	.cvsm-loop[data-active='b'] [data-stop='b'] .rec__lines .decision,
+	.cvsm-loop[data-active='g2'] [data-stop='g2'] .rec__lines .decision,
+	.cvsm-loop[data-active='g3'] [data-stop='g3'] .rec__lines .decision,
+	.cvsm-loop[data-active='g4'] [data-stop='g4'] .rec__lines .decision {
+		color: var(--cvsm-accent-ink);
 		font-weight: 500;
 	}
 
 	/* The detail panel for the active stop. */
 	.detail {
-		border-top: 1px solid var(--rh-hair-2);
-		border-bottom: 1px solid var(--rh-hair);
+		border-top: 1px solid var(--cvsm-hair-2);
+		border-bottom: 1px solid var(--cvsm-hair);
 		padding: 1.25rem 0 1.1rem;
 		position: relative;
 	}
 	.detail__item {
 		display: none;
 	}
-	.rh-loop[data-active='g1'] [data-for='g1'],
-	.rh-loop[data-active='b'] [data-for='b'],
-	.rh-loop[data-active='g2'] [data-for='g2'],
-	.rh-loop[data-active='g3'] [data-for='g3'],
-	.rh-loop[data-active='g4'] [data-for='g4'] {
+	.cvsm-loop[data-active='g1'] [data-for='g1'],
+	.cvsm-loop[data-active='b'] [data-for='b'],
+	.cvsm-loop[data-active='g2'] [data-for='g2'],
+	.cvsm-loop[data-active='g3'] [data-for='g3'],
+	.cvsm-loop[data-active='g4'] [data-for='g4'] {
 		display: grid;
 		grid-template-columns: minmax(9rem, 1fr) 5fr;
 		gap: 1rem;
-		animation: rh-loop-in 260ms var(--rh-ease);
+		animation: cvsm-loop-in 260ms var(--cvsm-ease);
 	}
-	@keyframes rh-loop-in {
+	@keyframes cvsm-loop-in {
 		from {
 			opacity: 0;
 			transform: translateY(4px);
@@ -498,9 +498,9 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 		margin: 0;
 		font-family: var(--mono);
 		font-size: var(--cap);
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		color: var(--rh-accent-ink);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		color: var(--cvsm-accent-ink);
 		font-weight: 500;
 		align-self: start;
 	}
@@ -516,28 +516,28 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 	dt {
 		font-family: var(--mono);
 		font-size: 0.625rem;
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		color: var(--rh-muted);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		color: var(--cvsm-muted);
 		margin-bottom: 0.35rem;
 	}
 	dd {
 		margin: 0;
 		font-size: 0.875rem;
 		line-height: 1.5;
-		color: var(--rh-soft);
+		color: var(--cvsm-soft);
 	}
 	dd.say {
-		color: var(--rh-text);
+		color: var(--cvsm-text);
 		font-size: 1rem;
 	}
 	.detail__hint {
 		margin: 1rem 0 0;
 		font-family: var(--mono);
 		font-size: 0.625rem;
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		color: var(--rh-muted);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		color: var(--cvsm-muted);
 	}
 
 	@media (prefers-reduced-motion: reduce) {
@@ -551,7 +551,7 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 
 	/* Medium containers (a docs column): tighter, the detail stacks. */
 	@container (max-width: 860px) {
-		.rh-loop[data-active] .detail__item[data-for] {
+		.cvsm-loop[data-active] .detail__item[data-for] {
 			grid-template-columns: 1fr;
 			gap: 0.75rem;
 		}
@@ -582,7 +582,7 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 			column-gap: 0.75rem;
 			row-gap: 0.65rem;
 			padding: 1rem 0 1.1rem;
-			border-top: 1px solid var(--rh-hair);
+			border-top: 1px solid var(--cvsm-hair);
 			position: relative;
 		}
 		.phase > * {
@@ -616,14 +616,14 @@ const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
 			display: block;
 			font-family: var(--mono);
 			font-size: 0.625rem;
-			letter-spacing: var(--rh-track-caps);
-			text-transform: var(--rh-caps);
-			color: var(--rh-muted);
+			letter-spacing: var(--cvsm-track-caps);
+			text-transform: var(--cvsm-caps);
+			color: var(--cvsm-muted);
 			padding-top: 0.15rem;
 		}
 		.cell__empty::before {
 			content: '—';
-			color: var(--rh-muted);
+			color: var(--cvsm-muted);
 		}
 		.card {
 			min-height: 0;

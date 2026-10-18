@@ -3,18 +3,23 @@
 
 export type Lang = 'en' | 'zh-cn';
 
-export const GITHUB = 'https://github.com/doem97/research-harness';
+export const GITHUB = 'https://github.com/doem97/cvsm';
+
+export const NAME = {
+	en: 'Controlled-Variable State Machine Protocol',
+	'zh-cn': '控制变量状态机协议',
+};
 
 /** The adoption copy command, as #38 fixes it for the READMEs and the site. */
 export const COPY_COMMAND =
-	"git -C <rh clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts tests ':!.github/workflows/pages.yml' | tar -x -C <your repo>";
+	"git -C <cvsm clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts tests ':!.github/workflows/pages.yml' | tar -x -C <your repo>";
 
 const en = {
 	htmlLang: 'en',
 	meta: {
-		title: 'research-harness — Agents do the work. You hold the gates.',
+		title: 'CVSM — Controlled-Variable State Machine Protocol',
 		description:
-			'Let coding agents run your ML research, and keep every comparison fair. rh is a template you copy into a research repo: GitHub issues hold the state, and every run is checked against the study spec you approved.',
+			'A state machine protocol for running controlled ML experiments with coding agents. You write the study spec: which variables differ between arms, which are held fixed, and which may adapt.',
 	},
 	nav: {
 		docs: 'Docs',
@@ -41,25 +46,24 @@ const en = {
 		legend: { gate: 'Human gate', agent: 'Agent work', verify: 'Checked against the spec' },
 	},
 	hero: {
-		index: '01 — The harness',
-		tag: 'A template, not a service',
-		line1: 'Agents do the work.',
-		line2: 'You hold the gates.',
-		promise: 'Let coding agents run your ML research, and keep every comparison fair.',
-		body: 'rh is a template you copy into a research repo. GitHub issues hold the state, one rules file and four skills hold the procedure, and every run is checked against the study spec you approved, from its own record.',
+		index: '01 — Overview',
+		tag: 'CVSM',
+		line1: 'Controlled-Variable',
+		line2: 'State Machine Protocol',
+		desc: 'A state machine protocol for running controlled ML experiments with coding agents. You write the study spec: which variables differ between arms, which are held fixed, and which may adapt. Agents implement and run the study through GitHub issues and pull requests, one state at a time. Every run records its resolved config, and a script checks it against the spec and reports any difference the spec does not allow. You decide at four points: publish, merge, budget and conclude.',
 		ctaDocs: 'Read the docs',
 		ctaQuick: 'Quick start',
 		ctaGithub: 'GitHub',
 	},
 	problem: {
-		index: '02 — The problem',
-		aside: 'Where comparisons break',
-		title: ['The risk is', 'below the plan.'],
+		index: '02 — Problem',
+		aside: 'The spec and the layers below it',
+		title: ['Agents change settings', 'that a comparison needs fixed'],
 		body: [
 			'Coding agents now write the code, launch the runs and post the results of an ML study faster than you can read them.',
 			'A learning rate gets changed to fix a crash. An effective batch gets halved to fit memory. Each change is reasonable on its own; together they turn a comparison into a guess. Usually all you see is the agent’s summary.',
 		],
-		punch: 'The spec is the one layer you can truly read. So rh checks every run against it, from the run’s own record.',
+		punch: 'The study spec is the one layer you can read in full, so CVSM checks every run against it, from the run’s own record.',
 		spec: 'Study #10 · spec',
 		layer0: 'Layer 0 · readable by you',
 		layers: ['Layer 1 · code', 'Layer 2 · config', 'Layer 3 · launches and runs'],
@@ -71,13 +75,13 @@ const en = {
 		deep: 'Below it: agent work, too deep to read',
 	},
 	loop: {
-		index: '03 — The loop',
-		aside: 'One loop · four gates · every step on GitHub',
-		title: ['Stops only where', 'a human is needed.'],
-		body: 'Each instruction names a target state. The agent keeps going until it reaches the target, a gate or a blocker, and it stops at the four gates even when everything works.',
+		index: '03 — State machine',
+		aside: 'Four gates · every step on GitHub',
+		title: ['A study is a', 'state machine on GitHub'],
+		body: 'A study moves through plan, implement, review, merge, run and analyze, and each step is recorded on GitHub. Each instruction names a target state. The agent keeps going until it reaches that state, a gate or a blocker, and it stops at the four gates even when everything works.',
 		hint: 'Hover or focus a gate',
 		lanes: [
-			{ name: 'Human', note: 'in a session; never clicks on GitHub' },
+			{ name: 'Human', note: 'decides in a session' },
 			{ name: 'Agents', note: 'four skills; Claude Code or Codex' },
 			{ name: 'Record', note: 'GitHub and MLflow, written as it happens' },
 		],
@@ -96,7 +100,7 @@ const en = {
 			{ head: 'Pull request', lines: ['Closes #11', 'guard · test'] },
 			{ head: 'Review', lines: ['Verdict: pass', '@ 3f9c2a1'] },
 			{ head: 'main', lines: ['squash merge', 'of that head'] },
-			{ head: 'MLflow runs', lines: ['rh.*  cfg.*', 'artifacts'] },
+			{ head: 'MLflow runs', lines: ['cvsm.*  cfg.*', 'artifacts'] },
 			{ head: 'Results', lines: ['per-issue table'], verify: ['spec check', 'study table'] },
 		],
 		blocker: 'Blocker',
@@ -136,9 +140,9 @@ const en = {
 		decision: 'Decision:',
 	},
 	contract: {
-		index: '04 — The contract',
-		aside: 'The spec is the last layer you can read',
-		title: ['The spec is', 'the contract.'],
+		index: '04 — Spec check',
+		aside: 'Study spec and run records',
+		title: ['Every run is checked', 'against the study spec'],
 		body: 'You approve a study spec at gate 01: the arms, the settings held fixed (each with a reason), and what may adapt. Every run records its resolved config, and the results command checks those records against the spec, right after launch and in every results comment.',
 		specTitle: 'Study #10 · spec',
 		approved: 'Readable by you · gate 01',
@@ -150,6 +154,7 @@ const en = {
 		records: '6 run records',
 		checkTitle: 'spec check',
 		checkStatus: 'from the records · 6 runs',
+		checkSource: 'Output of {file}',
 		gloss: [
 			'The effective-batch line fails for one run, which took 128.',
 			'train.precision differs between runs, although no section declares it.',
@@ -166,14 +171,13 @@ const en = {
 			'arms with no run',
 			'the values each Adaptable key took per arm',
 		],
-		closing: 'rh reports what the records show. Whether the runs are still comparable is your call.',
-		lang: 'The reference results.py writes its report in Chinese; a project that wants another language changes results.py.',
+		closing: 'CVSM reports what the records show. Whether the runs are still comparable is your call.',
 	},
 	session: {
-		index: '05 — Talk, don’t click',
+		index: '05 — Decisions',
 		aside: 'Claude Code or Codex',
-		title: ['Talk,', 'don’t click.'],
-		body: 'You make decisions only in an agent session and never click around GitHub. Agents create issues, open PRs, review, merge and close on your instruction, and record each of your decisions on the issue.',
+		title: ['You decide in a session', 'at four points'],
+		body: 'You make decisions only in an agent session. Agents create issues, open PRs, review, merge and close on your instruction, and record each of your decisions on the issue.',
 		report: 'Every stop ends with three lines',
 		reportLines: ['Done:', 'Waiting for you:', 'Next:'],
 		you: 'You',
@@ -194,8 +198,9 @@ const en = {
 		],
 	},
 	facts: {
-		index: '06 — Facts',
-		aside: 'The template in six numbers',
+		index: '06 — Contents',
+		aside: 'Six numbers',
+		title: ['What the protocol', 'consists of'],
 		items: [
 			{ n: '0', cap: 'services to install' },
 			{ n: '80', cap: 'lines of rules, capped by a test' },
@@ -207,18 +212,18 @@ const en = {
 	},
 	cta: {
 		index: '07 — Adopt',
-		title: ['Copy it into', 'your repo.'],
+		title: ['Copy the protocol', 'into your repo'],
 		body: 'Copy only tracked files, then fill in the Project section of AGENTS.md. An agent in your session can do every step; you decide, and lend an admin account where one is needed.',
 		copy: 'Copy',
 		copied: 'Copied',
-		adopt: 'Adopt rh in five steps',
+		adopt: 'Adopt CVSM in five steps',
 		quick: 'Quick start',
 	},
 	footer: {
-		tagline: 'Agents do the work. You hold the gates.',
+		tagline: 'Controlled-Variable State Machine Protocol',
 		license: 'Apache-2.0',
 		licenseHref: 'project/license/',
-		status: 'Pre-release · built with rh',
+		status: 'Pre-release · built with CVSM',
 		docs: 'Docs',
 		github: 'GitHub',
 	},
@@ -238,9 +243,9 @@ type Strings = typeof en;
 const zh: Strings = {
 	htmlLang: 'zh-CN',
 	meta: {
-		title: 'research-harness — agent 干活，你来把关',
+		title: 'CVSM — 控制变量状态机协议',
 		description:
-			'让编码 agent 推进你的机器学习研究，同时让每个对比都公平。rh 是一套模板，复制进研究仓库就能用：状态放在 GitHub issue 里，每个 run 都按它自己的记录，对照你批准的研究规格核对。',
+			'用编码 agent 跑控制变量实验的状态机协议。你写研究规格：各组之间改变哪些变量、固定哪些变量、哪些可以调整。',
 	},
 	nav: {
 		docs: '文档',
@@ -267,25 +272,24 @@ const zh: Strings = {
 		legend: { gate: '人的关口', agent: 'agent 的工作', verify: '按规格核对过' },
 	},
 	hero: {
-		index: '01 — 总览',
-		tag: '是模板，不是服务',
-		line1: 'agent 干活',
-		line2: '你来把关',
-		promise: '让编码 agent 推进你的机器学习研究，同时让每个对比都公平。',
-		body: 'rh 是一套模板，复制进研究仓库就能用。状态放在 GitHub issue 里，步骤写在一个规则文件和四个 skill 里；每个 run 都按它自己的记录，对照你批准的研究规格核对。',
+		index: '01 — 概述',
+		tag: 'CVSM',
+		line1: '控制变量',
+		line2: '状态机协议',
+		desc: '用编码 agent 跑控制变量实验的状态机协议。你写研究规格：各组之间改变哪些变量、固定哪些变量、哪些可以调整。agent 在 GitHub 的 issue 和 PR 上按状态机一步步实现和运行实验。每个 run 都记下实际生效的完整配置，由脚本对照规格核对，规格不允许的差异都会报出来。你只在四处做决定：发布、合并、预算、下结论。',
 		ctaDocs: '阅读文档',
 		ctaQuick: '快速开始',
 		ctaGithub: 'GitHub',
 	},
 	problem: {
 		index: '02 — 问题',
-		aside: '对比在哪里悄悄失效',
-		title: ['风险在', '计划以下。'],
+		aside: '规格和它以下的各层',
+		title: ['agent 会改动', '对比需要固定的设置'],
 		body: [
 			'编码 agent 写代码、启动运行、贴出结果的速度，已经快过人能读完的速度。',
 			'为了修一次崩溃改了学习率，为了塞进显存把有效 batch 减半。每一处单看都合理，合在一起，对比就成了猜测。而你通常只看到 agent 的总结。',
 		],
-		punch: '规格是你能真正读懂的那一层。所以 rh 按每个 run 自己的记录对照规格核对。',
+		punch: '研究规格是你能完整读懂的那一层，所以 CVSM 按每个 run 自己的记录，对照规格核对。',
 		spec: '研究 #10 · 规格',
 		layer0: '第 0 层 · 你读得懂',
 		layers: ['第 1 层 · 代码', '第 2 层 · 配置', '第 3 层 · 启动与运行'],
@@ -297,13 +301,13 @@ const zh: Strings = {
 		deep: '规格以下：agent 的工作，深到读不完',
 	},
 	loop: {
-		index: '03 — 循环',
-		aside: '一个循环 · 四个关口 · 每一步都在 GitHub 上',
-		title: ['只在需要人的地方', '停下。'],
-		body: '每条指令就是一个目标状态。agent 一直推进，到达目标、碰到关口或遇到卡点时才停；一切顺利也要在四个关口停下。',
+		index: '03 — 状态机',
+		aside: '四个关口 · 每一步都在 GitHub 上',
+		title: ['研究是', 'GitHub 上的状态机'],
+		body: '研究依次经过计划、实现、审查、合并、运行、分析，每一步都记在 GitHub 上。每条指令就是一个目标状态。agent 一直推进，到达目标状态、碰到关口或遇到卡点时才停；一切顺利也要在四个关口停下。',
 		hint: '把鼠标移到关口上，或用 Tab 聚焦',
 		lanes: [
-			{ name: '人', note: '在会话里；不点 GitHub 页面' },
+			{ name: '人', note: '在会话里做决定' },
 			{ name: 'Agent', note: '四个 skill；Claude Code 或 Codex' },
 			{ name: '记录', note: 'GitHub 和 MLflow，随做随记' },
 		],
@@ -322,7 +326,7 @@ const zh: Strings = {
 			{ head: 'PR', lines: ['Closes #11', 'guard · test'] },
 			{ head: '审查', lines: ['Verdict: pass', '@ 3f9c2a1'] },
 			{ head: 'main', lines: ['squash 合并', '就是那个 head'] },
-			{ head: 'MLflow run', lines: ['rh.*  cfg.*', 'artifacts'] },
+			{ head: 'MLflow run', lines: ['cvsm.*  cfg.*', 'artifacts'] },
 			{ head: '结果', lines: ['单个 issue 的表'], verify: ['规格核对', '研究总表'] },
 		],
 		blocker: '卡点',
@@ -362,9 +366,9 @@ const zh: Strings = {
 		decision: 'Decision:',
 	},
 	contract: {
-		index: '04 — 合同',
-		aside: '规格是你能读懂的最后一层',
-		title: ['规格', '就是合同。'],
+		index: '04 — 规格核对',
+		aside: '研究规格与运行记录',
+		title: ['每个 run 都', '对照研究规格核对'],
 		body: '你在关口 01 批准研究规格：各组（arm）之间的不同、固定不变的设置（各带理由）、可以调整的设置。每个 run 都记下解析后的配置，结果命令拿这些记录对照规格核对：启动后马上核一次，每条结果评论里再核一次。',
 		specTitle: '研究 #10 · 规格',
 		approved: '你读得懂 · 关口 01',
@@ -376,6 +380,7 @@ const zh: Strings = {
 		records: '6 条运行记录',
 		checkTitle: '规格核对',
 		checkStatus: '来自记录 · 6 个 run',
+		checkSource: '{file} 的输出',
 		gloss: ['', '', '', ''],
 		listsTitle: '它按事实列出',
 		lists: [
@@ -387,14 +392,13 @@ const zh: Strings = {
 			'没有 run 的 arm',
 			'每个 Adaptable 键在各 arm 取过的值',
 		],
-		closing: 'rh 只报告记录里有什么。这些 run 还能不能比，由你判断。',
-		lang: '参考实现 results.py 输出的文字是中文；项目要用别的语言，就改 results.py。',
+		closing: 'CVSM 只报告记录里有什么。这些 run 还能不能比，由你判断。',
 	},
 	session: {
-		index: '05 — 说话，不点页面',
+		index: '05 — 决定',
 		aside: 'Claude Code 或 Codex',
-		title: ['说话，', '不点页面。'],
-		body: '你只在 agent 会话里做决定，不直接操作 GitHub 页面。建 issue、开 PR、审查、合并、关闭都由 agent 按你的指示执行，你的每个决定都记在相应的 issue 上。',
+		title: ['你在会话里', '做四个决定'],
+		body: '你只在 agent 会话里做决定。建 issue、开 PR、审查、合并、关闭都由 agent 按你的指示执行，你的每个决定都记在相应的 issue 上。',
 		report: '每次停下，都汇报三行',
 		reportLines: ['Done:', 'Waiting for you:', 'Next:'],
 		you: '你',
@@ -415,8 +419,9 @@ const zh: Strings = {
 		],
 	},
 	facts: {
-		index: '06 — 数字',
-		aside: '用六个数字看这套模板',
+		index: '06 — 组成',
+		aside: '六个数字',
+		title: ['协议由', '什么组成'],
 		items: [
 			{ n: '0', cap: '个要安装的服务' },
 			{ n: '80', cap: '行规则，有测试卡住上限' },
@@ -428,18 +433,18 @@ const zh: Strings = {
 	},
 	cta: {
 		index: '07 — 接入',
-		title: ['复制进', '你的仓库。'],
+		title: ['把协议复制进', '你的仓库'],
 		body: '只复制被跟踪的文件，再填好 AGENTS.md 的 Project 一节。每一步都可以交给会话里的 agent 去做；你只需要拍板，并在需要时提供管理员账号。',
 		copy: '复制',
 		copied: '已复制',
-		adopt: '五步接入 rh',
+		adopt: '五步接入 CVSM',
 		quick: '快速开始',
 	},
 	footer: {
-		tagline: 'agent 干活，你来把关',
+		tagline: '控制变量状态机协议',
 		license: 'Apache-2.0',
 		licenseHref: 'zh-cn/project/license/',
-		status: '预发布 · 用 rh 开发',
+		status: '预发布 · 用 CVSM 开发',
 		docs: '文档',
 		github: 'GitHub',
 	},
@@ -466,19 +471,22 @@ export function url(path = ''): string {
 	return base + path.replace(/^\//, '');
 }
 
-/** The spec of the running example, as README and results.py show it. */
-export const SPEC_LINES: Array<{ kind: 'h' | 'kv'; text: string; note?: string }> = [
-	{ kind: 'h', text: '### Arms' },
-	{ kind: 'kv', text: 'full: model.adapter=none' },
-	{ kind: 'kv', text: 'lora: model.adapter=lora model.lora.rank=8' },
-	{ kind: 'h', text: '### Controlled' },
-	{ kind: 'kv', text: 'optim.lr=3e-4', note: '# paper X, Table 2' },
-	{ kind: 'kv', text: 'train.effective_batch=256', note: '# paper X, Table 2' },
-	{ kind: 'kv', text: 'seed in 1,2,3', note: '# three seeds' },
-	{ kind: 'h', text: '### Adaptable' },
-	{ kind: 'kv', text: 'train.per_device_batch', note: '# fit GPU memory' },
-	{ kind: 'kv', text: 'train.accum', note: '# keeps the effective batch' },
-];
+/** The spec of the running example, as README and results.py show it; reasons in the page's language. */
+export function specLines(lang: Lang): Array<{ kind: 'h' | 'kv'; text: string; note?: string }> {
+	const zh = lang === 'zh-cn';
+	return [
+		{ kind: 'h', text: '### Arms' },
+		{ kind: 'kv', text: 'full: model.adapter=none' },
+		{ kind: 'kv', text: 'lora: model.adapter=lora model.lora.rank=8' },
+		{ kind: 'h', text: '### Controlled' },
+		{ kind: 'kv', text: 'optim.lr=3e-4', note: zh ? '# 论文 X 表 2' : '# paper X, Table 2' },
+		{ kind: 'kv', text: 'train.effective_batch=256', note: zh ? '# 论文 X 表 2' : '# paper X, Table 2' },
+		{ kind: 'kv', text: 'seed in 1,2,3', note: zh ? '# 同论文 X，用 3 个 seed' : '# three seeds, as in paper X' },
+		{ kind: 'h', text: '### Adaptable' },
+		{ kind: 'kv', text: 'train.per_device_batch', note: zh ? '# 按显存调整，有效 batch 固定为 256' : '# fit to GPU memory; effective batch stays 256' },
+		{ kind: 'kv', text: 'train.accum', note: zh ? '# 跟随 per_device_batch' : '# follows per_device_batch' },
+	];
+}
 
 /** results.py's 规格核对 for six toy runs of that spec (README, verbatim; run id shortened). */
 export const CHECK_LINES = [

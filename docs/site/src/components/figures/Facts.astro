@@ -1,6 +1,6 @@
 ---
 /**
- * The template in six numbers. The human gates are the only orange number.
+ * The protocol in six numbers. The human gates are the only orange number.
  *
  *   <Facts lang="en" />
  */
@@ -13,7 +13,7 @@ const { lang = 'en' } = Astro.props;
 const s = t(lang).facts;
 ---
 
-<figure class="rh-facts not-content">
+<figure class="cvsm-facts not-content">
 	<ul>
 		{
 			s.items.map((it, i) => (
@@ -27,10 +27,10 @@ const s = t(lang).facts;
 </figure>
 
 <style>
-	.rh-facts {
+	.cvsm-facts {
 		container-type: inline-size;
 		margin: 2rem 0;
-		color: var(--rh-text);
+		color: var(--cvsm-text);
 	}
 	ul {
 		list-style: none;
@@ -38,8 +38,8 @@ const s = t(lang).facts;
 		padding: 0;
 		display: grid;
 		grid-template-columns: repeat(6, minmax(0, 1fr));
-		border-top: 1px solid var(--rh-hair-2);
-		border-bottom: 1px solid var(--rh-hair);
+		border-top: 1px solid var(--cvsm-hair-2);
+		border-bottom: 1px solid var(--cvsm-hair);
 	}
 	li {
 		display: flex;
@@ -47,7 +47,7 @@ const s = t(lang).facts;
 		gap: 0.9rem;
 		margin: 0;
 		padding: 1.4rem clamp(0.6rem, 1.6cqi, 1.5rem) 1.6rem;
-		border-inline-start: 1px solid var(--rh-hair);
+		border-inline-start: 1px solid var(--cvsm-hair);
 	}
 	li:first-child {
 		border-inline-start: 0;
@@ -61,13 +61,13 @@ const s = t(lang).facts;
 		font-variant-numeric: tabular-nums;
 	}
 	.accent .n {
-		color: var(--rh-accent);
+		color: var(--cvsm-accent);
 	}
 	.cap {
-		font-family: var(--rh-font-mono);
+		font-family: var(--cvsm-font-mono);
 		font-size: 0.8125rem;
 		line-height: 1.5;
-		color: var(--rh-muted);
+		color: var(--cvsm-muted);
 		max-width: 22ch;
 	}
 	:lang(zh-CN) .cap {
@@ -76,11 +76,11 @@ const s = t(lang).facts;
 	@supports (animation-timeline: view()) {
 		@media (prefers-reduced-motion: no-preference) {
 			.n {
-				animation: rh-fact-in linear both;
+				animation: cvsm-fact-in linear both;
 				animation-timeline: view();
 				animation-range: entry calc(20% + var(--i) * 5%) entry calc(80% + var(--i) * 5%);
 			}
-			@keyframes rh-fact-in {
+			@keyframes cvsm-fact-in {
 				from {
 					opacity: 0;
 					transform: translateY(0.25em);
@@ -97,7 +97,7 @@ const s = t(lang).facts;
 			padding-inline-start: 0;
 		}
 		li:nth-child(n + 4) {
-			border-top: 1px solid var(--rh-hair);
+			border-top: 1px solid var(--cvsm-hair);
 		}
 	}
 	@container (max-width: 440px) {
@@ -105,7 +105,7 @@ const s = t(lang).facts;
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 		li:nth-child(3n + 1) {
-			border-inline-start: 1px solid var(--rh-hair);
+			border-inline-start: 1px solid var(--cvsm-hair);
 			padding-inline-start: clamp(0.6rem, 1.6cqi, 1.5rem);
 		}
 		li:nth-child(2n + 1) {
@@ -113,7 +113,7 @@ const s = t(lang).facts;
 			padding-inline-start: 0;
 		}
 		li:nth-child(n + 3) {
-			border-top: 1px solid var(--rh-hair);
+			border-top: 1px solid var(--cvsm-hair);
 		}
 	}
 </style>

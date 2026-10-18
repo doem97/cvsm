@@ -7,7 +7,7 @@ sidebar:
 
 `.github/ISSUE_TEMPLATE/` 里的三种 issue 表单，固定了每个任务和研究正文的各节。guard、`merge.py`、结果命令和各个 skill 都按 `### ` 标题读正文，所以标题名不能改。
 
-源文件：[`study.yml`](https://github.com/doem97/research-harness/blob/main/.github/ISSUE_TEMPLATE/study.yml)、[`code.yml`](https://github.com/doem97/research-harness/blob/main/.github/ISSUE_TEMPLATE/code.yml)、[`run.yml`](https://github.com/doem97/research-harness/blob/main/.github/ISSUE_TEMPLATE/run.yml)。
+源文件：[`study.yml`](https://github.com/doem97/cvsm/blob/main/.github/ISSUE_TEMPLATE/study.yml)、[`code.yml`](https://github.com/doem97/cvsm/blob/main/.github/ISSUE_TEMPLATE/code.yml)、[`run.yml`](https://github.com/doem97/cvsm/blob/main/.github/ISSUE_TEMPLATE/run.yml)。
 
 ## 总览
 
@@ -17,7 +17,7 @@ sidebar:
 | `code.yml` | 代码任务 | `code` | Goal、Scope、Acceptance、Budget、Merge |
 | `run.yml` | 运行任务 | `run` | Runs、Budget、Report |
 
-开发用的父 issue（label `plan`）没有表单，正文是 `### Goal` 和 `### Context`。agent 严格按这些节写正文，父子关系和依赖用 `gh issue create --parent P --blocked-by M` 设置，不写进正文。表单说明用中文，也就是 rh 自己面向人的语言。
+开发用的父 issue（label `plan`）没有表单，正文是 `### Goal` 和 `### Context`。agent 严格按这些节写正文，父子关系和依赖用 `gh issue create --parent P --blocked-by M` 设置，不写进正文。表单说明用中文，也就是 CVSM 自己面向人的语言。
 
 ## study
 
@@ -69,8 +69,8 @@ guard 读 Scope 时，会去掉行首的 `- ` 或 `* ` 和反引号，并忽略 
 
 ## 相关页面
 
-- [研究规格](/research-harness/zh-cn/concepts/study-spec/)
-- [计划一个研究](/research-harness/zh-cn/guides/plan-a-study/)
-- [guard](/research-harness/zh-cn/reference/guard/)
-- [results.py](/research-harness/zh-cn/reference/results-py/)
-- [保持不变的接口](/research-harness/zh-cn/reference/interfaces/)
+- [研究规格](/cvsm/zh-cn/concepts/study-spec/)
+- [计划一个研究](/cvsm/zh-cn/guides/plan-a-study/)
+- [guard](/cvsm/zh-cn/reference/guard/)
+- [results.py](/cvsm/zh-cn/reference/results-py/)
+- [保持不变的接口](/cvsm/zh-cn/reference/interfaces/)

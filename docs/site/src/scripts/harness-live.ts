@@ -41,9 +41,9 @@ function readColors(el: Element): Colors {
 	const cs = getComputedStyle(el);
 	const v = (k: string) => cs.getPropertyValue(k).trim();
 	return {
-		text: v('--rh-text'), muted: v('--rh-muted'), hair: v('--rh-hair'), hair2: v('--rh-hair-2'),
-		accent: v('--rh-accent'), accentInk: v('--rh-accent-ink'), verify: v('--rh-verify'),
-		verifyInk: v('--rh-verify-ink'), bg: v('--rh-bg'), rgb: hexRgb(v('--rh-text')),
+		text: v('--cvsm-text'), muted: v('--cvsm-muted'), hair: v('--cvsm-hair'), hair2: v('--cvsm-hair-2'),
+		accent: v('--cvsm-accent'), accentInk: v('--cvsm-accent-ink'), verify: v('--cvsm-verify'),
+		verifyInk: v('--cvsm-verify-ink'), bg: v('--cvsm-bg'), rgb: hexRgb(v('--cvsm-text')),
 	};
 }
 

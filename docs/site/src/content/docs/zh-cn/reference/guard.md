@@ -7,7 +7,7 @@ sidebar:
 
 guard 是每个 PR 的必过检查。它通过 GitHub API 读 PR，对照 `.github/guard.toml` 和 PR 关闭的 issue 检查，从不 checkout 或执行 PR 里的代码。
 
-源文件：[`.github/guard.toml`](https://github.com/doem97/research-harness/blob/main/.github/guard.toml)、[`.github/scripts/guard.py`](https://github.com/doem97/research-harness/blob/main/.github/scripts/guard.py)、[`.github/workflows/guard.yml`](https://github.com/doem97/research-harness/blob/main/.github/workflows/guard.yml)。
+源文件：[`.github/guard.toml`](https://github.com/doem97/cvsm/blob/main/.github/guard.toml)、[`.github/scripts/guard.py`](https://github.com/doem97/cvsm/blob/main/.github/scripts/guard.py)、[`.github/workflows/guard.yml`](https://github.com/doem97/cvsm/blob/main/.github/workflows/guard.yml)。
 
 ## workflow
 
@@ -28,7 +28,7 @@ guard 从 main 运行，所以对 `guard.toml` 的改动要合并之后才生效
 
 ## guard.toml
 
-| 键 | 类型 | rh 的值 | 含义 |
+| 键 | 类型 | CVSM 的值 | 含义 |
 |---|---|---|---|
 | `layout` | glob 列表 | `README.md`、`AGENTS.md`、`.gitignore`、`.agents/**`、`.claude/**`、`.codex/**`、`.github/**`、`docs/**`、`scripts/**`、`tests/**` | 文件可以放在哪里。接入方加上自己的目录和根目录文件（`src/**`、`configs/**`、`pyproject.toml`、锁文件、数据清单）。 |
 | `markdown` | glob 列表 | `README.md`、`AGENTS.md`、`docs/**`、`.agents/skills/**`、`.github/**` | `.md` 文件可以放在哪里。 |
@@ -39,7 +39,7 @@ guard 从 main 运行，所以对 `guard.toml` 的改动要合并之后才生效
 | `test_paths` | glob 列表 | `tests/**` | 不计入 `max_diff_lines` 的路径。 |
 | `max_diff_lines` | 整数 | 未设（注释掉的示例为 `400`） | 可选。`test_paths` 之外改动行数（增加加删除）的上限。 |
 
-任务 #39 把仓库根目录的 Apache-2.0 许可证 `LICENSE` 加进 rh 自己的 `layout`。
+任务 #39 把仓库根目录的 Apache-2.0 许可证 `LICENSE` 加进 CVSM 自己的 `layout`。
 
 ### glob 语法
 
@@ -112,8 +112,8 @@ REPO=owner/repo PR_NUMBER=15 python .github/scripts/guard.py
 
 ## 相关页面
 
-- [AGENTS.md：Files](/research-harness/zh-cn/reference/agents-md/#files)
-- [merge.py](/research-harness/zh-cn/reference/merge-py/)
-- [issue 表单](/research-harness/zh-cn/reference/issue-forms/)
-- [接入 rh](/research-harness/zh-cn/guides/adopt/)
-- [合并](/research-harness/zh-cn/concepts/merging/)
+- [AGENTS.md：Files](/cvsm/zh-cn/reference/agents-md/#files)
+- [merge.py](/cvsm/zh-cn/reference/merge-py/)
+- [issue 表单](/cvsm/zh-cn/reference/issue-forms/)
+- [接入 CVSM](/cvsm/zh-cn/guides/adopt/)
+- [合并](/cvsm/zh-cn/concepts/merging/)

@@ -4,16 +4,16 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightLinksValidator from 'starlight-links-validator';
 
-const GITHUB = 'https://github.com/doem97/research-harness';
+const GITHUB = 'https://github.com/doem97/cvsm';
 
 export default defineConfig({
 	site: 'https://doem97.github.io',
-	base: '/research-harness',
+	base: '/cvsm',
 	integrations: [
 		starlight({
-			title: 'research-harness',
+			title: 'CVSM',
 			description:
-				'Let coding agents run your ML research, and keep every comparison fair. A template, not a service.',
+				'A state machine protocol for running controlled ML experiments with coding agents. You write the study spec: which variables differ between arms, which are held fixed, and which may adapt.',
 			defaultLocale: 'root',
 			locales: {
 				root: { label: 'English', lang: 'en' },

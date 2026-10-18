@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-rh works with Claude Code and Codex from one set of files: both read `AGENTS.md` and the same four skills, and each has its own config that forbids `gh pr merge`. You can run sessions of either tool side by side, each on its own task.
+CVSM works with Claude Code and Codex from one set of files: both read `AGENTS.md` and the same four skills, and each has its own config that forbids `gh pr merge`. You can run sessions of either tool side by side, each on its own task.
 
 ## What each tool reads
 
@@ -16,7 +16,7 @@ rh works with Claude Code and Codex from one set of files: both read `AGENTS.md`
 | Merge ban | `.claude/settings.json`: `permissions.deny` with `Bash(gh pr merge:*)` | `.codex/rules/harness.rules`: `gh pr merge` is `forbidden` |
 | Machine account (optional) | `.claude/settings.local.json` sets `GH_CONFIG_DIR` | `.codex/config.toml` sets `GH_CONFIG_DIR` |
 
-`AGENTS.md` is the only instruction file. Don't add a `CLAUDE.md`: guard rejects `.md` files outside the allowed places, and the harness reads only `AGENTS.md`.
+`AGENTS.md` is the only instruction file. Don't add a `CLAUDE.md`: guard rejects `.md` files outside the allowed places, and CVSM reads only `AGENTS.md`.
 
 ## Check that the rules are loaded
 
@@ -55,12 +55,12 @@ If agents use a machine account, both tools need `GH_CONFIG_DIR` pointed at its 
   set = { GH_CONFIG_DIR = "<dir>" }
   ```
 
-Both files live only in the main clone. A session started from the main clone passes the setting to the agents it starts; if you open a session directly in a worktree, put copies there first. The full setup is in [Adopt rh](/research-harness/guides/adopt/#optional-a-machine-account-for-the-agents).
+Both files live only in the main clone. A session started from the main clone passes the setting to the agents it starts; if you open a session directly in a worktree, put copies there first. The full setup is in [Adopt CVSM](/cvsm/guides/adopt/#optional-a-machine-account-for-the-agents).
 
 ## Related
 
-- [Review](/research-harness/concepts/review/)
-- [Talk, don't click](/research-harness/start/talk-dont-click/)
-- [Skills](/research-harness/reference/skills/)
-- [AGENTS.md](/research-harness/reference/agents-md/)
-- [merge.py](/research-harness/reference/merge-py/)
+- [Review](/cvsm/concepts/review/)
+- [Work in a session](/cvsm/start/talk-dont-click/)
+- [Skills](/cvsm/reference/skills/)
+- [AGENTS.md](/cvsm/reference/agents-md/)
+- [merge.py](/cvsm/reference/merge-py/)

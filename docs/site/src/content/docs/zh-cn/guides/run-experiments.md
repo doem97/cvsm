@@ -64,13 +64,13 @@ Adaptable 设置可以按它的规则调整，例如显存不够时调小每卡 
 ## 6. 下结论
 
 :::caution[关口 04：下结论]
-读研究总表和它的 `规格核对`。rh 只报告记录里有什么，这些 run 还能不能比，由你判断。给出你的结论，例如“`#10` 下结论：……”。agent 记下它；只有你明确指示，才关闭研究。
+读研究总表和它的 `规格核对`。CVSM 只报告记录里有什么，这些 run 还能不能比，由你判断。给出你的结论，例如“`#10` 下结论：……”。agent 记下它；只有你明确指示，才关闭研究。
 :::
 
 ## 相关页面
 
-- [运行记录](/research-harness/zh-cn/concepts/run-records/)
-- [关口与卡点](/research-harness/zh-cn/concepts/gates-and-blockers/)
-- [skill：run](/research-harness/zh-cn/reference/skills/#run)
-- [run.py 参考](/research-harness/zh-cn/reference/run-py/)
-- [results.py 参考](/research-harness/zh-cn/reference/results-py/)
+- [运行记录](/cvsm/zh-cn/concepts/run-records/)
+- [关口与卡点](/cvsm/zh-cn/concepts/gates-and-blockers/)
+- [skill：run](/cvsm/zh-cn/reference/skills/#run)
+- [run.py 参考](/cvsm/zh-cn/reference/run-py/)
+- [results.py 参考](/cvsm/zh-cn/reference/results-py/)
