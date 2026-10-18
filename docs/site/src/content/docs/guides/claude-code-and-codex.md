@@ -13,7 +13,7 @@ CVSM works with Claude Code and Codex from one set of files: both read `AGENTS.m
 |---|---|---|
 | Rules | `AGENTS.md` | `AGENTS.md` |
 | Skills | `.claude/skills`, a symlink to `../.agents/skills` | `.agents/skills` |
-| Merge ban | `.claude/settings.json`: `permissions.deny` with `Bash(gh pr merge:*)` | `.codex/rules/harness.rules`: `gh pr merge` is `forbidden` |
+| Merge ban | `.claude/settings.json`: `permissions.deny` with `Bash(gh pr merge:*)` | `.codex/rules/cvsm.rules`: `gh pr merge` is `forbidden` |
 | Machine account (optional) | `.claude/settings.local.json` sets `GH_CONFIG_DIR` | `.codex/config.toml` sets `GH_CONFIG_DIR` |
 
 `AGENTS.md` is the only instruction file. Don't add a `CLAUDE.md`: guard rejects `.md` files outside the allowed places, and CVSM reads only `AGENTS.md`.
@@ -21,7 +21,7 @@ CVSM works with Claude Code and Codex from one set of files: both read `AGENTS.m
 ## Check that the rules are loaded
 
 1. **Codex: trust the project.** Codex reads the project's `.codex/` only once it trusts the project. Run `codex` interactively once at the repo root and accept the trust prompt. (`codex exec -s danger-full-access` marks the project trusted without a prompt.)
-2. **Codex: check the rules file.** `codex execpolicy check --rules .codex/rules/harness.rules gh pr merge 1` should print `forbidden`. This checks only the file itself.
+2. **Codex: check the rules file.** `codex execpolicy check --rules .codex/rules/cvsm.rules gh pr merge 1` should print `forbidden`. This checks only the file itself.
 3. **Codex: check a live session.** Open a Codex session in the repo and ask it to run `gh pr merge --help`. The rule should block it; even if allowed, this command merges nothing. Confirm that all four skills (`plan`, `implement`, `review`, `run`) are listed.
 4. **Claude Code: check a live session.** Open a session in the repo and confirm that all four skills are listed.
 

@@ -13,7 +13,7 @@ CVSM 用一套文件同时支持 Claude Code 和 Codex：两者都读 `AGENTS.md
 |---|---|---|
 | 规则 | `AGENTS.md` | `AGENTS.md` |
 | skill | `.claude/skills`，指向 `../.agents/skills` 的软链 | `.agents/skills` |
-| 禁止合并 | `.claude/settings.json`：`permissions.deny` 里的 `Bash(gh pr merge:*)` | `.codex/rules/harness.rules`：`gh pr merge` 设为 `forbidden` |
+| 禁止合并 | `.claude/settings.json`：`permissions.deny` 里的 `Bash(gh pr merge:*)` | `.codex/rules/cvsm.rules`：`gh pr merge` 设为 `forbidden` |
 | 机器账号（可选） | `.claude/settings.local.json` 设 `GH_CONFIG_DIR` | `.codex/config.toml` 设 `GH_CONFIG_DIR` |
 
 `AGENTS.md` 是唯一的指令文件。不要加 `CLAUDE.md`：guard 会拒收放在允许位置之外的 `.md`，CVSM 也只认 `AGENTS.md`。
@@ -21,7 +21,7 @@ CVSM 用一套文件同时支持 Claude Code 和 Codex：两者都读 `AGENTS.md
 ## 确认规则已加载
 
 1. **Codex：信任项目。** 项目要先被 Codex 信任，它才会读项目里的 `.codex/`。在仓库根目录交互式运行一次 `codex`，接受信任提示（`codex exec -s danger-full-access` 不提示就会把项目记为信任）。
-2. **Codex：检查规则文件。** `codex execpolicy check --rules .codex/rules/harness.rules gh pr merge 1` 应输出 `forbidden`。这只检查文件本身。
+2. **Codex：检查规则文件。** `codex execpolicy check --rules .codex/rules/cvsm.rules gh pr merge 1` 应输出 `forbidden`。这只检查文件本身。
 3. **Codex：检查真实会话。** 在仓库里开一个 Codex 会话，让它运行 `gh pr merge --help`，应该被规则拦下（这条命令即使放行也不会合并任何东西）。确认四个 skill（`plan`、`implement`、`review`、`run`）都列出来了。
 4. **Claude Code：检查真实会话。** 在仓库里开一个会话，确认四个 skill 都列出来了。
 

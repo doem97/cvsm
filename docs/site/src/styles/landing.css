@@ -375,8 +375,19 @@ body.cvsm {
 /* The band takes what the viewport has left, so the gates and the whole table stay in view. */
 .hero__band {
 	position: relative;
-	height: clamp(340px, min(34vw, calc(100svh - 400px)), 580px);
+	height: clamp(320px, min(34vw, calc(100svh - 440px)), 580px);
 	margin-top: clamp(8px, 1.2vw, 20px);
+}
+/* Wide screens: the band's empty top margin tucks under the description column, which stays
+   above it, so the gate labels at the bottom land inside the first viewport. */
+@media (min-width: 961px) {
+	.hero__top {
+		position: relative;
+		z-index: 1;
+	}
+	.hero__band {
+		margin-top: -28px;
+	}
 }
 .legend {
 	display: flex;
@@ -456,7 +467,7 @@ body.cvsm {
 		display: none;
 	}
 }
-/* Phones: the harness turns vertical (below 640 px) and needs the height. */
+/* Phones: the figure turns vertical (below 640 px) and needs the height. */
 @media (max-width: 639px) {
 	.hero__band {
 		height: 640px;

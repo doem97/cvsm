@@ -1,4 +1,4 @@
-"""Merge a PR the harness way: python .github/scripts/merge.py <PR> [--human]
+"""Merge a PR through the gate: python .github/scripts/merge.py <PR> [--human]
 
 Without --human (an agent merging a `Merge: agent` task) it merges only if the issue
 the PR closes says `Merge: agent`, no changed path is protected in the base branch's

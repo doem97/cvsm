@@ -1,10 +1,10 @@
-// The live harness: a canvas that redraws the hero illustration every frame.
+// The live figure: a canvas that redraws the hero illustration every frame.
 // Agent trajectories breathe between the gates (most before gate 01, none at a gate), particles
 // stream along them and brighten at each gate, and an orange pulse holds at every gate before it
 // lands on a table row, whose blue check then redraws. The pointer gently parts the unordered
 // work before gate 01; the gates themselves never move. Paused offscreen and in hidden tabs; one
 // static frame under prefers-reduced-motion.
-import { layout, envelope, indexAt, type Layout, type Line, type Pt } from '~/lib/harness';
+import { layout, envelope, indexAt, type Layout, type Line, type Pt } from '~/lib/trajectories';
 
 interface Data {
 	gates: { num: string; name: string }[];
@@ -51,7 +51,7 @@ function readColors(el: Element): Colors {
 const caps = (s: string) => (document.documentElement.lang.startsWith('zh') ? s : s.toUpperCase());
 const smooth = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 
-class LiveHarness {
+class LiveTrajectories {
 	fig: HTMLElement;
 	canvas: HTMLCanvasElement;
 	ctx: CanvasRenderingContext2D;
@@ -75,7 +75,7 @@ class LiveHarness {
 		this.fig = fig;
 		this.canvas = fig.querySelector('canvas')!;
 		this.ctx = this.canvas.getContext('2d')!;
-		this.data = JSON.parse(fig.dataset.harness || '{}');
+		this.data = JSON.parse(fig.dataset.trajectories || '{}');
 		this.col = readColors(fig);
 		this.resize();
 		new ResizeObserver(() => this.resize()).observe(fig);
@@ -536,8 +536,8 @@ class LiveHarness {
 }
 
 function boot() {
-	document.querySelectorAll<HTMLElement>('[data-harness]').forEach((fig) => {
-		if (!(fig as any).__rh) (fig as any).__rh = new LiveHarness(fig);
+	document.querySelectorAll<HTMLElement>('[data-trajectories]').forEach((fig) => {
+		if (!(fig as any).__cvsm) (fig as any).__cvsm = new LiveTrajectories(fig);
 	});
 }
 boot();

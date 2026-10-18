@@ -9,7 +9,7 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-RULES = ROOT / ".codex" / "rules" / "harness.rules"
+RULES = ROOT / ".codex" / "rules" / "cvsm.rules"
 HEADINGS = ["State", "Gates", "Blockers", "Report", "Git", "Files", "Context", "Skills", "Project"]
 
 

@@ -1,6 +1,6 @@
 ---
 import Landing from '~/layouts/Landing.astro';
-import Harness from '~/components/figures/Harness.astro';
+import Trajectories from '~/components/figures/Trajectories.astro';
 import Loop from '~/components/figures/Loop.astro';
 import Contract from '~/components/figures/Contract.astro';
 import Session from '~/components/figures/Session.astro';
@@ -40,14 +40,14 @@ const zh = lang === 'zh-cn';
 			</div>
 		</div>
 		<div class="hero__band">
-			<Harness lang={lang} live />
+			<Trajectories lang={lang} live />
 		</div>
 		<div class="wrap">
 			<div class="rule"><i></i><i></i></div>
 			<div class="legend">
-				<span><i class="k-gate"></i>{s.harness.legend.gate}</span>
-				<span><i class="k-agent"></i>{s.harness.legend.agent}</span>
-				<span><i class="k-verify"></i>{s.harness.legend.verify}</span>
+				<span><i class="k-gate"></i>{s.trajectories.legend.gate}</span>
+				<span><i class="k-agent"></i>{s.trajectories.legend.agent}</span>
+				<span><i class="k-verify"></i>{s.trajectories.legend.verify}</span>
 				<span class="legend__repo">doem97/cvsm</span>
 			</div>
 		</div>

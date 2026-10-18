@@ -1,14 +1,14 @@
 ---
 /**
- * The harness: agent trajectories pass four human gates and resolve into a study table
+ * The figure: agent trajectories pass four human gates and resolve into a study table
  * checked against the spec.
  *
- *   <Harness lang="en" />            static figure (SVG), for docs pages
- *   <Harness lang="zh-cn" live />    the live canvas the landing hero uses
+ *   <Trajectories lang="en" />            static figure (SVG), for docs pages
+ *   <Trajectories lang="zh-cn" live />    the live canvas the landing hero uses
  *
  * Colours follow the site tokens, so the figure follows the theme.
  */
-import { layout, smoothPath, TABLE, type Pt } from '~/lib/harness';
+import { layout, smoothPath, TABLE, type Pt } from '~/lib/trajectories';
 import { t, type Lang } from '~/i18n/strings';
 
 interface Props {
@@ -34,7 +34,7 @@ const labelY = L.bot + 46;
 const f = (x: number) => Math.round(x * 10) / 10;
 const check = (x: number, y: number, sz = 14) =>
 	`M${f(x)} ${f(y - sz * 0.45)}L${f(x + sz * 0.36)} ${f(y - sz * 0.08)}L${f(x + sz)} ${f(y - sz * 0.9)}`;
-// Narrow containers (phones): the same harness, flowing downwards into a transposed table.
+// Narrow containers (phones): the same figure, flowing downwards into a transposed table.
 const VW = 360, VH = 600;
 const LV = layout({ w: VW, h: VH, margin: 14, gutter: 12, seed: 36, lines: 56, vertical: true });
 const vmap = (p: Pt): Pt => [p[1], p[0]];
@@ -43,26 +43,26 @@ const vpaths = LV.lines.map((ln, i) => ({ d: smoothPath(ln.ctrl, vmap), hero: i 
 const vty = LV.tableU;
 const liveData = JSON.stringify({
 	gates: s.gates,
-	table: s.harness.table,
-	caption: s.harness.caption,
+	table: s.trajectories.table,
+	caption: s.trajectories.caption,
 	rows: TABLE,
 });
 ---
 
 {
 	live ? (
-		<figure class:list={['cvsm-harness cvsm-harness--live not-content', cls]} data-harness={liveData}>
-			<canvas role="img" aria-label={s.harness.label} />
+		<figure class:list={['cvsm-trajectories cvsm-trajectories--live not-content', cls]} data-trajectories={liveData}>
+			<canvas role="img" aria-label={s.trajectories.label} />
 			<noscript>
-				<style>{`.cvsm-harness--live canvas{display:none}`}</style>
+				<style>{`.cvsm-trajectories--live canvas{display:none}`}</style>
 			</noscript>
 		</figure>
 	) : null
 }
 {
 	!live ? (
-		<figure class:list={['cvsm-harness cvsm-harness--figure not-content', cls]}>
-			<svg class="h" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={s.harness.label}>
+		<figure class:list={['cvsm-trajectories cvsm-trajectories--figure not-content', cls]}>
+			<svg class="h" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={s.trajectories.label}>
 				<defs>
 					<linearGradient id={`${id}-fade`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={f(g0)} y2="0">
 						<stop offset="0" class="stop" stop-opacity="0" />
@@ -96,10 +96,10 @@ const liveData = JSON.stringify({
 				{paths.filter((p) => p.hero).map((p) => <path d={p.d} fill="none" stroke={`url(#${id}-hero)`} stroke-width="1.5" />)}
 				<g class="table">
 					<path class="wall" d={`M${f(tx)} ${f(hy)}H${f(right)}M${f(tx)} ${f(hy)}V${f(L.rows[3] + L.pitch / 2)}`} />
-					<text class="mono muted caps" x={cols[0]} y={f(hy + 22)}>{s.harness.table.arm}</text>
-					<text class="mono muted" x={cols[1]} y={f(hy + 22)}>{s.harness.table.n}</text>
-					<text class="mono muted caps" x={cols[2]} y={f(hy + 22)}>{s.harness.table.metric}</text>
-					<text class="mono verify caps" x={cols[3]} y={f(hy + 22)} text-anchor="end">{s.harness.table.spec}</text>
+					<text class="mono muted caps" x={cols[0]} y={f(hy + 22)}>{s.trajectories.table.arm}</text>
+					<text class="mono muted" x={cols[1]} y={f(hy + 22)}>{s.trajectories.table.n}</text>
+					<text class="mono muted caps" x={cols[2]} y={f(hy + 22)}>{s.trajectories.table.metric}</text>
+					<text class="mono verify caps" x={cols[3]} y={f(hy + 22)} text-anchor="end">{s.trajectories.table.spec}</text>
 					{TABLE.map((row, r) => {
 						const y = L.rows[r];
 						return (
@@ -117,10 +117,10 @@ const liveData = JSON.stringify({
 						);
 					})}
 					<path class="wall" d={`M${f(tx)} ${f(L.rows[3] + L.pitch / 2)}H${f(right)}`} />
-					<text class="mono muted caps" x={f(tx)} y={f(L.rows[3] + L.pitch / 2 + 24)}>{s.harness.caption}</text>
+					<text class="mono muted caps" x={f(tx)} y={f(L.rows[3] + L.pitch / 2 + 24)}>{s.trajectories.caption}</text>
 				</g>
 			</svg>
-			<svg class="v" viewBox={`0 0 ${VW} ${VH}`} role="img" aria-label={s.harness.label}>
+			<svg class="v" viewBox={`0 0 ${VW} ${VH}`} role="img" aria-label={s.trajectories.label}>
 				<defs>
 					<linearGradient id={`${id}-vfade`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={f(LV.gates[0].u)}>
 						<stop offset="0" class="stop" stop-opacity="0" />
@@ -164,26 +164,26 @@ const liveData = JSON.stringify({
 						</g>
 					);
 				})}
-				<text class="mono muted caps" x={f(LV.top)} y={f(vty + 128)}>{s.harness.caption}</text>
-				<text class="mono verify caps" x={f(LV.bot)} y={f(vty + 128)} text-anchor="end">{s.harness.table.spec}</text>
+				<text class="mono muted caps" x={f(LV.top)} y={f(vty + 128)}>{s.trajectories.caption}</text>
+				<text class="mono verify caps" x={f(LV.bot)} y={f(vty + 128)} text-anchor="end">{s.trajectories.table.spec}</text>
 			</svg>
 			<figcaption class="cvsm-legend">
-				<span><i class="k-gate" />{s.harness.legend.gate}</span>
-				<span><i class="k-agent" />{s.harness.legend.agent}</span>
-				<span><i class="k-verify" />{s.harness.legend.verify}</span>
+				<span><i class="k-gate" />{s.trajectories.legend.gate}</span>
+				<span><i class="k-agent" />{s.trajectories.legend.agent}</span>
+				<span><i class="k-verify" />{s.trajectories.legend.verify}</span>
 			</figcaption>
 		</figure>
 	) : null
 }
 
-{live && <script src="../../scripts/harness-live.ts"></script>}
+{live && <script src="../../scripts/trajectories-live.ts"></script>}
 
 <style>
-	.cvsm-harness {
+	.cvsm-trajectories {
 		margin: 0;
 		color: var(--cvsm-text);
 	}
-	.cvsm-harness--figure {
+	.cvsm-trajectories--figure {
 		container-type: inline-size;
 		margin-block: 2rem;
 		padding: 1.25rem 0 0;
@@ -304,12 +304,12 @@ const liveData = JSON.stringify({
 	}
 
 	/* Live hero: the canvas fills the band the landing page gives it. */
-	.cvsm-harness--live {
+	.cvsm-trajectories--live {
 		position: relative;
 		width: 100%;
 		height: 100%;
 	}
-	.cvsm-harness--live canvas {
+	.cvsm-trajectories--live canvas {
 		position: absolute;
 		inset: 0;
 		width: 100%;

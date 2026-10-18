@@ -100,7 +100,7 @@ Adopting CVSM means copying a set of tracked files into your repo, filling in a 
 
    - **Codex** reads `AGENTS.md`, skills from `.agents/skills` and rules from `.codex/rules`.
      - Codex reads the project's `.codex/` only once it trusts the project. Run `codex` interactively once at the repo root and accept the trust prompt. (`codex exec -s danger-full-access` marks the project trusted without a prompt.)
-     - `codex execpolicy check --rules .codex/rules/harness.rules gh pr merge 1` checks only the rules file itself, and should print `forbidden`.
+     - `codex execpolicy check --rules .codex/rules/cvsm.rules gh pr merge 1` checks only the rules file itself, and should print `forbidden`.
      - To confirm a session really loaded the rules, open a Codex session in the repo and ask it to run `gh pr merge --help`. The rule should block it; even if allowed, this command merges nothing. Also confirm that all four skills are listed.
    - **Claude Code** reads `AGENTS.md`, reads skills through the `.claude/skills` symlink, and `.claude/settings.json` denies `gh pr merge`. Open a session in the repo and confirm that all four skills are listed.
 

@@ -38,7 +38,7 @@ const en = {
 		{ num: '03', name: 'Budget' },
 		{ num: '04', name: 'Conclude' },
 	],
-	harness: {
+	trajectories: {
 		label:
 			'Many fine agent trajectories enter from the left, pass through four orange human gates (publish, merge, budget, conclude), grow more ordered at each, and resolve into a study table whose rows are checked against the study spec.',
 		table: { arm: 'Arm', n: 'n', metric: 'Top-1', spec: 'Spec' },
@@ -264,7 +264,7 @@ const zh: Strings = {
 		{ num: '03', name: '预算' },
 		{ num: '04', name: '下结论' },
 	],
-	harness: {
+	trajectories: {
 		label:
 			'许多细密的 agent 轨迹从左侧进入，穿过四个橙色的人的关口（发布、合并、预算、下结论），每过一关就更有序，最后汇成一张按研究规格逐行核对过的研究总表。',
 		table: { arm: 'Arm', n: 'n', metric: 'Top-1', spec: '规格' },
