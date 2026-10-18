@@ -22,11 +22,11 @@ CVSM asks you for four decisions and makes the rest checkable.
 
 - **You approve a study spec**: the arms, the settings held fixed (each with a reason), and the settings that may adapt. See [The study spec](/cvsm/concepts/study-spec/).
 - **Agents do everything below it** through GitHub issues and pull requests. They stop only at [four gates](/cvsm/concepts/gates-and-blockers/), or at a blocker they cannot resolve alone.
-- **Every run records its resolved config**, and the results command checks those records against the spec. Deviations reach you as facts, not as an agent's account. See [Run records](/cvsm/concepts/run-records/).
+- **Every run records its resolved config**, and the results command checks those records against the spec. Deviations reach you as facts taken from the records. See [Run records](/cvsm/concepts/run-records/).
 
 ## What you copy in
 
-CVSM is a convention around git and GitHub, not a service. Nothing runs outside GitHub, git and your own machines.
+CVSM is a set of files and conventions around git and GitHub. Nothing is installed, and nothing runs outside GitHub, git and your own machines.
 
 <CardGrid>
   <Card title="State: GitHub issues">

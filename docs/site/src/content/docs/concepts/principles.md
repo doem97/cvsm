@@ -7,7 +7,7 @@ sidebar:
 
 CVSM is small on purpose: a few rules, each answering one major way agent-driven research goes wrong. These principles explain why it looks the way it does, and what it deliberately leaves to you.
 
-## GitHub-native, no service to install
+## CVSM runs on GitHub and your own machines
 
 Workflow state lives in issues, PRs, checks and branch protection, and run records live in MLflow. There is no CVSM server, database or CLI. You can see everything in GitHub's own UI, and adopting CVSM is copying files.
 
@@ -15,7 +15,7 @@ Workflow state lives in issues, PRs, checks and branch protection, and run recor
 
 The repo holds no state, plan or progress files, and a session is never the record. Every state change goes to GitHub or git as it happens, so a session can end at any moment without losing anything, and a fresh session reads where things stand. See [State](/cvsm/concepts/state/).
 
-## Mechanism, not policy
+## CVSM records facts and leaves judgements to you
 
 CVSM records facts and shows differences. It does not choose seeds, design experiments, decide when to rerun, or judge whether runs are comparable; you set those in the [study spec](/cvsm/concepts/study-spec/) and your instructions. It also leaves analysis, visualization and how an agent works inside a task to you.
 
@@ -31,7 +31,7 @@ Each rule sits where it can be enforced best. What a script can check, `guard` a
 
 Rules are short and concrete: AGENTS.md is at most 80 lines and each skill at most 120. They assume an agent that follows clearly written rules. Scripts fix the process, but they don't defend against malformed input, forgery or outsiders, and reviewers don't ask for such defenses unless a task requires them.
 
-## Copied files, not a framework
+## CVSM is a set of files in your repo
 
 CVSM ships no adapters for clusters, schedulers, storage or tracking services. `run.py` and `results.py` are a single-machine reference. Each adopter fits its own cluster, scheduler (for example SLURM) and tracking backend through its own issues, and keeps the [interfaces that stay fixed](/cvsm/reference/interfaces/).
 

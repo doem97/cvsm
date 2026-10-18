@@ -84,6 +84,9 @@ const sectionNote = new Map(s.notes.map((n) => [`### ${n.name}`, n.note]));
 					))
 				}
 			</ul>
+			<p class="check__src">
+				{s.checkSource.split('{file}').map((part, i) => (i ? <><code>scripts/results.py</code>{part}</> : part))}
+			</p>
 		</section>
 	</div>
 
@@ -293,6 +296,14 @@ const sectionNote = new Map(s.notes.map((n) => [`### ${n.name}`, n.note]));
 		display: grid;
 		grid-template-columns: 1.1rem 1fr;
 		margin: 0 0 0.7rem;
+	}
+	.check__src {
+		margin: 0.9rem 0 0;
+		font-size: 0.75rem;
+		color: var(--cvsm-muted);
+	}
+	.check__src code {
+		font-family: var(--mono);
 	}
 	.check__lines .m {
 		color: var(--cvsm-muted);

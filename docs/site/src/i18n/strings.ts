@@ -81,7 +81,7 @@ const en = {
 		body: 'A study moves through plan, implement, review, merge, run and analyze, and each step is recorded on GitHub. Each instruction names a target state. The agent keeps going until it reaches that state, a gate or a blocker, and it stops at the four gates even when everything works.',
 		hint: 'Hover or focus a gate',
 		lanes: [
-			{ name: 'Human', note: 'in a session; never clicks on GitHub' },
+			{ name: 'Human', note: 'decides in a session' },
 			{ name: 'Agents', note: 'four skills; Claude Code or Codex' },
 			{ name: 'Record', note: 'GitHub and MLflow, written as it happens' },
 		],
@@ -154,6 +154,7 @@ const en = {
 		records: '6 run records',
 		checkTitle: 'spec check',
 		checkStatus: 'from the records · 6 runs',
+		checkSource: 'Output of {file}',
 		gloss: [
 			'The effective-batch line fails for one run, which took 128.',
 			'train.precision differs between runs, although no section declares it.',
@@ -176,7 +177,7 @@ const en = {
 		index: '05 — Decisions',
 		aside: 'Claude Code or Codex',
 		title: ['You decide in a session', 'at four points'],
-		body: 'You make decisions only in an agent session, not on GitHub pages. Agents create issues, open PRs, review, merge and close on your instruction, and record each of your decisions on the issue.',
+		body: 'You make decisions only in an agent session. Agents create issues, open PRs, review, merge and close on your instruction, and record each of your decisions on the issue.',
 		report: 'Every stop ends with three lines',
 		reportLines: ['Done:', 'Waiting for you:', 'Next:'],
 		you: 'You',
@@ -306,7 +307,7 @@ const zh: Strings = {
 		body: '研究依次经过计划、实现、审查、合并、运行、分析，每一步都记在 GitHub 上。每条指令就是一个目标状态。agent 一直推进，到达目标状态、碰到关口或遇到卡点时才停；一切顺利也要在四个关口停下。',
 		hint: '把鼠标移到关口上，或用 Tab 聚焦',
 		lanes: [
-			{ name: '人', note: '在会话里；不点 GitHub 页面' },
+			{ name: '人', note: '在会话里做决定' },
 			{ name: 'Agent', note: '四个 skill；Claude Code 或 Codex' },
 			{ name: '记录', note: 'GitHub 和 MLflow，随做随记' },
 		],
@@ -379,6 +380,7 @@ const zh: Strings = {
 		records: '6 条运行记录',
 		checkTitle: '规格核对',
 		checkStatus: '来自记录 · 6 个 run',
+		checkSource: '{file} 的输出',
 		gloss: ['', '', '', ''],
 		listsTitle: '它按事实列出',
 		lists: [
@@ -396,7 +398,7 @@ const zh: Strings = {
 		index: '05 — 决定',
 		aside: 'Claude Code 或 Codex',
 		title: ['你在会话里', '做四个决定'],
-		body: '你只在 agent 会话里做决定，不在 GitHub 页面上操作。建 issue、开 PR、审查、合并、关闭都由 agent 按你的指示执行，你的每个决定都记在相应的 issue 上。',
+		body: '你只在 agent 会话里做决定。建 issue、开 PR、审查、合并、关闭都由 agent 按你的指示执行，你的每个决定都记在相应的 issue 上。',
 		report: '每次停下，都汇报三行',
 		reportLines: ['Done:', 'Waiting for you:', 'Next:'],
 		you: '你',

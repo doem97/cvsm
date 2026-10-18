@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-Each run is one MLflow run that records where it came from, the config it actually resolved, and its outputs. Results comments are generated from these records, so what you read about a run is what the run recorded, not what an agent wrote.
+Each run is one MLflow run that records where it came from, the config it actually resolved, and its outputs. Results comments are generated from these records, so what you read about a run is what the run recorded.
 
 ## What a record holds
 
