@@ -294,20 +294,23 @@ def hero(s):
     t = THEMES[s.theme]
     zh = s.lang == "zh"
     # Header: wordmark and status, on a hairline.
-    s.text("research-harness", M, 92, 40, "semi", "text", -0.02)
-    s.mono(s.tr("Pre-release  ·  a template, not a service", "预发布 · 是模板，不是服务"), W - M, 90, 22, "muted",
+    s.text("CVSM", M, 92, 40, "semi", "text", -0.02)
+    s.mono(s.tr("Pre-release  ·  files you copy, not a service", "预发布 · 是复制进仓库的文件，不是服务"), W - M, 90, 22, "muted",
            anchor="end")
     s.line(M, 124, W - M, 124, "hair")
     for x in (M, W - M):
         s.reg(x, 124)
     # Headline.
-    s.text(s.tr("Agents do the work.", "agent 干活"), M - 4, 248, 104, "display", "muted", -0.02)
-    s.text(s.tr("You hold the gates.", "你来把关"), M - 4, 360, 104, "display", "text", -0.02)
+    # The full name, in two lines that break at the phrase boundary. English is set smaller than Chinese
+    # so that its longer line stays left of the caption column.
+    hs = 104 if zh else 88
+    s.text(s.tr("Controlled-Variable", "控制变量"), M - 4, 248, hs, "display", "muted", -0.02)
+    s.text(s.tr("State Machine Protocol", "状态机协议"), M - 4, 360, hs, "display", "text", -0.02)
     # Caption block, right.
     cx = col(9)
-    s.mono(s.tr("01 — The harness", "01 — 总览"), cx, 178, 22, "faint")
-    cap = s.tr(["Wide, fast agent work", "passes four human gates", "and leaves as one table,", "checked against the spec."],
-               ["agent 的工作又快又杂，", "穿过你守的四道关口，", "最后汇成一张表，", "每一行都按规格核对过。"])
+    s.mono(s.tr("01 — The protocol", "01 — 总览"), cx, 178, 22, "faint")
+    cap = s.tr(["Agent runs pass four", "human decisions and end", "in a study table checked", "against the spec."],
+               ["agent 的运行要经过", "四次人的决定，", "最后汇成一张结果表，", "按研究规格核对过。"])
     for i, ln in enumerate(cap):
         s.text(ln, cx, 228 + i * (40 if zh else 36), 26, "sans", "muted")
 
@@ -444,7 +447,7 @@ def hero(s):
         s.reg(x, fy - 44)
     legend(s, M, fy, [("gate", s.tr("Human gate", "人的关口")), ("agent", s.tr("Agent work", "agent 的工作")),
                       ("verify", s.tr("Checked against the spec", "已按规格核对"))])
-    s.mono("doem97/research-harness", W - M, fy, 22, "faint", anchor="end", upper=False)
+    s.mono("doem97/cvsm", W - M, fy, 22, "faint", anchor="end", upper=False)
 
 
 # ---------------------------------------------------------------- the spec is the contract
@@ -453,8 +456,8 @@ def contract(s):
     H = s.h
     rng = random.Random(7)
     zh = s.lang == "zh"
-    frame(s, 96, H - 112, s.tr("02 — Contract", "02 — 合同"),
-          s.tr("The spec is the last layer you can read", "规格是你能读懂的最后一层"))
+    frame(s, 96, H - 112, s.tr("02 — Study spec", "02 — 研究规格"),
+          "Arms · Controlled · Adaptable")
     L, Rr = M, col(7) - GUT                 # left block: columns 1-7
     px = col(8)                              # right panel: columns 9-12
     spec = [("h", "### Arms"),
@@ -577,19 +580,19 @@ def contract(s):
 
 ASSETS = {
     "hero": (hero, 980, {
-        "en": ("research-harness: agents do the work, you hold the gates",
+        "en": ("CVSM: Controlled-Variable State Machine Protocol",
                "Many fine agent trajectories enter from the left, pass through four orange human gates "
                "(publish, merge, budget, conclude), grow more ordered at each, and resolve into a results "
                "table whose rows are checked against the study spec."),
-        "zh": ("research-harness：agent 干活，你来把关",
+        "zh": ("CVSM：控制变量状态机协议",
                "许多细密的 agent 轨迹从左边进来，穿过四道橙色的人的关口（发布、合并、预算、下结论），"
                "每过一道就更有序，最后汇成一张结果表，每一行都按研究规格核对过。")}),
     "contract": (contract, 1340, {
-        "en": ("The spec is the contract",
+        "en": ("Every run is checked against the study spec",
                "A study spec card (arms, controlled settings with reasons, adaptable settings), readable by you and "
                "approved at gate 01. Below it, denser layers of agent work: code, config, launches and runs. A blue "
                "arrow runs from six run records back up to the spec, with the spec check those records produced."),
-        "zh": ("规格就是合同",
+        "zh": ("每个 run 都对照研究规格核对",
                "一张研究规格卡片（各组的不同、带理由的固定设置、可调整的设置），你能读懂，在关口 01 批准。"
                "下面是越来越密的 agent 工作层：代码、配置、启动和运行。一支蓝色箭头从六条运行记录指回规格，"
                "旁边是这些记录得出的规格核对。")}),
