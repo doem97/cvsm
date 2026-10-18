@@ -46,7 +46,7 @@ CVSM 是一组复制进研究仓库就能用的文件，不是一个服务。状
 - **项目**：[状态](https://doem97.github.io/cvsm/zh-cn/project/status/) · [用 CVSM 开发 CVSM](https://doem97.github.io/cvsm/zh-cn/project/built-with-cvsm/) · [许可证](https://doem97.github.io/cvsm/zh-cn/project/license/)
 - **设计文档**：[docs/design/2026-10-16-harness-v1.md](design/2026-10-16-harness-v1.md)
 
-CVSM 处于预发布阶段，接口仍可能变化。文档站点随第一个正式版上线。
+CVSM v0.1.0 是预发布版本，1.0 之前接口仍可能变化。
 
 ## 许可证
 

@@ -46,7 +46,7 @@ Then open Claude Code or Codex in the repo and say "let's plan this study". The 
 - **Project:** [Status](https://doem97.github.io/cvsm/project/status/) · [Built with CVSM](https://doem97.github.io/cvsm/project/built-with-cvsm/) · [License](https://doem97.github.io/cvsm/project/license/)
 - **Design notes** (Chinese): [docs/design/2026-10-16-harness-v1.md](docs/design/2026-10-16-harness-v1.md)
 
-CVSM is a pre-release, and its interfaces may still change. The docs site goes live with the first release.
+CVSM v0.1.0 is a pre-release, and its interfaces may still change before 1.0.
 
 ## License
 
