@@ -38,7 +38,7 @@ gh pr merge <PR> --squash --match-head-commit <SHA> --subject "<PR title> (#<PR>
 
 ## Why only one path
 
-A direct `gh pr merge` is denied in both agent CLIs: `.claude/settings.json` has `permissions.deny` for `Bash(gh pr merge:*)`, and `.codex/rules/harness.rules` marks `gh pr merge` as `forbidden`. AGENTS.md says the same in words. With one path, the checks above cannot be skipped by accident.
+A direct `gh pr merge` is denied in both agent CLIs: `.claude/settings.json` has `permissions.deny` for `Bash(gh pr merge:*)`, and `.codex/rules/cvsm.rules` marks `gh pr merge` as `forbidden`. AGENTS.md says the same in words. With one path, the checks above cannot be skipped by accident.
 
 :::caution[Protected paths always go to you]
 AGENTS.md, `.agents/`, `.codex/`, `.claude/`, `.github/` and your eval and data paths are protected. guard lets a PR change them only when the task's Scope names them explicitly, and merge.py without `--human` refuses any PR that touches them. Such a PR always waits for your merge instruction, whatever its Merge field says.

@@ -6,11 +6,11 @@ sidebar:
 ---
 
 import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
-import Harness from '~/components/figures/Harness.astro';
+import Trajectories from '~/components/figures/Trajectories.astro';
 
 用编码 agent 跑控制变量实验的状态机协议。你写研究规格：各组之间改变哪些变量、固定哪些变量、哪些可以调整。agent 在 GitHub 的 issue 和 PR 上按状态机一步步实现和运行实验。每个 run 都记下实际生效的完整配置，由脚本对照规格核对，规格不允许的差异都会报出来。你只在四处做决定：发布、合并、预算、下结论。
 
-<Harness lang="zh-cn" />
+<Trajectories lang="zh-cn" />
 
 ## 问题：agent 改动了需要固定的设置
 
@@ -22,11 +22,11 @@ CVSM 只请你做四个决定，其余的都能核对。
 
 - **你批准一份研究规格**：各组之间的不同、固定不变的设置（各带理由）、可以调整的设置。见[研究规格](/cvsm/zh-cn/concepts/study-spec/)。
 - **规格以下的事都由 agent 做**，通过 GitHub issue 和 PR。它们只在[四个关口](/cvsm/zh-cn/concepts/gates-and-blockers/)停下，或者在自己解决不了的卡点停下。
-- **每个 run 都记下解析后的配置**，结果命令拿这些记录对照规格核对。偏差以事实的形式交到你手上，来源是这些记录。见[运行记录](/cvsm/zh-cn/concepts/run-records/)。
+- **每个 run 都记下解析后的配置**，结果命令拿这些记录对照规格核对。偏差以取自记录的事实交到你手上。见[运行记录](/cvsm/zh-cn/concepts/run-records/)。
 
 ## 复制进去的是什么
 
-CVSM 是围绕 git 和 GitHub 的一组文件和约定。不用安装任何东西，除了 GitHub、git 和你自己的机器，也不需要别的东西。
+CVSM 是围绕 git 和 GitHub 的一组文件和约定。不用安装任何东西；除了 GitHub、git 和你自己的机器，不需要别的。
 
 <CardGrid>
   <Card title="状态：GitHub issue">

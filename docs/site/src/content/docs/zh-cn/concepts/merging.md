@@ -38,7 +38,7 @@ gh pr merge <PR> --squash --match-head-commit <SHA> --subject "<PR 标题> (#<PR
 
 ## 为什么只留一个入口
 
-两种 agent 命令行工具都禁止直接运行 `gh pr merge`：`.claude/settings.json` 的 `permissions.deny` 写了 `Bash(gh pr merge:*)`，`.codex/rules/harness.rules` 把 `gh pr merge` 设为 `forbidden`。AGENTS.md 也用文字写了同一条。只有一个入口，上面的检查就不会被无意绕过。
+两种 agent 命令行工具都禁止直接运行 `gh pr merge`：`.claude/settings.json` 的 `permissions.deny` 写了 `Bash(gh pr merge:*)`，`.codex/rules/cvsm.rules` 把 `gh pr merge` 设为 `forbidden`。AGENTS.md 也用文字写了同一条。只有一个入口，上面的检查就不会被无意绕过。
 
 :::caution[受保护路径一律由你合并]
 AGENTS.md、`.agents/`、`.codex/`、`.claude/`、`.github/`，以及你的评测和数据路径，都是受保护路径。只有任务的 Scope 明确列出时，guard 才允许 PR 改它们；不带 `--human` 的 merge.py 拒绝任何碰了它们的 PR。所以这样的 PR 不管 Merge 字段写什么，都要等你说合并。

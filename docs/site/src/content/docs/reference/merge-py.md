@@ -64,7 +64,7 @@ Messages are printed in Chinese, e.g. `不合并 PR #15：` followed by one `- <
 
 ## Why agents can't bypass it
 
-`gh pr merge` is forbidden for agents: `AGENTS.md` says so, `.claude/settings.json` denies `Bash(gh pr merge:*)`, and `.codex/rules/harness.rules` marks it `forbidden`. Calling `python .github/scripts/merge.py` stays allowed.
+`gh pr merge` is forbidden for agents: `AGENTS.md` says so, `.claude/settings.json` denies `Bash(gh pr merge:*)`, and `.codex/rules/cvsm.rules` marks it `forbidden`. Calling `python .github/scripts/merge.py` stays allowed.
 
 ## Related
 

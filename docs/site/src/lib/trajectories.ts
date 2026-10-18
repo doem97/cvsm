@@ -1,4 +1,4 @@
-// Geometry of the harness illustration, shared by the static figure (SVG, built at build time)
+// Geometry of the trajectories illustration, shared by the static figure (SVG, built at build time)
 // and the live hero (canvas). A port of the hero in docs/assets/src/build.py: seeded agent
 // trajectories pass four gate apertures, grow more ordered at each, and land on the rows of a
 // study table. Coordinates are in "flow" space: u runs along the flow, v across it. The

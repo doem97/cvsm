@@ -64,7 +64,7 @@ gh pr merge <PR> --squash --match-head-commit <head SHA> --subject "<PR title> (
 
 ## agent 为什么绕不过它
 
-agent 不能运行 `gh pr merge`：`AGENTS.md` 这样规定，`.claude/settings.json` 用 `Bash(gh pr merge:*)` 拒绝它，`.codex/rules/harness.rules` 把它设为 `forbidden`。运行 `python .github/scripts/merge.py` 仍然是允许的。
+agent 不能运行 `gh pr merge`：`AGENTS.md` 这样规定，`.claude/settings.json` 用 `Bash(gh pr merge:*)` 拒绝它，`.codex/rules/cvsm.rules` 把它设为 `forbidden`。运行 `python .github/scripts/merge.py` 仍然是允许的。
 
 ## 相关页面
 
