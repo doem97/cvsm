@@ -1,0 +1,101 @@
+---
+import '~/styles/fonts.css';
+import '~/styles/tokens.css';
+import '~/styles/landing.css';
+import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
+import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
+import { t, url, GITHUB, type Lang } from '~/i18n/strings';
+
+interface Props {
+	lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const home = url(lang === 'zh-cn' ? 'zh-cn/' : '');
+const other = url(lang === 'zh-cn' ? '' : 'zh-cn/');
+const canonical = new URL(home, Astro.site).href;
+---
+
+<!doctype html>
+<html lang={s.htmlLang} dir="ltr">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{s.meta.title}</title>
+		<meta name="description" content={s.meta.description} />
+		<link rel="canonical" href={canonical} />
+		<link rel="alternate" hreflang="en" href={new URL(url(''), Astro.site).href} />
+		<link rel="alternate" hreflang="zh-CN" href={new URL(url('zh-cn/'), Astro.site).href} />
+		<link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
+		<meta property="og:title" content={s.meta.title} />
+		<meta property="og:description" content={s.meta.description} />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={canonical} />
+		<meta name="color-scheme" content="dark light" />
+		<link rel="preload" href={geist} as="font" type="font/woff2" crossorigin />
+		<link rel="preload" href={geistMono} as="font" type="font/woff2" crossorigin />
+		{lang === 'zh-cn' && <link rel="stylesheet" href={url('fonts/noto-sans-sc.css')} />}
+		{/* Same storage key and logic as Starlight's ThemeProvider, so the choice carries across. Inline to avoid a flash. */}
+		<script is:inline>
+			(() => {
+				let stored = null;
+				try { stored = localStorage.getItem('starlight-theme'); } catch {}
+				const theme = stored || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+				document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+			})();
+		</script>
+	</head>
+	<body class="rh">
+		<a class="skip" href="#main">{s.nav.skip}</a>
+		<header class="top">
+			<div class="wrap top__bar">
+				<a class="rh-wordmark" href={home} aria-label="research-harness">
+					<span class="rh-wordmark__name">research-harness</span>
+				</a>
+				<span class="top__status mono-cap">{s.nav.status}</span>
+				<nav class="top__nav" aria-label="Site">
+					<a class="top__link" href={url(s.links.docs)}>{s.nav.docs}</a>
+					<a class="top__link hide-sm" href={url(s.links.quick)}>{s.nav.quick}</a>
+					<a class="top__link hide-sm" href={GITHUB} rel="noopener">{s.nav.github}<span aria-hidden="true">&nbsp;↗</span></a>
+					<span class="top__sep" aria-hidden="true"></span>
+					<a class="top__lang" href={other} hreflang={s.nav.otherLang} lang={s.nav.otherLang} aria-label={`${s.nav.langLabel}: ${s.nav.other}`}>{s.nav.other}</a>
+					<button class="top__theme" type="button" aria-label={s.nav.theme} data-theme-toggle>
+						<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" /><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" /></svg>
+						<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" /></svg>
+					</button>
+				</nav>
+			</div>
+		</header>
+		<main id="main">
+			<slot />
+		</main>
+		<footer class="foot">
+			<div class="wrap">
+				<div class="rule"><i></i><i></i></div>
+				<div class="foot__grid">
+					<div class="foot__brand">
+						<a class="rh-wordmark" href={home}><span class="rh-wordmark__name">research-harness</span></a>
+						<p>{s.footer.tagline}</p>
+					</div>
+					<nav class="foot__links" aria-label="Footer">
+						<a href={url(s.links.docs)}>{s.footer.docs}</a>
+						<a href={GITHUB} rel="noopener">{s.footer.github}<span aria-hidden="true">&nbsp;↗</span></a>
+						<a href={url(s.footer.licenseHref)}>{s.footer.license}</a>
+						<a href={other} hreflang={s.nav.otherLang} lang={s.nav.otherLang}>{s.nav.other}</a>
+					</nav>
+					<p class="foot__meta mono-cap">{s.footer.status}</p>
+				</div>
+			</div>
+		</footer>
+		<script>
+			const KEY = 'starlight-theme';
+			document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
+				const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+				document.documentElement.dataset.theme = next;
+				try {
+					localStorage.setItem(KEY, next);
+				} catch {}
+			});
+		</script>
+	</body>
+</html>

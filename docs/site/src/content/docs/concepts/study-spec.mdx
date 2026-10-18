@@ -1,0 +1,107 @@
+---
+title: The study spec
+description: The fair-comparison contract you approve, and how every run is checked against it.
+sidebar:
+  order: 6
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Contract from '~/components/figures/Contract.astro';
+
+The study spec is the fair-comparison table you approve when you publish a study: what the arms vary, what every run holds fixed, and what may adapt. It is the last layer you can truly read, so rh checks every run against it from the run's own record.
+
+<Contract lang="en" />
+
+## Why a spec
+
+Below an approved study, code, configs and launches multiply faster than anyone can read, and that is where setting differences creep in. The spec is a few variables you can check by eye. Making it the contract moves the question from "did the agent say it kept things fair?" to "do the records match what I approved?".
+
+## The three sections
+
+The spec is three sections of the `study` issue, one item per line. Any line may end with `  # <comment>`.
+
+```text
+### Arms
+full: model.adapter=none
+lora: model.adapter=lora model.lora.rank=8
+
+### Controlled
+data.split=val  # held-out split from data.sha256
+model.backbone=vit_b16  # paper X, Table 2
+optim.lr=3e-4  # paper X, Table 2
+train.epochs=30  # paper X, Table 2
+train.effective_batch=256  # paper X, Table 2
+seed in 1,2,3  # three seeds, as in paper X
+
+### Adaptable
+train.per_device_batch  # fit to GPU memory; effective batch stays 256
+train.accum  # follows per_device_batch
+```
+
+- **Arms**: the only settings in which the arms differ. Each line is `<arm>: <key>=<value> ...`.
+- **Controlled**: settings every run must meet. `key=value  # reason` holds for every run. `key in v1,v2,...  # reason` lists values every arm must run, such as seeds and tuning grids. The reason is required: a paper, a record or an earlier result.
+- **Adaptable**: engineering settings that may differ between runs, each as `key  # rule`, where the rule keeps the comparison intact. This section may be empty.
+
+## Keys and values
+
+Keys are the dotted keys of each run's resolved config, the `config.json` that the training code writes and `run.py` logs as `cfg.*` params. A key appears in at most one section. Values that parse as JSON (numbers, `true`, `false`, `null`, lists) compare as JSON, so `1` and `1.0` are equal; others compare as strings.
+
+## How the spec is built
+
+The `plan` skill works out the spec with you before publishing, so it is complete and justified from the start. It walks the usual confounders and fixes every one that applies: data and split; preprocessing and augmentation; model and init; optimizer and schedule; effective batch and training length; precision; tuning budget; evaluation protocol and checkpoint selection; seeds. A setting the code cannot yet take through config gets a code sub-issue.
+
+<Aside type="caution" title="Gate 01 covers the spec">
+Publishing the spec is gate 01, and so is any later change to Arms, Controlled or Adaptable. The agent edits them only on your explicit instruction and records the Decision.
+</Aside>
+
+## How each role holds to it
+
+- **implement** sets every key of the spec through config, writes the resolved config to `$RUN_DIR/config.json`, and never alters a Controlled setting or makes the arms differ beyond Arms.
+- **review** treats a code change that breaks the spec as blocking.
+- **run** checks before launch that each Runs line runs exactly one arm and that each arm the issue runs gets every `in` value. Right after launch it runs the spec check and stops runs that break a Controlled `key=value` line, did not record its key, or match no arm or several. An undeclared difference is a blocker. It changes an Adaptable setting only within its rule and notes each change.
+- If a Controlled line cannot be met without changing the comparison, that is a [blocker](/research-harness/concepts/gates-and-blockers/): change the implementation, relax the spec, or drop the comparison.
+
+## The spec check
+
+Every results comment ends with a `规格核对` (spec check) section, produced by the results command from the records:
+
+```sh
+gh issue view 10 --json body -q .body | python scripts/results.py --issue 12 --spec -
+```
+
+It lists, as facts, for the selected runs, running ones included:
+
+- runs where a Controlled line does not hold, or that never recorded its key (`未记录`);
+- runs that match no arm, or several;
+- arms missing a value of an `in` line;
+- keys in no section whose values differ (`未声明的差异`, undeclared difference);
+- arms with no run;
+- problems in the spec itself, such as unreadable lines or a Controlled line without a reason;
+- the values each Adaptable key took per arm.
+
+With no spec or no deviation, the section says so.
+
+## An example
+
+Six toy runs of the spec above, started with `run.py` directly. One lora run used a smaller per-device batch and fp16. The `run` skill would have stopped it right after launch.
+
+```text
+规格核对：
+- `train.effective_batch=256` 不成立：1 个 run，0330bc8a46094e03a875e72c6dfd0872（128）
+- 未声明的差异 `train.precision`：bf16（5 个 run）、fp16（1 个 run）
+- Adaptable `train.per_device_batch`：full 取 64（3 个 run）；lora 取 64（2 个 run）、32（1 个 run）
+- Adaptable `train.accum`：full 取 4（3 个 run）；lora 取 4（3 个 run）
+```
+
+In English: the effective batch line fails for one run, which took 128; `train.precision` differs between runs although no section declares it; and these are the values each Adaptable key took. The reference `results.py` writes its text in Chinese; a project that wants another language changes `results.py`.
+
+<Aside type="note">
+rh reports what the records show. Whether the runs are still comparable is your call.
+</Aside>
+
+## Related
+
+- [Run records](/research-harness/concepts/run-records/)
+- [Plan a study](/research-harness/guides/plan-a-study/)
+- [Issue forms](/research-harness/reference/issue-forms/)
+- [results.py](/research-harness/reference/results-py/)

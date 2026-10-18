@@ -1,0 +1,80 @@
+---
+title: Overview
+description: What rh is, the problem it solves, and what you copy into your repo.
+sidebar:
+  order: 1
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+import Harness from '~/components/figures/Harness.astro';
+
+rh (research-harness) is a template you copy into a research repo so that coding agents can run an ML study while you hold four gates. Every run is checked against the study spec you approved, from the run's own record rather than from an agent's account.
+
+<Harness lang="en" />
+
+## The problem: drift below the plan
+
+Coding agents can now write the code, launch the runs and post the results of a study faster than you can read them. The risk sits below the plan. A learning rate gets changed to fix a crash. An effective batch gets halved to fit memory. Each change is reasonable on its own, and together they turn a comparison into a guess. Usually all you see is the agent's summary.
+
+## What rh does about it
+
+rh keeps you where a human is needed and makes the rest checkable.
+
+- **You approve a study spec**: the arms, the settings held fixed (each with a reason), and the settings that may adapt. See [The study spec](/research-harness/concepts/study-spec/).
+- **Agents do everything below it** through GitHub issues and pull requests. They stop only at [four gates](/research-harness/concepts/gates-and-blockers/), or at a blocker they cannot resolve alone.
+- **Every run records its resolved config**, and the results command checks those records against the spec. Deviations reach you as facts, not as an agent's account. See [Run records](/research-harness/concepts/run-records/).
+
+## What you copy in
+
+rh is a convention around git and GitHub, not a service. Nothing runs outside GitHub, git and your own machines.
+
+<CardGrid>
+  <Card title="State: GitHub issues">
+    A `study` or `plan` parent with `code` and `run` sub-issues. The repo holds no plan, progress or notes files. See [State](/research-harness/concepts/state/).
+  </Card>
+  <Card title="Rules: AGENTS.md">
+    How to read state, when to stop, how to ask, how to use git and files. At most 80 lines, capped by a test. See [AGENTS.md](/research-harness/reference/agents-md/).
+  </Card>
+  <Card title="Procedures: four skills">
+    `plan`, `implement`, `review` and `run`, each at most 120 lines. Claude Code and Codex read the same files. See [Skills](/research-harness/reference/skills/).
+  </Card>
+  <Card title="Checks: guard, test, merge.py">
+    `guard` checks each PR's format, file locations and scope; `test` runs your tests; `merge.py` is the only way an agent merges. See [Merging](/research-harness/concepts/merging/).
+  </Card>
+  <Card title="Runs: run.py and results.py">
+    A reference Run command that records each run as an MLflow run, and a results command that builds the table and the spec check. See [run.py](/research-harness/reference/run-py/).
+  </Card>
+  <Card title="Review: a fresh session">
+    Every PR is reviewed by a session that starts from the PR number alone. See [Review](/research-harness/concepts/review/).
+  </Card>
+</CardGrid>
+
+## rh in numbers
+
+| | |
+|---|---|
+| Services to install | 0 |
+| Lines of rules (AGENTS.md) | at most 80, checked by a test |
+| Skills | 4, at most 120 lines each |
+| Human gates | 4, the only planned stops |
+| Merge paths for agents | 1, `merge.py` |
+| Agent CLIs | 2, Claude Code and Codex, with one set of skills |
+
+## What rh leaves to you
+
+rh records facts and shows differences. It does not choose seeds, design experiments, decide when to rerun, or judge whether runs are comparable; you set those in the spec and in your instructions. Analysis, visualization, and how an agent works inside a task are also yours. See [Principles](/research-harness/concepts/principles/).
+
+<Aside type="tip">
+rh is built with rh. Since the initial commit, every change to its `main` has been a squash-merged PR that closes one task issue under a `plan` parent. See [Built with rh](/research-harness/project/built-with-rh/).
+</Aside>
+
+## Status
+
+rh is a pre-release. It runs its own development, and its interfaces may still change before the first release. See [Status](/research-harness/project/status/).
+
+## Related
+
+- [Quick start](/research-harness/start/quick-start/)
+- [Talk, don't click](/research-harness/start/talk-dont-click/)
+- [The study spec](/research-harness/concepts/study-spec/)
+- [Adopt rh](/research-harness/guides/adopt/)

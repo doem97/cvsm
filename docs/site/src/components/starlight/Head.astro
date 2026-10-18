@@ -1,0 +1,14 @@
+---
+// Starlight's own <head>, plus preloads for the two Latin faces every page paints first and,
+// on Chinese pages, the Noto Sans SC face map.
+import Default from '@astrojs/starlight/components/Head.astro';
+import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
+import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
+const zh = Astro.locals.starlightRoute.lang === 'zh-CN';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+
+<Default><slot /></Default>
+{zh && <link rel="stylesheet" href={`${base}fonts/noto-sans-sc.css`} />}
+<link rel="preload" href={geist} as="font" type="font/woff2" crossorigin />
+<link rel="preload" href={geistMono} as="font" type="font/woff2" crossorigin />

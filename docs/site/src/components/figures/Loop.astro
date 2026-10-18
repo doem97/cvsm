@@ -1,0 +1,642 @@
+---
+/**
+ * The rh loop: HUMAN, AGENTS and RECORD lanes across PLAN … ANALYZE.
+ * Hovering, focusing or pressing a gate (or the blocker) highlights its phase and shows when it
+ * applies, what you say and what gets recorded. Lays itself out by container width: six columns
+ * when there is room, one phase per row when there is not.
+ *
+ *   <Loop lang="en" />
+ */
+import { t, type Lang } from '~/i18n/strings';
+
+interface Props {
+	lang?: Lang;
+}
+const { lang = 'en' } = Astro.props;
+const s = t(lang).loop;
+const uid = `loop-${lang}`;
+const stopAt = new Map(s.stops.map((st) => [st.phase, st]));
+---
+
+<figure class="rh-loop not-content" data-loop data-active="g1">
+	<div class="grid" role="group" aria-label={s.aside}>
+		<div class="lane-label" style="grid-row: 2">
+			<b>{s.lanes[0].name}</b><span>{s.lanes[0].note}</span>
+		</div>
+		<div class="lane-label" style="grid-row: 4">
+			<b>{s.lanes[1].name}</b><span>{s.lanes[1].note}</span>
+		</div>
+		<div class="lane-label" style="grid-row: 7">
+			<b>{s.lanes[2].name}</b><span>{s.lanes[2].note}</span>
+		</div>
+		{
+			s.phases.map((phase, k) => {
+				const st = stopAt.get(k);
+				const agent = s.agents[k];
+				const rec = s.records[k];
+				return (
+					<div class="phase" data-phase={k} data-stop={st?.id} style={`--c: ${k + 1}`}>
+						<span class="wash" aria-hidden="true" />
+						<p class="phase__head">
+							<span class="phase__num">0{k + 1}</span> {phase}
+						</p>
+						<div class="cell cell--human">
+							<span class="lane-tag">{s.lanes[0].name}</span>
+							{st ? (
+								<button
+									type="button"
+									class:list={['stop', `stop--${st.kind}`]}
+									data-stop-btn={st.id}
+									aria-controls={`${uid}-detail`}
+									aria-pressed={st.id === 'g1' ? 'true' : 'false'}
+								>
+									<span class="stop__mark" aria-hidden="true" />
+									<span class="stop__name">
+										{st.num && <span class="stop__num">{st.num}</span>}
+										{st.name}
+									</span>
+									<span class="stop__say">{st.say}</span>
+								</button>
+							) : (
+								<span class="cell__empty" aria-hidden="true" />
+							)}
+						</div>
+						<div class="cell cell--agent">
+							<span class="lane-tag">{s.lanes[1].name}</span>
+							<div class:list={['card', { 'card--fresh': agent.title === 'review' }]}>
+								<span class:list={['card__title', { mono: agent.mono }]}>{agent.title}</span>
+								<span class="card__sub">{agent.sub}</span>
+							</div>
+							{k < 5 && <span class="arrow" aria-hidden="true" />}
+							{k === 2 && (
+								<span class="changes" aria-hidden="true">
+									<span>{s.changes}</span>
+								</span>
+							)}
+						</div>
+						<div class="cell cell--record">
+							<span class="lane-tag">{s.lanes[2].name}</span>
+							<p class="rec__head">
+								<span class="rec__box" aria-hidden="true" />
+								{rec.head}
+							</p>
+							<ul class="rec__lines">
+								{rec.lines.map((ln) => <li>{ln}</li>)}
+								{rec.verify?.map((ln) => (
+									<li class="verify">
+										{ln}
+										<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8.8l3.8 3.6L14 3.5" /></svg>
+									</li>
+								))}
+								{st && <li class="decision">{s.decision}</li>}
+							</ul>
+						</div>
+					</div>
+				);
+			})
+		}
+	</div>
+	<div class="detail" id={`${uid}-detail`} aria-live="polite">
+		{
+			s.stops.map((st) => (
+				<div class="detail__item" data-for={st.id}>
+					<p class="detail__title">
+						<span class:list={['stop__mark', `mark--${st.kind}`]} aria-hidden="true" />
+						{st.num && <span class="stop__num">{st.num}</span>}
+						{st.name}
+					</p>
+					<dl>
+						<div>
+							<dt>{s.labels.when}</dt>
+							<dd>{st.when}</dd>
+						</div>
+						<div>
+							<dt>{s.labels.say}</dt>
+							<dd class="say">{st.answer}</dd>
+						</div>
+						<div>
+							<dt>{s.labels.rec}</dt>
+							<dd>{st.rec}</dd>
+						</div>
+					</dl>
+				</div>
+			))
+		}
+		<p class="detail__hint">{s.hint}</p>
+	</div>
+</figure>
+
+<script>
+	// Hover, focus or press a stop to show it; the last one shown stays until another is chosen.
+	document.querySelectorAll<HTMLElement>('[data-loop]').forEach((fig) => {
+		const buttons = [...fig.querySelectorAll<HTMLButtonElement>('[data-stop-btn]')];
+		const show = (id: string) => {
+			fig.dataset.active = id;
+			buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.stopBtn === id)));
+		};
+		buttons.forEach((b, i) => {
+			const id = b.dataset.stopBtn!;
+			b.addEventListener('pointerenter', () => show(id));
+			b.addEventListener('focus', () => show(id));
+			b.addEventListener('click', () => show(id));
+			b.addEventListener('keydown', (e) => {
+				const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+				if (!d) return;
+				e.preventDefault();
+				buttons[(i + d + buttons.length) % buttons.length].focus();
+			});
+		});
+	});
+</script>
+
+<style>
+	.rh-loop {
+		container-type: inline-size;
+		margin: 2rem 0;
+		color: var(--rh-text);
+		font-family: var(--rh-font-sans);
+		--mono: var(--rh-font-mono);
+		--cap: 0.6875rem;
+	}
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+		grid-template-rows: auto auto auto auto auto auto auto auto;
+		column-gap: clamp(10px, 1.6cqi, 24px);
+		border-top: 1px solid var(--rh-hair-2);
+		position: relative;
+	}
+	.lane-label {
+		grid-column: 1 / -1;
+		display: flex;
+		gap: 0.9rem;
+		align-items: baseline;
+		padding: 1.1rem 0 0.75rem;
+		border-top: 1px solid var(--rh-hair);
+		font-family: var(--mono);
+		font-size: var(--cap);
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		z-index: 1;
+	}
+	.lane-label b {
+		font-weight: 500;
+	}
+	.lane-label span {
+		color: var(--rh-muted);
+	}
+	.phase {
+		display: contents;
+	}
+	.phase > * {
+		grid-column: var(--c);
+	}
+	.phase__head {
+		grid-row: 1;
+		margin: 0;
+		padding: 0.9rem 0 0.8rem;
+		font-family: var(--mono);
+		font-size: var(--cap);
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		transition: color 160ms var(--rh-ease);
+	}
+	.phase__num {
+		color: var(--rh-muted);
+		margin-inline-end: 0.35em;
+	}
+	.cell {
+		position: relative;
+		min-width: 0;
+	}
+	.cell--human {
+		grid-row: 3;
+		padding-bottom: 1rem;
+	}
+	.cell--agent {
+		grid-row: 5;
+		padding-bottom: 2.6rem;
+	}
+	.cell--record {
+		grid-row: 8;
+		padding-bottom: 1rem;
+	}
+	/* The column of the active stop, washed from the phase head to the record. */
+	.wash {
+		grid-row: 1 / 9;
+		margin-inline: calc(-0.5 * clamp(10px, 1.6cqi, 24px));
+		background: var(--rh-accent-wash);
+		opacity: 0;
+		transition: opacity 200ms var(--rh-ease);
+		pointer-events: none;
+	}
+	.lane-tag {
+		display: none;
+	}
+
+	/* Human lane: the four gates and the blocker. */
+	.stop {
+		all: unset;
+		box-sizing: border-box;
+		display: grid;
+		grid-template-columns: auto 1fr;
+		column-gap: 0.6rem;
+		row-gap: 0.35rem;
+		width: 100%;
+		cursor: pointer;
+		position: relative;
+		padding: 0.2rem 0;
+	}
+	.stop:focus-visible {
+		outline: 2px solid var(--rh-accent);
+		outline-offset: 4px;
+	}
+	.stop__mark {
+		width: 10px;
+		height: 10px;
+		margin-top: 0.2rem;
+		background: var(--rh-accent);
+		transition: transform 200ms var(--rh-ease);
+	}
+	.stop--blocker .stop__mark,
+	.mark--blocker {
+		background: transparent;
+		border: 2px solid var(--rh-accent);
+		border-radius: 50%;
+	}
+	.stop__name {
+		font-family: var(--mono);
+		font-size: var(--cap);
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-accent-ink);
+		font-weight: 500;
+	}
+	.stop__num {
+		margin-inline-end: 0.5em;
+	}
+	.stop__say {
+		grid-column: 1 / -1;
+		font-size: clamp(0.95rem, 0.6rem + 1.1cqi, 1.25rem);
+		letter-spacing: -0.01em;
+		color: var(--rh-text);
+		line-height: 1.25;
+	}
+	.cell__empty {
+		display: block;
+	}
+
+	/* Agent lane: one card per skill. */
+	.card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		min-height: 5.25rem;
+		padding: 0.85rem 0.8rem;
+		background: var(--rh-surface);
+		border: 1px solid var(--rh-hair-2);
+		position: relative;
+		transition: border-color 200ms var(--rh-ease);
+	}
+	.card--fresh {
+		border-style: dashed;
+		border-color: color-mix(in srgb, var(--rh-text) 55%, transparent);
+	}
+	.card__title {
+		font-size: clamp(0.95rem, 0.55rem + 1.2cqi, 1.3rem);
+		font-weight: 500;
+		letter-spacing: -0.015em;
+		overflow-wrap: anywhere;
+	}
+	.card__title.mono {
+		font-family: var(--mono);
+		font-size: clamp(0.85rem, 0.5rem + 1.05cqi, 1.15rem);
+		letter-spacing: 0;
+	}
+	.card__sub {
+		font-size: clamp(0.78rem, 0.6rem + 0.5cqi, 0.95rem);
+		color: var(--rh-muted);
+		line-height: 1.3;
+	}
+	.arrow {
+		position: absolute;
+		top: 2.6rem;
+		right: calc(-1 * clamp(10px, 1.6cqi, 24px));
+		width: clamp(10px, 1.6cqi, 24px);
+		height: 1px;
+		background: var(--rh-text);
+	}
+	.arrow::after {
+		content: '';
+		position: absolute;
+		right: 1px;
+		top: -3px;
+		width: 6px;
+		height: 6px;
+		border-top: 1.5px solid var(--rh-text);
+		border-right: 1.5px solid var(--rh-text);
+		transform: rotate(45deg);
+	}
+	/* The review loop: changes go back to implement. */
+	.changes {
+		position: absolute;
+		left: calc(-50% - clamp(10px, 1.6cqi, 24px));
+		right: 50%;
+		bottom: 0.9rem;
+		height: 1.2rem;
+		border: 1.5px solid var(--rh-text);
+		border-top: 0;
+		display: flex;
+		justify-content: center;
+	}
+	.changes::before {
+		content: '';
+		position: absolute;
+		left: -4.5px;
+		top: -2px;
+		border: 4px solid transparent;
+		border-bottom: 6px solid var(--rh-text);
+		border-top: 0;
+	}
+	.changes span {
+		position: relative;
+		top: 0.7rem;
+		padding: 0 0.5rem;
+		background: var(--rh-bg);
+		font-family: var(--mono);
+		font-size: 0.625rem;
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-muted);
+		line-height: 1;
+	}
+
+	/* Record lane. */
+	.rec__head {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 0 0 0.6rem;
+		font-family: var(--mono);
+		font-size: var(--cap);
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-muted);
+	}
+	.rec__box {
+		width: 8px;
+		height: 8px;
+		border: 1.5px solid var(--rh-text);
+		flex: none;
+	}
+	.rec__lines {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		font-family: var(--mono);
+		font-size: clamp(0.7rem, 0.5rem + 0.55cqi, 0.8125rem);
+		line-height: 1.7;
+		color: var(--rh-text);
+	}
+	.rec__lines li {
+		margin: 0;
+		overflow-wrap: anywhere;
+	}
+	.rec__lines .verify {
+		color: var(--rh-verify-ink);
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+	.rec__lines svg {
+		width: 0.9em;
+		height: 0.9em;
+		fill: none;
+		stroke: var(--rh-verify);
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		flex: none;
+	}
+	.rec__lines .decision {
+		color: var(--rh-accent-ink);
+		margin-top: 0.4rem;
+		transition: color 200ms var(--rh-ease);
+	}
+
+	/* Active stop: wash the column, lift its mark, bring out its Decision. */
+	.rh-loop[data-active='g1'] [data-stop='g1'] .wash,
+	.rh-loop[data-active='b'] [data-stop='b'] .wash,
+	.rh-loop[data-active='g2'] [data-stop='g2'] .wash,
+	.rh-loop[data-active='g3'] [data-stop='g3'] .wash,
+	.rh-loop[data-active='g4'] [data-stop='g4'] .wash {
+		opacity: 1;
+	}
+	.rh-loop[data-active='g1'] [data-stop='g1'] .stop__mark,
+	.rh-loop[data-active='b'] [data-stop='b'] .stop__mark,
+	.rh-loop[data-active='g2'] [data-stop='g2'] .stop__mark,
+	.rh-loop[data-active='g3'] [data-stop='g3'] .stop__mark,
+	.rh-loop[data-active='g4'] [data-stop='g4'] .stop__mark {
+		transform: scale(1.35);
+	}
+	.rh-loop[data-active='g1'] [data-stop='g1'] .card,
+	.rh-loop[data-active='b'] [data-stop='b'] .card,
+	.rh-loop[data-active='g2'] [data-stop='g2'] .card,
+	.rh-loop[data-active='g3'] [data-stop='g3'] .card,
+	.rh-loop[data-active='g4'] [data-stop='g4'] .card {
+		border-color: var(--rh-text);
+	}
+	.rh-loop[data-active='g1'] [data-stop='g1'] .phase__head,
+	.rh-loop[data-active='b'] [data-stop='b'] .phase__head,
+	.rh-loop[data-active='g2'] [data-stop='g2'] .phase__head,
+	.rh-loop[data-active='g3'] [data-stop='g3'] .phase__head,
+	.rh-loop[data-active='g4'] [data-stop='g4'] .phase__head {
+		color: var(--rh-accent-ink);
+	}
+	.rh-loop[data-active] .rec__lines .decision {
+		color: var(--rh-muted);
+	}
+	.rh-loop[data-active='g1'] [data-stop='g1'] .rec__lines .decision,
+	.rh-loop[data-active='b'] [data-stop='b'] .rec__lines .decision,
+	.rh-loop[data-active='g2'] [data-stop='g2'] .rec__lines .decision,
+	.rh-loop[data-active='g3'] [data-stop='g3'] .rec__lines .decision,
+	.rh-loop[data-active='g4'] [data-stop='g4'] .rec__lines .decision {
+		color: var(--rh-accent-ink);
+		font-weight: 500;
+	}
+
+	/* The detail panel for the active stop. */
+	.detail {
+		border-top: 1px solid var(--rh-hair-2);
+		border-bottom: 1px solid var(--rh-hair);
+		padding: 1.25rem 0 1.1rem;
+		position: relative;
+	}
+	.detail__item {
+		display: none;
+	}
+	.rh-loop[data-active='g1'] [data-for='g1'],
+	.rh-loop[data-active='b'] [data-for='b'],
+	.rh-loop[data-active='g2'] [data-for='g2'],
+	.rh-loop[data-active='g3'] [data-for='g3'],
+	.rh-loop[data-active='g4'] [data-for='g4'] {
+		display: grid;
+		grid-template-columns: minmax(9rem, 1fr) 5fr;
+		gap: 1rem;
+		animation: rh-loop-in 260ms var(--rh-ease);
+	}
+	@keyframes rh-loop-in {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+	}
+	.detail__title {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin: 0;
+		font-family: var(--mono);
+		font-size: var(--cap);
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-accent-ink);
+		font-weight: 500;
+		align-self: start;
+	}
+	.detail__title .stop__mark {
+		margin: 0;
+	}
+	dl {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 1.25rem;
+		margin: 0;
+	}
+	dt {
+		font-family: var(--mono);
+		font-size: 0.625rem;
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-muted);
+		margin-bottom: 0.35rem;
+	}
+	dd {
+		margin: 0;
+		font-size: 0.875rem;
+		line-height: 1.5;
+		color: var(--rh-soft);
+	}
+	dd.say {
+		color: var(--rh-text);
+		font-size: 1rem;
+	}
+	.detail__hint {
+		margin: 1rem 0 0;
+		font-family: var(--mono);
+		font-size: 0.625rem;
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-muted);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.detail__item,
+		.wash,
+		.stop__mark {
+			animation: none !important;
+			transition: none !important;
+		}
+	}
+
+	/* Medium containers (a docs column): tighter, the detail stacks. */
+	@container (max-width: 860px) {
+		.rh-loop[data-active] .detail__item[data-for] {
+			grid-template-columns: 1fr;
+			gap: 0.75rem;
+		}
+		dl {
+			gap: 1rem;
+		}
+		.card {
+			padding: 0.7rem 0.6rem;
+			min-height: 4.75rem;
+		}
+		.lane-label span {
+			display: none;
+		}
+	}
+
+	/* Narrow containers: one phase per row, lanes as tags. */
+	@container (max-width: 600px) {
+		.grid {
+			grid-template-columns: 1fr;
+			grid-template-rows: none;
+		}
+		.lane-label {
+			display: none;
+		}
+		.phase {
+			display: grid;
+			grid-template-columns: 5.5rem 1fr;
+			column-gap: 0.75rem;
+			row-gap: 0.65rem;
+			padding: 1rem 0 1.1rem;
+			border-top: 1px solid var(--rh-hair);
+			position: relative;
+		}
+		.phase > * {
+			grid-column: 2;
+			grid-row: auto;
+		}
+		.phase__head {
+			grid-column: 1;
+			grid-row: 1 / span 3;
+			padding: 0;
+		}
+		.cell {
+			padding: 0;
+			display: grid;
+			grid-template-columns: 4rem 1fr;
+			gap: 0.5rem;
+			align-items: start;
+		}
+		.wash {
+			grid-column: 1 / -1;
+			grid-row: 1 / span 4;
+			margin: -0.5rem -0.5rem;
+		}
+		.cell > :not(.lane-tag) {
+			grid-column: 2;
+		}
+		.lane-tag {
+			grid-row: 1 / span 3;
+		}
+		.lane-tag {
+			display: block;
+			font-family: var(--mono);
+			font-size: 0.625rem;
+			letter-spacing: var(--rh-track-caps);
+			text-transform: var(--rh-caps);
+			color: var(--rh-muted);
+			padding-top: 0.15rem;
+		}
+		.cell__empty::before {
+			content: '—';
+			color: var(--rh-muted);
+		}
+		.card {
+			min-height: 0;
+		}
+		.arrow,
+		.changes {
+			display: none;
+		}
+		dl {
+			grid-template-columns: 1fr;
+		}
+		.rec__head {
+			margin-bottom: 0.25rem;
+		}
+	}
+</style>

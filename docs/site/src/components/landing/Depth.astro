@@ -1,0 +1,254 @@
+---
+// The problem, drawn: the readable spec on top, and below it denser layers of agent work, where
+// reasonable-looking changes break the comparison without anyone reading them.
+import { rng } from '~/lib/harness';
+import { t, SPEC_LINES, type Lang } from '~/i18n/strings';
+
+interface Props {
+	lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang).problem;
+const rand = rng(7);
+const W = 600;
+const layers = [
+	{ h: 92, rows: 6, w: [40, 220], gap: [10, 26], indent: true, op: 0.34, sw: 3 },
+	{ h: 92, rows: 9, w: [14, 70], gap: [10, 22], indent: false, op: 0.27, sw: 3 },
+	{ h: 132, rows: 16, w: [3, 6], gap: [4, 7], indent: false, op: 0.22, sw: 2.5 },
+];
+const bars = layers.map((ly, li) => {
+	const out: string[] = [];
+	const pitch = (ly.h - 12) / (ly.rows - 1);
+	for (let r = 0; r < ly.rows; r++) {
+		const y = 6 + r * pitch;
+		let x = ly.indent ? [0, 0, 24, 48, 72][Math.floor(rand() * 5)] : 0;
+		while (x < W) {
+			const w = ly.w[0] + rand() * (ly.w[1] - ly.w[0]);
+			if (x + w > W) break;
+			out.push(`M${x.toFixed(1)} ${y.toFixed(1)}h${w.toFixed(1)}`);
+			x += w + ly.gap[0] + rand() * (ly.gap[1] - ly.gap[0]);
+			if (li === 0 && rand() < 0.25) break;
+		}
+	}
+	return out.join('');
+});
+const controlled = SPEC_LINES.slice(3, 7);
+---
+
+<div class="depth" aria-hidden="true">
+	<div class="d-spec">
+		<div class="d-head">
+			<span class="d-mark"></span>
+			<span>{s.spec}</span>
+			<span class="d-aside">{s.layer0}</span>
+		</div>
+		<ol>
+			{
+				controlled.map((ln) => (
+					<li class:list={{ h: ln.kind === 'h' }}>
+						<code>{ln.text}</code>
+						{ln.note && <code class="c">{ln.note}</code>}
+					</li>
+				))
+			}
+		</ol>
+	</div>
+	<p class="d-deep">{s.deep}</p>
+	{
+		layers.map((ly, i) => (
+			<div class="d-layer" style={`--i:${i}`}>
+				<span class="d-name">{s.layers[i]}</span>
+				<svg viewBox={`0 0 ${W} ${ly.h}`} preserveAspectRatio="none" style={`height:${ly.h}px`}>
+					<path d={bars[i]} stroke-width={ly.sw} style={`stroke-opacity:${ly.op}`} vector-effect="non-scaling-stroke" />
+				</svg>
+				<span class="d-drift" style={`--x:${[38, 22, 46][i]}%; --y:${[52, 58, 46][i]}%`}>
+					<b>≠</b>
+					<code>{s.drifts[i].key}</code>
+					<span class="d-from">{s.drifts[i].from}</span>
+					<span class="d-arrow">→</span>
+					<code>{s.drifts[i].to}</code>
+					<em>{s.drifts[i].why}</em>
+				</span>
+			</div>
+		))
+	}
+</div>
+
+<style>
+	.depth {
+		position: relative;
+		color: var(--rh-text);
+	}
+	code {
+		font-family: var(--rh-font-mono);
+		background: none;
+		padding: 0;
+	}
+	.d-spec {
+		position: relative;
+		z-index: 2;
+		background: var(--rh-surface);
+		border: 1px solid var(--rh-hair-2);
+		border-left: 4px solid var(--rh-accent);
+		padding: 1rem 1.25rem 1.1rem;
+	}
+	.d-head {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+		align-items: center;
+		padding-bottom: 0.75rem;
+		margin-bottom: 0.75rem;
+		border-bottom: 1px solid var(--rh-hair);
+		font-family: var(--rh-font-mono);
+		font-size: 0.6875rem;
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+	}
+	.d-mark {
+		width: 9px;
+		height: 9px;
+		background: var(--rh-accent);
+	}
+	.d-aside {
+		margin-inline-start: auto;
+		color: var(--rh-accent-ink);
+	}
+	.d-spec ol {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		font-family: var(--rh-font-mono);
+		font-size: clamp(0.72rem, 0.6rem + 0.3vw, 0.875rem);
+		line-height: 1.85;
+	}
+	.d-spec li {
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+	.d-spec li.h {
+		color: var(--rh-muted);
+	}
+	.d-spec .c {
+		color: var(--rh-muted);
+	}
+	.depth .d-deep {
+		margin: 2.25rem 0 0.9rem;
+		font-family: var(--rh-font-mono);
+		font-size: 0.6875rem;
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-muted);
+	}
+	.d-layer {
+		position: relative;
+		border: 1px solid var(--rh-hair);
+		padding: 2.2rem 1.1rem 1rem;
+		margin-bottom: 1rem;
+		background: var(--rh-bg);
+	}
+	.d-layer:last-child {
+		mask-image: linear-gradient(to bottom, #000 55%, transparent);
+		-webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+		border-bottom: 0;
+	}
+	.d-name {
+		position: absolute;
+		top: 0.75rem;
+		left: 1.1rem;
+		font-family: var(--rh-font-mono);
+		font-size: 0.6875rem;
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-muted);
+	}
+	svg {
+		display: block;
+		width: 100%;
+	}
+	svg path {
+		stroke: var(--rh-text);
+		fill: none;
+	}
+	.d-drift {
+		position: absolute;
+		left: var(--x);
+		top: var(--y);
+		display: inline-flex;
+		align-items: baseline;
+		gap: 0.45rem;
+		padding: 0.35rem 0.6rem;
+		background: var(--rh-bg);
+		border: 1px dashed var(--rh-text);
+		font-family: var(--rh-font-mono);
+		font-size: 0.75rem;
+		white-space: nowrap;
+		color: var(--rh-text);
+		max-width: calc(100% - var(--x) - 0.5rem);
+		overflow: hidden;
+	}
+	.d-drift b {
+		font-weight: 500;
+	}
+	.d-from {
+		color: var(--rh-muted);
+		text-decoration: line-through;
+		text-decoration-color: var(--rh-muted);
+	}
+	.d-arrow {
+		color: var(--rh-muted);
+	}
+	.d-drift em {
+		font-style: normal;
+		font-family: var(--rh-font-sans);
+		color: var(--rh-muted);
+		margin-inline-start: 0.2rem;
+	}
+
+	@supports (animation-timeline: view()) {
+		@media (prefers-reduced-motion: no-preference) {
+			/* Each layer settles under the spec as it scrolls in; its drift surfaces after. */
+			.d-layer {
+				animation: rh-settle linear both;
+				animation-timeline: view();
+				animation-range: entry 0% cover 38%;
+			}
+			.d-drift {
+				animation: rh-surface linear both;
+				animation-timeline: view();
+				animation-range: entry 70% cover 45%;
+			}
+			@keyframes rh-settle {
+				from {
+					opacity: 0;
+					transform: translateY(calc(-40px - var(--i) * 30px)) scale(0.97);
+				}
+			}
+			@keyframes rh-surface {
+				from {
+					opacity: 0;
+					transform: translateY(6px);
+				}
+			}
+		}
+	}
+
+	@media (max-width: 640px) {
+		.d-drift {
+			left: 0.75rem;
+			max-width: calc(100% - 1.5rem);
+			font-size: 0.6875rem;
+		}
+		.d-drift em {
+			display: none;
+		}
+		.d-spec li {
+			flex-direction: column;
+			gap: 0;
+		}
+		.d-spec li .c {
+			padding-inline-start: 1.5em;
+		}
+	}
+</style>

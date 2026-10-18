@@ -1,0 +1,244 @@
+---
+/**
+ * Talk, don't click: a session transcript. Your words at a gate are marked orange; every agent
+ * stop ends with the three report lines Done, Waiting for you and Next.
+ *
+ *   <Session lang="en" />           static
+ *   <Session lang="en" animate />   types itself in when scrolled into view (landing page)
+ */
+import { t, type Lang } from '~/i18n/strings';
+
+interface Props {
+	lang?: Lang;
+	animate?: boolean;
+}
+const { lang = 'en', animate = false } = Astro.props;
+const s = t(lang).session;
+const KEYS = ['Done', 'Waiting for you', 'Next'];
+const split = (ln: string) => {
+	const i = ln.indexOf(': ');
+	const key = i > 0 ? ln.slice(0, i) : '';
+	return KEYS.includes(key) ? { key: key + ':', rest: ln.slice(i + 2) } : { key: '', rest: ln };
+};
+---
+
+<figure class="rh-session not-content" data-session={animate ? '' : undefined}>
+	<ol class="turns">
+		{
+			s.transcript.map((turn) =>
+				turn.who === 'you' ? (
+					<li class="turn turn--you">
+						<span class="who">{s.you}</span>
+						<p class="say">
+							<span class="typed">{turn.say}</span>
+						</p>
+						{turn.gate && (
+							<span class="gate">
+								<i aria-hidden="true" />
+								{s.gate} {turn.gate}
+							</span>
+						)}
+					</li>
+				) : (
+					<li class="turn turn--agent">
+						<span class="who">{s.agent}</span>
+						<div class="lines">
+							{turn.lines!.map((ln) => {
+								const { key, rest } = split(ln);
+								return (
+									<p class="line">
+										{key && <span class="key">{key}</span>}
+										<span class="rest">{rest}</span>
+									</p>
+								);
+							})}
+						</div>
+					</li>
+				),
+			)
+		}
+	</ol>
+	<figcaption class="foot">
+		<span class="foot__label">{s.report}</span>
+		<span class="foot__keys">{s.reportLines.map((k) => <code>{k}</code>)}</span>
+		{animate && (
+			<button type="button" class="replay" data-replay hidden>
+				↺ {s.replay}
+			</button>
+		)}
+	</figcaption>
+</figure>
+
+{animate && <script src="../../scripts/session-type.ts"></script>}
+
+<style>
+	.rh-session {
+		container-type: inline-size;
+		margin: 2rem 0;
+		color: var(--rh-text);
+		--mono: var(--rh-font-mono);
+		border-top: 1px solid var(--rh-hair-2);
+	}
+	.turns {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.turn {
+		display: grid;
+		grid-template-columns: clamp(4rem, 14cqi, 9rem) minmax(0, 1fr) auto;
+		column-gap: 1rem;
+		align-items: baseline;
+		margin: 0;
+	}
+	.turn--you {
+		padding: 1.1rem 0 0.45rem;
+	}
+	.turn--you + .turn--agent {
+		padding-bottom: 1.1rem;
+		border-bottom: 1px solid var(--rh-hair);
+	}
+	.turn:last-child {
+		border-bottom: 0;
+	}
+	.who {
+		font-family: var(--mono);
+		font-size: 0.6875rem;
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-muted);
+	}
+	.turn--you .who {
+		color: var(--rh-accent-ink);
+		font-weight: 500;
+	}
+	.say {
+		margin: 0;
+		font-size: clamp(1.05rem, 0.7rem + 1.6cqi, 1.75rem);
+		font-weight: 500;
+		letter-spacing: -0.02em;
+		line-height: 1.25;
+	}
+	.gate {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-family: var(--mono);
+		font-size: 0.6875rem;
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-accent-ink);
+		white-space: nowrap;
+	}
+	.gate i {
+		width: 9px;
+		height: 9px;
+		background: var(--rh-accent);
+	}
+	.lines {
+		grid-column: 2 / -1;
+	}
+	.line {
+		margin: 0;
+		font-size: clamp(0.85rem, 0.7rem + 0.5cqi, 1rem);
+		line-height: 1.65;
+		color: var(--rh-muted);
+	}
+	.key {
+		font-family: var(--mono);
+		font-size: 0.9em;
+		color: var(--rh-text);
+		margin-inline-end: 0.6em;
+	}
+	.foot {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 1.25rem;
+		padding: 0.9rem 0;
+		border-top: 1px solid var(--rh-hair-2);
+		font-family: var(--mono);
+		font-size: 0.6875rem;
+		letter-spacing: var(--rh-track-caps);
+		text-transform: var(--rh-caps);
+		color: var(--rh-muted);
+	}
+	.foot__keys {
+		display: inline-flex;
+		gap: 0.9rem;
+	}
+	.foot code {
+		font-family: var(--mono);
+		text-transform: none;
+		letter-spacing: 0;
+		font-size: 0.75rem;
+		color: var(--rh-text);
+		background: none;
+		padding: 0;
+		border: 0;
+	}
+	.replay {
+		margin-inline-start: auto;
+		font: inherit;
+		letter-spacing: inherit;
+		text-transform: inherit;
+		color: var(--rh-text);
+		background: none;
+		border: 1px solid var(--rh-hair-2);
+		padding: 0.35rem 0.7rem;
+		cursor: pointer;
+	}
+	.replay:hover {
+		border-color: var(--rh-text);
+	}
+	.replay:focus-visible {
+		outline: 2px solid var(--rh-text);
+		outline-offset: 2px;
+	}
+
+	/* Typing: every character keeps its place, so nothing shifts while it types. */
+	:global(.rh-session.is-typing) .typed .off,
+	:global(.rh-session.is-typing) .line:not(.on),
+	:global(.rh-session.is-typing) .turn--you:not(.on) .gate {
+		opacity: 0;
+	}
+	:global(.rh-session.is-typing) .line {
+		transition: opacity 280ms var(--rh-ease), transform 280ms var(--rh-ease);
+	}
+	:global(.rh-session.is-typing) .line:not(.on) {
+		transform: translateY(3px);
+	}
+	:global(.rh-session.is-typing) .caret::after {
+		content: '';
+		display: inline-block;
+		width: 0.08em;
+		height: 0.95em;
+		margin-inline-start: 0.04em;
+		vertical-align: -0.1em;
+		background: var(--rh-accent);
+		animation: rh-caret 0.9s steps(1) infinite;
+	}
+	@keyframes rh-caret {
+		50% {
+			opacity: 0;
+		}
+	}
+
+	@container (max-width: 540px) {
+		.turn {
+			grid-template-columns: 1fr auto;
+		}
+		.who {
+			grid-column: 1;
+		}
+		.turn--you .gate {
+			grid-column: 2;
+			grid-row: 1;
+		}
+		.say,
+		.lines {
+			grid-column: 1 / -1;
+			margin-top: 0.35rem;
+		}
+	}
+</style>
