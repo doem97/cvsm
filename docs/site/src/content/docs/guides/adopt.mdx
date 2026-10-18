@@ -1,36 +1,36 @@
 ---
-title: Adopt rh
-description: Copy the template into your research repo and switch on its checks, in five steps plus an optional machine account.
+title: Adopt CVSM
+description: Copy the CVSM files into your research repo and switch on its checks, in five steps plus an optional machine account.
 sidebar:
   order: 1
 ---
 
 import { Steps, Aside } from '@astrojs/starlight/components';
 
-Adopting rh means copying a set of tracked files into your repo, filling in a few project values, and turning on branch protection once. An agent in your session can do every step; you decide, and you provide an admin account where one is needed.
+Adopting CVSM means copying a set of tracked files into your repo, filling in a few project values, and turning on branch protection once. An agent in your session can do every step; you decide, and you provide an admin account where one is needed.
 
 ## Before you start
 
 - A GitHub repo whose default branch is `main`, and an account with admin rights on it.
 - `git`, the GitHub CLI `gh`, and Python 3.11 or later (the scripts read TOML with `tomllib`; CI uses 3.12).
-- A local clone of rh, written `<rh clone>` below.
+- A local clone of CVSM, written `<cvsm clone>` below.
 - Branch protection on a private repo needs a paid GitHub plan (e.g. Pro or Team). Public repos don't.
 
 ## The five steps
 
 <Steps>
 
-1. **Copy the template files, then adapt `guard.toml`, `run.toml` and your training code's config output.**
+1. **Copy the CVSM files, then adapt `guard.toml`, `run.toml` and your training code's config output.**
 
-   Copy only tracked files. That way untracked local files in the template clone (tool configs, `__pycache__`) stay behind, and the `.claude/skills` symlink survives. The exclusion leaves out `pages.yml`, which builds rh's own docs site:
+   Copy only tracked files. That way untracked local files in the CVSM clone (tool configs, `__pycache__`) stay behind, and the `.claude/skills` symlink survives. The exclusion leaves out `pages.yml`, which builds CVSM's own docs site:
 
    ```sh
-   git -C <rh clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts tests ':!.github/workflows/pages.yml' | tar -x -C <your repo>
+   git -C <cvsm clone> archive HEAD AGENTS.md .agents .claude .codex .github scripts tests ':!.github/workflows/pages.yml' | tar -x -C <your repo>
    ```
 
-   If your repo is published or shared, also keep a copy of rh's licence with these files, e.g. as `.github/RH-LICENSE` (see [License](/research-harness/project/license/)).
+   If your repo is published or shared, also keep a copy of CVSM's licence with these files, e.g. as `.github/CVSM-LICENSE` (see [License](/cvsm/project/license/)).
 
-   Then merge the lines of rh's `.gitignore` into yours. You can delete tests in `tests/` that you won't use. Note which rh commit you copied (`git -C <rh clone> rev-parse HEAD`) in the message of the adoption commit, so you can compare later rh improvements against it.
+   Then merge the lines of CVSM's `.gitignore` into yours. You can delete tests in `tests/` that you won't use. Note which CVSM commit you copied (`git -C <cvsm clone> rev-parse HEAD`) in the message of the adoption commit, so you can compare later CVSM improvements against it.
 
    - Edit `.github/guard.toml`:
      - Add your directories to `layout` (e.g. `src/**`, `configs/**`). Also add the root files the project changes, such as `pyproject.toml`, lock files like `uv.lock`, and `.python-version`. If you miss one, guard rejects PRs that change dependencies.
@@ -44,7 +44,7 @@ Adopting rh means copying a set of tracked files into your repo, filling in a fe
      - The keys in a study spec are this config's flattened dotted keys (e.g. `optim.lr`). The results command uses them to check each run against the spec.
      - Leave out values that differ per run without affecting results, such as output directories, run names and timestamps. Otherwise every results comment lists them as `未声明的差异` (undeclared differences). If you must include one, declare it Adaptable in the spec.
    - If several users share one machine and `TMPDIR` is per user, each user's default GPU lock directory sits in their own `TMPDIR`, and they can't see each other's locks. Set `lock_dir` in `run.toml` to one local directory they can all write to.
-   - If you have a `CLAUDE.md`, condense the project facts into the Project section of `AGENTS.md` (one line per field). Move the rest into `docs/` or code comments, then delete `CLAUDE.md`. The harness reads only `AGENTS.md`, and guard rejects `.md` files elsewhere.
+   - If you have a `CLAUDE.md`, condense the project facts into the Project section of `AGENTS.md` (one line per field). Move the rest into `docs/` or code comments, then delete `CLAUDE.md`. CVSM reads only `AGENTS.md`, and guard rejects `.md` files elsewhere.
 
 2. **Fill in the Project section of `AGENTS.md`, one line per field.**
 
@@ -52,7 +52,7 @@ Adopting rh means copying a set of tracked files into your repo, filling in a fe
 
    - `Layout`: how the code directories divide, and where the shared code and the method modules live.
    - `Test`: the test command, the same one CI runs.
-   - `Language`: the language of human-facing text (see [Language](/research-harness/reference/agents-md/#project)).
+   - `Language`: the language of human-facing text (see [Language](/cvsm/reference/agents-md/#project)).
    - `Protected eval/data paths`: eval and data paths agents may not change at will. These match `protected` in `guard.toml`.
    - `Run`: the Run command and the results-comment command.
      - Runs launch in a fresh worktree (`../worktrees/N-<slug>`) that has no ignored `.venv` or data directories. So the commands must work as they are in a new worktree, in an environment with both the project's dependencies and MLflow.
@@ -66,7 +66,7 @@ Adopting rh means copying a set of tracked files into your repo, filling in a fe
    Edit the `pip install` line in `.github/workflows/test.yml` to install your project's dependencies and test tools, and keep the test command the same as `Test` in `AGENTS.md`. If the project uses uv, CI can still install dependencies with pip and run the same tests.
 
    - The copied rule, skill and guard tests need `pyyaml`.
-   - If you keep the tests of `scripts/run.py`, install MLflow too. The template installs `mlflow-skinny`, plus `sqlalchemy` and `alembic` for SQLite.
+   - If you keep the tests of `scripts/run.py`, install MLflow too. The reference setup installs `mlflow-skinny`, plus `sqlalchemy` and `alembic` for SQLite.
    - CI runners have no GPU. If your lock file has a CUDA build of torch, install the CPU build in CI instead (`pip install torch --index-url https://download.pytorch.org/whl/cpu`). Install it *before* the project's dependencies, because a CUDA build that is already installed won't be replaced by one installed later.
    - Don't rename the jobs `guard` and `test`. Branch protection finds the checks by these names.
 
@@ -134,9 +134,9 @@ If you want GitHub to separate your actions from the agents', let all agents sha
 
 ## Related
 
-- [Quick start](/research-harness/start/quick-start/)
-- [Adapt rh to your environment](/research-harness/guides/adapt-your-environment/)
-- [Claude Code and Codex](/research-harness/guides/claude-code-and-codex/)
-- [AGENTS.md reference](/research-harness/reference/agents-md/)
-- [guard reference](/research-harness/reference/guard/)
-- [Interfaces that stay fixed](/research-harness/reference/interfaces/)
+- [Quick start](/cvsm/start/quick-start/)
+- [Adapt CVSM to your environment](/cvsm/guides/adapt-your-environment/)
+- [Claude Code and Codex](/cvsm/guides/claude-code-and-codex/)
+- [AGENTS.md reference](/cvsm/reference/agents-md/)
+- [guard reference](/cvsm/reference/guard/)
+- [Interfaces that stay fixed](/cvsm/reference/interfaces/)

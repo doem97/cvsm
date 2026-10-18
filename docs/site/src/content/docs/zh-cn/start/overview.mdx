@@ -1,6 +1,6 @@
 ---
 title: 概览
-description: rh 是什么、解决什么问题、往仓库里复制了哪些东西。
+description: CVSM 是什么、解决什么问题、往仓库里复制了哪些东西。
 sidebar:
   order: 1
 ---
@@ -8,44 +8,44 @@ sidebar:
 import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
 import Harness from '~/components/figures/Harness.astro';
 
-rh（research-harness）是一套复制进研究仓库就能用的模板：编码 agent 推进机器学习研究，你守住四个关口。每个 run 都按它自己的记录、而不是 agent 的说法，对照你批准的研究规格核对。
+用编码 agent 跑控制变量实验的状态机协议。你写研究规格：各组之间改变哪些变量、固定哪些变量、哪些可以调整。agent 在 GitHub 的 issue 和 PR 上按状态机一步步实现和运行实验。每个 run 都记下实际生效的完整配置，由脚本对照规格核对，规格不允许的差异都会报出来。你只在四处做决定：发布、合并、预算、下结论。
 
 <Harness lang="zh-cn" />
 
-## 问题出在计划以下
+## 问题：agent 改动了需要固定的设置
 
 编码 agent 写代码、启动运行、贴出结果的速度，已经快过人能读完的速度。风险在计划以下的那几层。为了修一次崩溃改了学习率，为了塞进显存把有效 batch 减半。每一处单看都合理，合在一起，对比就成了猜测。而你通常只看到 agent 的总结。
 
-## rh 怎么应对
+## CVSM 怎么应对
 
-rh 让人只待在需要人的地方，其余的都能核对。
+CVSM 只请你做四个决定，其余的都能核对。
 
-- **你批准一份研究规格**：各组之间的不同、固定不变的设置（各带理由）、可以调整的设置。见[研究规格](/research-harness/zh-cn/concepts/study-spec/)。
-- **规格以下的事都由 agent 做**，通过 GitHub issue 和 PR。它们只在[四个关口](/research-harness/zh-cn/concepts/gates-and-blockers/)停下，或者在自己解决不了的卡点停下。
-- **每个 run 都记下解析后的配置**，结果命令拿这些记录对照规格核对。偏差以事实的形式交到你手上，而不是 agent 的说法。见[运行记录](/research-harness/zh-cn/concepts/run-records/)。
+- **你批准一份研究规格**：各组之间的不同、固定不变的设置（各带理由）、可以调整的设置。见[研究规格](/cvsm/zh-cn/concepts/study-spec/)。
+- **规格以下的事都由 agent 做**，通过 GitHub issue 和 PR。它们只在[四个关口](/cvsm/zh-cn/concepts/gates-and-blockers/)停下，或者在自己解决不了的卡点停下。
+- **每个 run 都记下解析后的配置**，结果命令拿这些记录对照规格核对。偏差以事实的形式交到你手上，而不是 agent 的说法。见[运行记录](/cvsm/zh-cn/concepts/run-records/)。
 
 ## 复制进去的是什么
 
-rh 是一套围绕 git 和 GitHub 的约定，不是一个服务。除了 GitHub、git 和你自己的机器，不需要别的东西。
+CVSM 是一套围绕 git 和 GitHub 的约定，不是一个服务。除了 GitHub、git 和你自己的机器，不需要别的东西。
 
 <CardGrid>
   <Card title="状态：GitHub issue">
-    `study` 或 `plan` 父 issue，下面挂 `code` 和 `run` 子 issue。仓库里没有计划、进度或笔记文件。见[状态](/research-harness/zh-cn/concepts/state/)。
+    `study` 或 `plan` 父 issue，下面挂 `code` 和 `run` 子 issue。仓库里没有计划、进度或笔记文件。见[状态](/cvsm/zh-cn/concepts/state/)。
   </Card>
   <Card title="规则：AGENTS.md">
-    状态怎么判断、什么时候停、怎么提问、Git 和文件怎么用。最多 80 行，有测试卡住上限。见 [AGENTS.md](/research-harness/zh-cn/reference/agents-md/)。
+    状态怎么判断、什么时候停、怎么提问、Git 和文件怎么用。最多 80 行，有测试卡住上限。见 [AGENTS.md](/cvsm/zh-cn/reference/agents-md/)。
   </Card>
   <Card title="步骤：四个 skill">
-    `plan`、`implement`、`review`、`run`，每个最多 120 行。Claude Code 和 Codex 读同一套文件。见 [skill](/research-harness/zh-cn/reference/skills/)。
+    `plan`、`implement`、`review`、`run`，每个最多 120 行。Claude Code 和 Codex 读同一套文件。见 [skill](/cvsm/zh-cn/reference/skills/)。
   </Card>
   <Card title="检查：guard、test、merge.py">
-    `guard` 检查每个 PR 的格式、文件位置和改动范围；`test` 跑项目测试；`merge.py` 是 agent 唯一的合并入口。见[合并](/research-harness/zh-cn/concepts/merging/)。
+    `guard` 检查每个 PR 的格式、文件位置和改动范围；`test` 跑项目测试；`merge.py` 是 agent 唯一的合并入口。见[合并](/cvsm/zh-cn/concepts/merging/)。
   </Card>
   <Card title="运行：run.py 和 results.py">
-    Run 命令的参考实现把每次运行记成一个 MLflow run；结果命令生成结果表和规格核对。见 [run.py](/research-harness/zh-cn/reference/run-py/)。
+    Run 命令的参考实现把每次运行记成一个 MLflow run；结果命令生成结果表和规格核对。见 [run.py](/cvsm/zh-cn/reference/run-py/)。
   </Card>
   <Card title="审查：新会话">
-    每个 PR 都由一个只拿到 PR 编号的新会话审查。见[审查](/research-harness/zh-cn/concepts/review/)。
+    每个 PR 都由一个只拿到 PR 编号的新会话审查。见[审查](/cvsm/zh-cn/concepts/review/)。
   </Card>
 </CardGrid>
 
@@ -62,19 +62,19 @@ rh 是一套围绕 git 和 GitHub 的约定，不是一个服务。除了 GitHub
 
 ## 留给你的事
 
-rh 只记录事实、展示差异。它不定 seed 数，不设计实验，不决定何时重跑，也不判断 run 能不能比，这些由你在规格和指令里定。分析、可视化，以及 agent 在任务内部怎么实现，也都由你决定。见[原则](/research-harness/zh-cn/concepts/principles/)。
+CVSM 只记录事实、展示差异。它不定 seed 数，不设计实验，不决定何时重跑，也不判断 run 能不能比，这些由你在规格和指令里定。分析、可视化，以及 agent 在任务内部怎么实现，也都由你决定。见[原则](/cvsm/zh-cn/concepts/principles/)。
 
 <Aside type="tip">
-rh 本身就是用 rh 开发的。从第一个提交之后，main 上的每次改动都是一个 squash 合并的 PR，关闭 `plan` 父 issue 下的一个任务 issue。见[用 rh 开发 rh](/research-harness/zh-cn/project/built-with-rh/)。
+CVSM 用它自己的流程开发。从第一个提交之后，main 上的每次改动都是一个 squash 合并的 PR，关闭 `plan` 父 issue 下的一个任务 issue。见[用 CVSM 开发 CVSM](/cvsm/zh-cn/project/built-with-cvsm/)。
 </Aside>
 
 ## 状态
 
-rh 处于预发布阶段。它已经用来开发它自己，但在第一个正式版之前接口仍可能变化。见[项目状态](/research-harness/zh-cn/project/status/)。
+CVSM 处于预发布阶段。它已经用来开发它自己，但在第一个正式版之前接口仍可能变化。见[项目状态](/cvsm/zh-cn/project/status/)。
 
 ## 相关页面
 
-- [快速上手](/research-harness/zh-cn/start/quick-start/)
-- [说话，不点页面](/research-harness/zh-cn/start/talk-dont-click/)
-- [研究规格](/research-harness/zh-cn/concepts/study-spec/)
-- [接入 rh](/research-harness/zh-cn/guides/adopt/)
+- [快速上手](/cvsm/zh-cn/start/quick-start/)
+- [在会话里工作](/cvsm/zh-cn/start/talk-dont-click/)
+- [研究规格](/cvsm/zh-cn/concepts/study-spec/)
+- [接入 CVSM](/cvsm/zh-cn/guides/adopt/)

@@ -7,7 +7,7 @@ sidebar:
 
 A skill is the procedure for one role, from start to finish, in at most 120 lines. There are four, and Claude Code and Codex read the same files.
 
-Sources: [`.agents/skills/`](https://github.com/doem97/research-harness/tree/main/.agents/skills).
+Sources: [`.agents/skills/`](https://github.com/doem97/cvsm/tree/main/.agents/skills).
 
 ## Common shape
 
@@ -64,7 +64,7 @@ Sources: [`.agents/skills/`](https://github.com/doem97/research-harness/tree/mai
 
    Items 1 to 4 are blocking; everything else is minor. No requests for defenses against malformed formats, forgery, outsiders or adversarial input unless the issue requires them. The verdict is `changes` only with at least one blocking finding.
 3. **Post one comment.** Re-read the full head SHA right before posting; if it moved, review the new head first. First line exactly `Verdict: pass @ <full head SHA>` or `Verdict: changes @ <full head SHA>`; below it, the findings in the tool's own format and language, unedited, each pointed at a file and line. Don't approve, label, push or edit anything. Remove the scratch worktree.
-4. **Starting a review** (for the implementer): a fresh Claude Code subagent, `codex exec -s danger-full-access`, or the built-in `codex exec review`, whose `[P0]` or `[P1]` findings mean `changes`. A pre-PR review gets only the issue number and the diff and posts nothing. See [Claude Code and Codex](/research-harness/guides/claude-code-and-codex/#start-a-fresh-context-review).
+4. **Starting a review** (for the implementer): a fresh Claude Code subagent, `codex exec -s danger-full-access`, or the built-in `codex exec review`, whose `[P0]` or `[P1]` findings mean `changes`. A pre-PR review gets only the issue number and the diff and posts nothing. See [Claude Code and Codex](/cvsm/guides/claude-code-and-codex/#start-a-fresh-context-review).
 
 ## run
 
@@ -79,8 +79,8 @@ Sources: [`.agents/skills/`](https://github.com/doem97/research-harness/tree/mai
 
 ## Related
 
-- [AGENTS.md](/research-harness/reference/agents-md/)
-- [Review](/research-harness/concepts/review/)
-- [Plan a study](/research-harness/guides/plan-a-study/)
-- [Run experiments](/research-harness/guides/run-experiments/)
-- [Claude Code and Codex](/research-harness/guides/claude-code-and-codex/)
+- [AGENTS.md](/cvsm/reference/agents-md/)
+- [Review](/cvsm/concepts/review/)
+- [Plan a study](/cvsm/guides/plan-a-study/)
+- [Run experiments](/cvsm/guides/run-experiments/)
+- [Claude Code and Codex](/cvsm/guides/claude-code-and-codex/)

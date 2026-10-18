@@ -64,13 +64,13 @@ When all run issues of the study are closed, it posts the same table and spec ch
 ## 6. Conclude
 
 :::caution[Gate 04: conclude]
-Read the study table and its `规格核对`. rh reports what the records show; whether the runs are still comparable is your call. Give your conclusion, e.g. "conclude `#10`: …". The agent records it and closes the study only on your explicit instruction.
+Read the study table and its `规格核对`. CVSM reports what the records show; whether the runs are still comparable is your call. Give your conclusion, e.g. "conclude `#10`: …". The agent records it and closes the study only on your explicit instruction.
 :::
 
 ## Related
 
-- [Run records](/research-harness/concepts/run-records/)
-- [Gates and blockers](/research-harness/concepts/gates-and-blockers/)
-- [Skills: run](/research-harness/reference/skills/#run)
-- [run.py reference](/research-harness/reference/run-py/)
-- [results.py reference](/research-harness/reference/results-py/)
+- [Run records](/cvsm/concepts/run-records/)
+- [Gates and blockers](/cvsm/concepts/gates-and-blockers/)
+- [Skills: run](/cvsm/reference/skills/#run)
+- [run.py reference](/cvsm/reference/run-py/)
+- [results.py reference](/cvsm/reference/results-py/)

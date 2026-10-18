@@ -1,6 +1,6 @@
 ---
-title: 说话，不点页面
-description: 怎样通过 agent 会话使用 rh，以及每条指令要的是什么。
+title: 在会话里工作
+description: 怎样通过 agent 会话使用 CVSM，以及每条指令要的是什么。
 sidebar:
   order: 3
 ---
@@ -14,7 +14,7 @@ import Session from '~/components/figures/Session.astro';
 
 ## 每条指令就是一个目标状态
 
-指令说的是工作要推进到哪里。agent 一直推进，到达目标、碰到[关口](/research-harness/zh-cn/concepts/gates-and-blockers/)或遇到卡点时才停。
+指令说的是工作要推进到哪里。agent 一直推进，到达目标、碰到[关口](/cvsm/zh-cn/concepts/gates-and-blockers/)或遇到卡点时才停。
 
 | 你说 | agent 做什么 |
 |---|---|
@@ -54,7 +54,7 @@ Next: <接下来做什么>
 
 ## 你不在会话里时
 
-agent 在你不在时遇到卡点，会给 issue 打上 `needs-decision`，贴一条四行的卡点评论，然后转去做别的就绪任务。你之后在会话里答复，agent 再去掉这个 label。见[关口与卡点](/research-harness/zh-cn/concepts/gates-and-blockers/)。
+agent 在你不在时遇到卡点，会给 issue 打上 `needs-decision`，贴一条四行的卡点评论，然后转去做别的就绪任务。你之后在会话里答复，agent 再去掉这个 label。见[关口与卡点](/cvsm/zh-cn/concepts/gates-and-blockers/)。
 
 ## 同时开几个会话
 
@@ -63,12 +63,12 @@ agent 在你不在时遇到卡点，会给 issue 打上 `needs-decision`，贴�
 会话本身什么都不存。每次状态变化都当场写回 GitHub 或 git，会话随时可以断；新会话说一句“继续 #11”就能接上。
 
 <Aside type="tip">
-rh 自己的 skill 用中文讨论和汇报。接入的项目在 AGENTS.md Project 一节的 `Language` 一行写明面向人的文字用什么语言。`Decision:`、`Verdict:` 这类格式关键字保持英文。
+CVSM 自己的 skill 用中文讨论和汇报。接入的项目在 AGENTS.md Project 一节的 `Language` 一行写明面向人的文字用什么语言。`Decision:`、`Verdict:` 这类格式关键字保持英文。
 </Aside>
 
 ## 相关页面
 
-- [快速上手](/research-harness/zh-cn/start/quick-start/)
-- [关口与卡点](/research-harness/zh-cn/concepts/gates-and-blockers/)
-- [状态](/research-harness/zh-cn/concepts/state/)
-- [Claude Code 和 Codex](/research-harness/zh-cn/guides/claude-code-and-codex/)
+- [快速上手](/cvsm/zh-cn/start/quick-start/)
+- [关口与卡点](/cvsm/zh-cn/concepts/gates-and-blockers/)
+- [状态](/cvsm/zh-cn/concepts/state/)
+- [Claude Code 和 Codex](/cvsm/zh-cn/guides/claude-code-and-codex/)

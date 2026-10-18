@@ -1,88 +1,88 @@
-/* research-harness design tokens: one source for the landing pages, the docs and the figures.
+/* CVSM design tokens: one source for the landing pages, the docs and the figures.
    Colour carries meaning: accent (signal orange) only for human gates and decisions, verify
    (blue) only for records checked against the spec, ink and paper neutrals for agent work.
    *-ink variants are the text-safe (WCAG AA) tones of accent and verify. */
 :root {
-	--rh-font-sans: 'Geist Variable', 'Noto Sans SC Variable', ui-sans-serif, system-ui, -apple-system,
+	--cvsm-font-sans: 'Geist Variable', 'Noto Sans SC Variable', ui-sans-serif, system-ui, -apple-system,
 		'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-	--rh-font-mono: 'Geist Mono Variable', 'Noto Sans SC Variable', ui-monospace, SFMono-Regular, Menlo,
+	--cvsm-font-mono: 'Geist Mono Variable', 'Noto Sans SC Variable', ui-monospace, SFMono-Regular, Menlo,
 		Consolas, monospace;
-	--rh-track-caps: 0.08em;
+	--cvsm-track-caps: 0.08em;
 	/* Mono caps labels; Chinese keeps proper-noun casing (GitHub, run, MLflow). */
-	--rh-caps: uppercase;
-	--rh-ease: cubic-bezier(0.2, 0.7, 0.1, 1);
-	--rh-ease-io: cubic-bezier(0.65, 0, 0.35, 1);
-	--rh-gutter: clamp(16px, 2.2vw, 24px);
-	--rh-margin: clamp(16px, 5vw, 96px);
-	--rh-max: 1600px;
+	--cvsm-caps: uppercase;
+	--cvsm-ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+	--cvsm-ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+	--cvsm-gutter: clamp(16px, 2.2vw, 24px);
+	--cvsm-margin: clamp(16px, 5vw, 96px);
+	--cvsm-max: 1600px;
 	color-scheme: dark;
 }
 
 :root,
 :root[data-theme='dark'] {
-	--rh-bg: #0b0c0f;
-	--rh-surface: #121419;
-	--rh-surface-2: #171a20;
-	--rh-hair: rgba(255, 255, 255, 0.1);
-	--rh-hair-2: rgba(255, 255, 255, 0.18);
-	--rh-text: #f2f2f0;
-	--rh-soft: #c9cbce;
-	--rh-muted: #9ba0a8;
-	--rh-faint: #5c616b;
-	--rh-accent: #ff5a1f;
-	--rh-accent-ink: #ff5a1f;
-	--rh-accent-wash: rgba(255, 90, 31, 0.1);
-	--rh-verify: #6ea8ff;
-	--rh-verify-ink: #6ea8ff;
-	--rh-verify-wash: rgba(110, 168, 255, 0.1);
-	--rh-select: rgba(255, 255, 255, 0.16);
+	--cvsm-bg: #0b0c0f;
+	--cvsm-surface: #121419;
+	--cvsm-surface-2: #171a20;
+	--cvsm-hair: rgba(255, 255, 255, 0.1);
+	--cvsm-hair-2: rgba(255, 255, 255, 0.18);
+	--cvsm-text: #f2f2f0;
+	--cvsm-soft: #c9cbce;
+	--cvsm-muted: #9ba0a8;
+	--cvsm-faint: #5c616b;
+	--cvsm-accent: #ff5a1f;
+	--cvsm-accent-ink: #ff5a1f;
+	--cvsm-accent-wash: rgba(255, 90, 31, 0.1);
+	--cvsm-verify: #6ea8ff;
+	--cvsm-verify-ink: #6ea8ff;
+	--cvsm-verify-wash: rgba(110, 168, 255, 0.1);
+	--cvsm-select: rgba(255, 255, 255, 0.16);
 }
 
 :root[data-theme='light'] {
-	--rh-bg: #f7f6f2;
-	--rh-surface: #ffffff;
-	--rh-surface-2: #fbfaf7;
-	--rh-hair: rgba(10, 12, 15, 0.1);
-	--rh-hair-2: rgba(10, 12, 15, 0.2);
-	--rh-text: #0b0c0f;
-	--rh-soft: #33363c;
-	--rh-muted: #5f646c;
-	--rh-faint: #a3a7ae;
-	--rh-accent: #f04a0e;
-	--rh-accent-ink: #c2370a;
-	--rh-accent-wash: rgba(240, 74, 14, 0.08);
-	--rh-verify: #2f6fe0;
-	--rh-verify-ink: #2560cc;
-	--rh-verify-wash: rgba(47, 111, 224, 0.08);
-	--rh-select: rgba(10, 12, 15, 0.12);
+	--cvsm-bg: #f7f6f2;
+	--cvsm-surface: #ffffff;
+	--cvsm-surface-2: #fbfaf7;
+	--cvsm-hair: rgba(10, 12, 15, 0.1);
+	--cvsm-hair-2: rgba(10, 12, 15, 0.2);
+	--cvsm-text: #0b0c0f;
+	--cvsm-soft: #33363c;
+	--cvsm-muted: #5f646c;
+	--cvsm-faint: #a3a7ae;
+	--cvsm-accent: #f04a0e;
+	--cvsm-accent-ink: #c2370a;
+	--cvsm-accent-wash: rgba(240, 74, 14, 0.08);
+	--cvsm-verify: #2f6fe0;
+	--cvsm-verify-ink: #2560cc;
+	--cvsm-verify-wash: rgba(47, 111, 224, 0.08);
+	--cvsm-select: rgba(10, 12, 15, 0.12);
 	color-scheme: light;
 }
 
 /* No script yet (or none at all): follow the system. */
 @media (prefers-color-scheme: light) {
 	:root:not([data-theme]) {
-		--rh-bg: #f7f6f2;
-		--rh-surface: #ffffff;
-		--rh-surface-2: #fbfaf7;
-		--rh-hair: rgba(10, 12, 15, 0.1);
-		--rh-hair-2: rgba(10, 12, 15, 0.2);
-		--rh-text: #0b0c0f;
-		--rh-soft: #33363c;
-		--rh-muted: #5f646c;
-		--rh-faint: #a3a7ae;
-		--rh-accent: #f04a0e;
-		--rh-accent-ink: #c2370a;
-		--rh-accent-wash: rgba(240, 74, 14, 0.08);
-		--rh-verify: #2f6fe0;
-		--rh-verify-ink: #2560cc;
-		--rh-verify-wash: rgba(47, 111, 224, 0.08);
-		--rh-select: rgba(10, 12, 15, 0.12);
+		--cvsm-bg: #f7f6f2;
+		--cvsm-surface: #ffffff;
+		--cvsm-surface-2: #fbfaf7;
+		--cvsm-hair: rgba(10, 12, 15, 0.1);
+		--cvsm-hair-2: rgba(10, 12, 15, 0.2);
+		--cvsm-text: #0b0c0f;
+		--cvsm-soft: #33363c;
+		--cvsm-muted: #5f646c;
+		--cvsm-faint: #a3a7ae;
+		--cvsm-accent: #f04a0e;
+		--cvsm-accent-ink: #c2370a;
+		--cvsm-accent-wash: rgba(240, 74, 14, 0.08);
+		--cvsm-verify: #2f6fe0;
+		--cvsm-verify-ink: #2560cc;
+		--cvsm-verify-wash: rgba(47, 111, 224, 0.08);
+		--cvsm-select: rgba(10, 12, 15, 0.12);
 		color-scheme: light;
 	}
 }
 
 :lang(zh-CN) {
-	--rh-caps: none;
+	--cvsm-caps: none;
 }
 
 /* Cross-document view transitions between the landing pages and the docs. */
@@ -92,7 +92,7 @@
 ::view-transition-old(root),
 ::view-transition-new(root) {
 	animation-duration: 260ms;
-	animation-timing-function: var(--rh-ease);
+	animation-timing-function: var(--cvsm-ease);
 }
 @media (prefers-reduced-motion: reduce) {
 	::view-transition-group(*),
@@ -103,5 +103,5 @@
 }
 
 ::selection {
-	background: var(--rh-select);
+	background: var(--cvsm-select);
 }

@@ -7,7 +7,7 @@ sidebar:
 
 `AGENTS.md` holds all of the agents' rules in at most 80 lines. Its first eight sections are the same in every project; the last one, Project, is where each adopter fills in its own values.
 
-Source: [`AGENTS.md`](https://github.com/doem97/research-harness/blob/main/AGENTS.md).
+Source: [`AGENTS.md`](https://github.com/doem97/cvsm/blob/main/AGENTS.md).
 
 ## Shape
 
@@ -97,27 +97,27 @@ At every stop the agent reports exactly three lines, with links: `Done: <what wa
 
 ## Skills
 
-Skills live in `.agents/skills/<name>/SKILL.md`, one per role: `plan`, `implement`, `review`, `run`. See [Skills](/research-harness/reference/skills/).
+Skills live in `.agents/skills/<name>/SKILL.md`, one per role: `plan`, `implement`, `review`, `run`. See [Skills](/cvsm/reference/skills/).
 
 ## Project
 
-The only section an adopter edits, one line per field. rh's own values are shown for reference.
+The only section an adopter edits, one line per field. CVSM's own values are shown for reference.
 
-| Field | Meaning | rh's own value |
+| Field | Meaning | CVSM's own value |
 |---|---|---|
-| `Layout` | How code directories divide; where shared code and method modules live | the template itself; no `src/`; `scripts/` holds the reference run and results scripts |
+| `Layout` | How code directories divide; where shared code and method modules live | this repo itself; no `src/`; `scripts/` holds the reference run and results scripts |
 | `Test` | The test command, the same one CI runs | `python -m pytest -q` |
 | `Language` | The language of human-facing text | see below |
 | `Protected eval/data paths` | Eval and data paths agents may not change at will; match `protected` in `guard.toml` | none |
 | `Run` | The Run command and the results-comment command | `python scripts/run.py --issue N -- <cmd>`; `python scripts/results.py --issue N` |
 | `Run records` | The MLflow backend run records go to | the backend `MLFLOW_TRACKING_URI` names; if unset, `mlflow.db` at the main clone root; experiment set in `scripts/run.toml` |
 
-rh's `Language` line: `README.md` is English, with a Chinese version at `docs/README.zh-CN.md`, kept in sync. Other human-facing text is Chinese: PR bodies, issue and PR comments, reports, issue-form descriptions and the results comment. Review comments keep the reviewing tool's own text below the Verdict line. Agent instructions (`AGENTS.md`, skills), code, PR titles and format keywords (`Closes`, `Decision:`, `Blocked:`, `Verdict:` and so on) stay English. An adopter sets its own language on this line.
+CVSM's `Language` line: `README.md` is English, with a Chinese version at `docs/README.zh-CN.md`, kept in sync. Other human-facing text is Chinese: PR bodies, issue and PR comments, reports, issue-form descriptions and the results comment. Review comments keep the reviewing tool's own text below the Verdict line. Agent instructions (`AGENTS.md`, skills), code, PR titles and format keywords (`Closes`, `Decision:`, `Blocked:`, `Verdict:` and so on) stay English. An adopter sets its own language on this line.
 
 ## Related
 
-- [Gates and blockers](/research-harness/concepts/gates-and-blockers/)
-- [State](/research-harness/concepts/state/)
-- [Skills](/research-harness/reference/skills/)
-- [guard](/research-harness/reference/guard/)
-- [Adopt rh](/research-harness/guides/adopt/)
+- [Gates and blockers](/cvsm/concepts/gates-and-blockers/)
+- [State](/cvsm/concepts/state/)
+- [Skills](/cvsm/reference/skills/)
+- [guard](/cvsm/reference/guard/)
+- [Adopt CVSM](/cvsm/guides/adopt/)

@@ -1,13 +1,13 @@
 ---
 title: 保持不变的接口
-description: skill、guard、merge.py 和结果评论依赖的形状；接入方适配 rh 时要守住它们。
+description: skill、guard、merge.py 和结果评论依赖的形状；接入方适配 CVSM 时要守住它们。
 sidebar:
   order: 8
 ---
 
 skill、guard、`merge.py` 和结果评论都依赖下面这些接口。适配自己的环境时，只换实现，不改它们的形状。
 
-其他的都由你的项目自己决定，并通过自己的 issue 去改：调度器（例如让 Run 命令把任务提交到 SLURM，同时照样写运行记录）、集群和 GPU 分配、数据和产物的存储位置、跟踪后端（例如把 `MLFLOW_TRACKING_URI` 指向团队的 MLflow 服务器）、`guard.toml` 的白名单和受保护路径、CI 的依赖。见[适配你的环境](/research-harness/zh-cn/guides/adapt-your-environment/)。
+其他的都由你的项目自己决定，并通过自己的 issue 去改：调度器（例如让 Run 命令把任务提交到 SLURM，同时照样写运行记录）、集群和 GPU 分配、数据和产物的存储位置、跟踪后端（例如把 `MLFLOW_TRACKING_URI` 指向团队的 MLflow 服务器）、`guard.toml` 的白名单和受保护路径、CI 的依赖。见[适配你的环境](/cvsm/zh-cn/guides/adapt-your-environment/)。
 
 ## Run 命令和结果命令
 
@@ -31,12 +31,12 @@ run issue 的每行 Runs 是 `<cmd>` 或 `<options> -- <cmd>`：`run` skill 把�
 
 ## 运行记录
 
-每次运行是一个 MLflow run，字段以 `scripts/run.py` 开头的说明为准，细节见 [run.py](/research-harness/zh-cn/reference/run-py/)。
+每次运行是一个 MLflow run，字段以 `scripts/run.py` 开头的说明为准，细节见 [run.py](/cvsm/zh-cn/reference/run-py/)。
 
-- **`rh.*` 参数**，写入后不能改：
-  - 创建时写 `rh.issue`、`rh.command`、`rh.seed`、`rh.host`；
-  - 启动前写 `rh.commit`、`rh.dirty`、`rh.env_lock_sha`、`rh.env_lock_missing`、`rh.data_manifest_sha`、`rh.gpus`；
-  - 结束时写 `rh.exit_code`。
+- **`cvsm.*` 参数**，写入后不能改：
+  - 创建时写 `cvsm.issue`、`cvsm.command`、`cvsm.seed`、`cvsm.host`；
+  - 启动前写 `cvsm.commit`、`cvsm.dirty`、`cvsm.env_lock_sha`、`cvsm.env_lock_missing`、`cvsm.data_manifest_sha`、`cvsm.gpus`；
+  - 结束时写 `cvsm.exit_code`。
 
   没有的值写空字符串，列表用逗号连接。
 - **`cfg.*` 参数**：命令写的 `$RUN_DIR/config.json` 一能解析成 JSON 对象就记一次。
@@ -79,10 +79,10 @@ run issue 结束时贴一条评论：一段说明，加上结果命令生成的�
 - 缺 `in` 行某些取值的 arm（只算还在跑或成功退出、没删除的 run）；
 - 不在任何一节、取值却不同的键（`未声明的差异`）；
 - 没有 run 的 arm；
-- 读不懂的规格行；
+- 规格本身的问题：读不懂的行、没写理由的 Controlled 行、缺少 Arms 或 Controlled 节、同一个键出现在多节；
 - 各 Adaptable 键在每个 arm 的取值。
 
-没给规格或没有偏差时，也会写明。研究的 run issue 全部关闭后，覆盖所有 run issue 的同一张表和核对会贴到研究 issue 上。每一行的样子见 [results.py](/research-harness/zh-cn/reference/results-py/)。
+没给规格或没有偏差时，也会写明。研究的 run issue 全部关闭后，覆盖所有 run issue 的同一张表和核对会贴到研究 issue 上。每一行的样子见 [results.py](/cvsm/zh-cn/reference/results-py/)。
 
 ## issue 表单的各节
 
@@ -97,7 +97,7 @@ guard、`merge.py` 和 skill 按 `### ` 标题读正文，标题名不能改：
 - **`code`**：Goal、Scope、Acceptance、Budget、Merge（`human` 或 `agent`，默认 `human`）。
 - **`run`**：Runs、Budget、Report。
 
-见 [issue 表单](/research-harness/zh-cn/reference/issue-forms/)。
+见 [issue 表单](/cvsm/zh-cn/reference/issue-forms/)。
 
 ## PR 模板、审查评论和 merge.py
 
@@ -114,7 +114,7 @@ guard、`merge.py` 和 skill 按 `### ` 标题读正文，标题名不能改：
 - `python .github/scripts/merge.py <PR> --human`：人已经决定，跳过这三项检查。
 - 两种方式都用 `gh pr merge --squash --match-head-commit <SHA>` 合并当前 head，提交标题是 `<PR 标题> (#<PR>)`，正文为空；分支保护照常要求检查通过。
 
-见 [merge.py](/research-harness/zh-cn/reference/merge-py/)。
+见 [merge.py](/cvsm/zh-cn/reference/merge-py/)。
 
 ## 评论格式
 
@@ -128,8 +128,8 @@ guard、`merge.py` 和 skill 按 `### ` 标题读正文，标题名不能改：
 
 ## 相关页面
 
-- [适配你的环境](/research-harness/zh-cn/guides/adapt-your-environment/)
-- [run.py](/research-harness/zh-cn/reference/run-py/)
-- [results.py](/research-harness/zh-cn/reference/results-py/)
-- [merge.py](/research-harness/zh-cn/reference/merge-py/)
-- [issue 表单](/research-harness/zh-cn/reference/issue-forms/)
+- [适配你的环境](/cvsm/zh-cn/guides/adapt-your-environment/)
+- [run.py](/cvsm/zh-cn/reference/run-py/)
+- [results.py](/cvsm/zh-cn/reference/results-py/)
+- [merge.py](/cvsm/zh-cn/reference/merge-py/)
+- [issue 表单](/cvsm/zh-cn/reference/issue-forms/)

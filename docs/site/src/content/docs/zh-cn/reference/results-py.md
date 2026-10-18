@@ -7,7 +7,7 @@ sidebar:
 
 `scripts/results.py` 为一个或几个 issue 的 run 打印一张 Markdown 结果表，标出出处上的差异，最后是一节 `规格核对`。agent 把它的输出原样贴进结果评论；它只报告事实，能不能比由你判断。
 
-源文件：[`scripts/results.py`](https://github.com/doem97/research-harness/blob/main/scripts/results.py)。
+源文件：[`scripts/results.py`](https://github.com/doem97/cvsm/blob/main/scripts/results.py)。
 
 ## 用法
 
@@ -18,7 +18,7 @@ gh issue view P --json body -q .body | python scripts/results.py --issue N --spe
 
 | 选项 | 含义 |
 |---|---|
-| `--issue N [N ...]` | 必填。要读哪些 issue 的 run（按 `rh.issue` 参数）。重复的只算一次。 |
+| `--issue N [N ...]` | 必填。要读哪些 issue 的 run（按 `cvsm.issue` 参数）。重复的只算一次。 |
 | `--metric M [M ...]` | 要显示的指标，按给出的顺序；可以给多次。默认是这些 run 的所有数值指标，按名字排序。 |
 | `--spec FILE` | 用来核对 run 的研究 issue 正文；`-` 从标准输入读。不给时，核对一节会写明没有给规格。 |
 | `--config FILE` | 从哪个 `run.toml` 读 `experiment` 和 `seed_key`。默认 `scripts/run.toml`。 |
@@ -97,7 +97,7 @@ run 按开始时间排序，按去掉 seed（`seed_key`）后的命令分组。�
 
 ## 示例
 
-对[示例规格](/research-harness/zh-cn/guides/plan-a-study/#2-定下公平对比)跑的六个玩具 run，其中一个 lora run 用了更小的每卡 batch 和 fp16：
+对[示例规格](/cvsm/zh-cn/guides/plan-a-study/#2-定下公平对比)跑的六个玩具 run，其中一个 lora run 用了更小的每卡 batch 和 fp16：
 
 ```text
 #12 的结果：6 个 run，3 组，按去掉 seed 的命令分组。
@@ -120,8 +120,8 @@ run 按开始时间排序，按去掉 seed（`seed_key`）后的命令分组。�
 
 ## 相关页面
 
-- [研究规格](/research-harness/zh-cn/concepts/study-spec/)
-- [运行记录](/research-harness/zh-cn/concepts/run-records/)
-- [run.py](/research-harness/zh-cn/reference/run-py/)
-- [保持不变的接口](/research-harness/zh-cn/reference/interfaces/#结果评论)
-- [运行实验](/research-harness/zh-cn/guides/run-experiments/)
+- [研究规格](/cvsm/zh-cn/concepts/study-spec/)
+- [运行记录](/cvsm/zh-cn/concepts/run-records/)
+- [run.py](/cvsm/zh-cn/reference/run-py/)
+- [保持不变的接口](/cvsm/zh-cn/reference/interfaces/#结果评论)
+- [运行实验](/cvsm/zh-cn/guides/run-experiments/)

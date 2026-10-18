@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-rh 用一套文件同时支持 Claude Code 和 Codex：两者都读 `AGENTS.md` 和同样的四个 skill，各自有一份禁止 `gh pr merge` 的配置。两种工具的会话可以同时开，各做各的任务。
+CVSM 用一套文件同时支持 Claude Code 和 Codex：两者都读 `AGENTS.md` 和同样的四个 skill，各自有一份禁止 `gh pr merge` 的配置。两种工具的会话可以同时开，各做各的任务。
 
 ## 各自读什么
 
@@ -16,7 +16,7 @@ rh 用一套文件同时支持 Claude Code 和 Codex：两者都读 `AGENTS.md` 
 | 禁止合并 | `.claude/settings.json`：`permissions.deny` 里的 `Bash(gh pr merge:*)` | `.codex/rules/harness.rules`：`gh pr merge` 设为 `forbidden` |
 | 机器账号（可选） | `.claude/settings.local.json` 设 `GH_CONFIG_DIR` | `.codex/config.toml` 设 `GH_CONFIG_DIR` |
 
-`AGENTS.md` 是唯一的指令文件。不要加 `CLAUDE.md`：guard 会拒收放在允许位置之外的 `.md`，harness 也只认 `AGENTS.md`。
+`AGENTS.md` 是唯一的指令文件。不要加 `CLAUDE.md`：guard 会拒收放在允许位置之外的 `.md`，CVSM 也只认 `AGENTS.md`。
 
 ## 确认规则已加载
 
@@ -55,12 +55,12 @@ agent 只能通过 `.github/scripts/merge.py` 合并。Codex 在选择沙箱之�
   set = { GH_CONFIG_DIR = "<dir>" }
   ```
 
-这两个文件只在主 clone 里。从主 clone 启动的会话会把这个设置传给它派出的 agent；直接在 worktree 里开会话，就要先在那里也放一份。完整设置见[接入 rh](/research-harness/zh-cn/guides/adopt/#可选给-agent-一个机器账号)。
+这两个文件只在主 clone 里。从主 clone 启动的会话会把这个设置传给它派出的 agent；直接在 worktree 里开会话，就要先在那里也放一份。完整设置见[接入 CVSM](/cvsm/zh-cn/guides/adopt/#可选给-agent-一个机器账号)。
 
 ## 相关页面
 
-- [审查](/research-harness/zh-cn/concepts/review/)
-- [说话，不点页面](/research-harness/zh-cn/start/talk-dont-click/)
-- [skill](/research-harness/zh-cn/reference/skills/)
-- [AGENTS.md](/research-harness/zh-cn/reference/agents-md/)
-- [merge.py](/research-harness/zh-cn/reference/merge-py/)
+- [审查](/cvsm/zh-cn/concepts/review/)
+- [在会话里工作](/cvsm/zh-cn/start/talk-dont-click/)
+- [skill](/cvsm/zh-cn/reference/skills/)
+- [AGENTS.md](/cvsm/zh-cn/reference/agents-md/)
+- [merge.py](/cvsm/zh-cn/reference/merge-py/)

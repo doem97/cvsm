@@ -51,17 +51,17 @@ const liveData = JSON.stringify({
 
 {
 	live ? (
-		<figure class:list={['rh-harness rh-harness--live not-content', cls]} data-harness={liveData}>
+		<figure class:list={['cvsm-harness cvsm-harness--live not-content', cls]} data-harness={liveData}>
 			<canvas role="img" aria-label={s.harness.label} />
 			<noscript>
-				<style>{`.rh-harness--live canvas{display:none}`}</style>
+				<style>{`.cvsm-harness--live canvas{display:none}`}</style>
 			</noscript>
 		</figure>
 	) : null
 }
 {
 	!live ? (
-		<figure class:list={['rh-harness rh-harness--figure not-content', cls]}>
+		<figure class:list={['cvsm-harness cvsm-harness--figure not-content', cls]}>
 			<svg class="h" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={s.harness.label}>
 				<defs>
 					<linearGradient id={`${id}-fade`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={f(g0)} y2="0">
@@ -167,7 +167,7 @@ const liveData = JSON.stringify({
 				<text class="mono muted caps" x={f(LV.top)} y={f(vty + 128)}>{s.harness.caption}</text>
 				<text class="mono verify caps" x={f(LV.bot)} y={f(vty + 128)} text-anchor="end">{s.harness.table.spec}</text>
 			</svg>
-			<figcaption class="rh-legend">
+			<figcaption class="cvsm-legend">
 				<span><i class="k-gate" />{s.harness.legend.gate}</span>
 				<span><i class="k-agent" />{s.harness.legend.agent}</span>
 				<span><i class="k-verify" />{s.harness.legend.verify}</span>
@@ -179,16 +179,16 @@ const liveData = JSON.stringify({
 {live && <script src="../../scripts/harness-live.ts"></script>}
 
 <style>
-	.rh-harness {
+	.cvsm-harness {
 		margin: 0;
-		color: var(--rh-text);
+		color: var(--cvsm-text);
 	}
-	.rh-harness--figure {
+	.cvsm-harness--figure {
 		container-type: inline-size;
 		margin-block: 2rem;
 		padding: 1.25rem 0 0;
-		border-top: 1px solid var(--rh-hair);
-		border-bottom: 1px solid var(--rh-hair);
+		border-top: 1px solid var(--cvsm-hair);
+		border-bottom: 1px solid var(--cvsm-hair);
 	}
 	svg {
 		display: block;
@@ -197,7 +197,7 @@ const liveData = JSON.stringify({
 		overflow: visible;
 	}
 	.stop {
-		stop-color: var(--rh-text);
+		stop-color: var(--cvsm-text);
 	}
 	svg.v {
 		display: none;
@@ -213,103 +213,103 @@ const liveData = JSON.stringify({
 		}
 	}
 	.knock {
-		fill: var(--rh-bg);
+		fill: var(--cvsm-bg);
 	}
 
 	.wall {
-		stroke: var(--rh-hair-2);
+		stroke: var(--cvsm-hair-2);
 		stroke-width: 1;
 		fill: none;
 	}
 	.hair {
-		stroke: var(--rh-hair);
+		stroke: var(--cvsm-hair);
 		stroke-width: 1;
 	}
 	.anchor {
-		stroke: var(--rh-accent);
+		stroke: var(--cvsm-accent);
 		stroke-width: 2;
 	}
 	.anchor-fill {
-		fill: var(--rh-accent);
+		fill: var(--cvsm-accent);
 	}
 	.dot {
-		fill: var(--rh-text);
+		fill: var(--cvsm-text);
 	}
 	.check {
 		fill: none;
-		stroke: var(--rh-verify);
+		stroke: var(--cvsm-verify);
 		stroke-width: 2;
 		stroke-linecap: round;
 		stroke-linejoin: round;
 	}
 	text.mono {
-		font-family: var(--rh-font-mono);
+		font-family: var(--cvsm-font-mono);
 		font-size: 13px;
 	}
 	text.caps {
-		text-transform: var(--rh-caps);
+		text-transform: var(--cvsm-caps);
 		letter-spacing: 0.06em;
 	}
 	.ink {
-		fill: var(--rh-text);
+		fill: var(--cvsm-text);
 	}
 	.muted,
 	tspan.muted {
-		fill: var(--rh-muted);
+		fill: var(--cvsm-muted);
 	}
 	.accent {
-		fill: var(--rh-accent-ink);
+		fill: var(--cvsm-accent-ink);
 		font-weight: 500;
 	}
 	.verify {
-		fill: var(--rh-verify-ink);
+		fill: var(--cvsm-verify-ink);
 	}
-	.rh-legend {
+	.cvsm-legend {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem 1.75rem;
 		padding: 0.9rem 0;
 		margin-top: 0.75rem;
-		border-top: 1px solid var(--rh-hair);
-		font-family: var(--rh-font-mono);
+		border-top: 1px solid var(--cvsm-hair);
+		font-family: var(--cvsm-font-mono);
 		font-size: 0.6875rem;
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		color: var(--rh-muted);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		color: var(--cvsm-muted);
 	}
-	.rh-legend span {
+	.cvsm-legend span {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.6rem;
 	}
-	.rh-legend i {
+	.cvsm-legend i {
 		display: inline-block;
 	}
 	.k-gate {
 		width: 9px;
 		height: 9px;
-		background: var(--rh-accent);
+		background: var(--cvsm-accent);
 	}
 	.k-agent {
 		width: 22px;
 		height: 1.5px;
-		background: var(--rh-text);
+		background: var(--cvsm-text);
 	}
 	.k-verify {
 		width: 12px;
 		height: 7px;
-		border-left: 2px solid var(--rh-verify);
-		border-bottom: 2px solid var(--rh-verify);
+		border-left: 2px solid var(--cvsm-verify);
+		border-bottom: 2px solid var(--cvsm-verify);
 		transform: rotate(-45deg) translate(1px, -2px);
 	}
 
 	/* Live hero: the canvas fills the band the landing page gives it. */
-	.rh-harness--live {
+	.cvsm-harness--live {
 		position: relative;
 		width: 100%;
 		height: 100%;
 	}
-	.rh-harness--live canvas {
+	.cvsm-harness--live canvas {
 		position: absolute;
 		inset: 0;
 		width: 100%;

@@ -7,7 +7,7 @@ sidebar:
 
 Three issue forms in `.github/ISSUE_TEMPLATE/` fix the sections of every task and study body. guard, `merge.py`, the results command and the skills read bodies by their `### ` headings, so the heading names can't change.
 
-Sources: [`study.yml`](https://github.com/doem97/research-harness/blob/main/.github/ISSUE_TEMPLATE/study.yml), [`code.yml`](https://github.com/doem97/research-harness/blob/main/.github/ISSUE_TEMPLATE/code.yml), [`run.yml`](https://github.com/doem97/research-harness/blob/main/.github/ISSUE_TEMPLATE/run.yml).
+Sources: [`study.yml`](https://github.com/doem97/cvsm/blob/main/.github/ISSUE_TEMPLATE/study.yml), [`code.yml`](https://github.com/doem97/cvsm/blob/main/.github/ISSUE_TEMPLATE/code.yml), [`run.yml`](https://github.com/doem97/cvsm/blob/main/.github/ISSUE_TEMPLATE/run.yml).
 
 ## Overview
 
@@ -17,7 +17,7 @@ Sources: [`study.yml`](https://github.com/doem97/research-harness/blob/main/.git
 | `code.yml` | 代码任务 | `code` | Goal, Scope, Acceptance, Budget, Merge |
 | `run.yml` | 运行任务 | `run` | Runs, Budget, Report |
 
-A development parent, labelled `plan`, has no form; its body has `### Goal` and `### Context`. Agents write bodies with these exact sections and set parents and dependencies with `gh issue create --parent P --blocked-by M`, never in the body. The forms' descriptions are in Chinese, the language of rh's own human-facing text.
+A development parent, labelled `plan`, has no form; its body has `### Goal` and `### Context`. Agents write bodies with these exact sections and set parents and dependencies with `gh issue create --parent P --blocked-by M`, never in the body. The forms' descriptions are in Chinese, the language of CVSM's own human-facing text.
 
 ## study
 
@@ -69,8 +69,8 @@ Each Runs line runs one arm. Each arm an issue runs gets every value of each Con
 
 ## Related
 
-- [Study spec](/research-harness/concepts/study-spec/)
-- [Plan a study](/research-harness/guides/plan-a-study/)
-- [guard](/research-harness/reference/guard/)
-- [results.py](/research-harness/reference/results-py/)
-- [Interfaces that stay fixed](/research-harness/reference/interfaces/)
+- [Study spec](/cvsm/concepts/study-spec/)
+- [Plan a study](/cvsm/guides/plan-a-study/)
+- [guard](/cvsm/reference/guard/)
+- [results.py](/cvsm/reference/results-py/)
+- [Interfaces that stay fixed](/cvsm/reference/interfaces/)

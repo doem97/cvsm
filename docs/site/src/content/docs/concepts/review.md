@@ -62,7 +62,7 @@ The findings may be in English even when your project's human-facing text is Chi
 
 ## Related
 
-- [Merging](/research-harness/concepts/merging/)
-- [Gates and blockers](/research-harness/concepts/gates-and-blockers/)
-- [Skills](/research-harness/reference/skills/)
-- [Claude Code and Codex](/research-harness/guides/claude-code-and-codex/)
+- [Merging](/cvsm/concepts/merging/)
+- [Gates and blockers](/cvsm/concepts/gates-and-blockers/)
+- [Skills](/cvsm/reference/skills/)
+- [Claude Code and Codex](/cvsm/guides/claude-code-and-codex/)

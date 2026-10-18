@@ -8,7 +8,7 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import Contract from '~/components/figures/Contract.astro';
 
-The study spec is the fair-comparison table you approve when you publish a study: what the arms vary, what every run holds fixed, and what may adapt. It is the last layer you can truly read, so rh checks every run against it from the run's own record.
+The study spec is the fair-comparison table you approve when you publish a study: what the arms vary, what every run holds fixed, and what may adapt. It is the last layer you can truly read, so CVSM checks every run against it from the run's own record.
 
 <Contract lang="en" />
 
@@ -59,7 +59,7 @@ Publishing the spec is gate 01, and so is any later change to Arms, Controlled o
 - **implement** sets every key of the spec through config, writes the resolved config to `$RUN_DIR/config.json`, and never alters a Controlled setting or makes the arms differ beyond Arms.
 - **review** treats a code change that breaks the spec as blocking.
 - **run** checks before launch that each Runs line runs exactly one arm and that each arm the issue runs gets every `in` value. Right after launch it runs the spec check and stops runs that break a Controlled `key=value` line, did not record its key, or match no arm or several. An undeclared difference is a blocker. It changes an Adaptable setting only within its rule and notes each change.
-- If a Controlled line cannot be met without changing the comparison, that is a [blocker](/research-harness/concepts/gates-and-blockers/): change the implementation, relax the spec, or drop the comparison.
+- If a Controlled line cannot be met without changing the comparison, that is a [blocker](/cvsm/concepts/gates-and-blockers/): change the implementation, relax the spec, or drop the comparison.
 
 ## The spec check
 
@@ -76,7 +76,7 @@ It lists, as facts, for the selected runs, running ones included:
 - arms missing a value of an `in` line;
 - keys in no section whose values differ (`未声明的差异`, undeclared difference);
 - arms with no run;
-- problems in the spec itself, such as unreadable lines or a Controlled line without a reason;
+- problems of the spec itself: unreadable lines, Controlled lines without a reason, a missing Arms or Controlled section, and keys in several sections;
 - the values each Adaptable key took per arm.
 
 With no spec or no deviation, the section says so.
@@ -96,12 +96,12 @@ Six toy runs of the spec above, started with `run.py` directly. One lora run use
 In English: the effective batch line fails for one run, which took 128; `train.precision` differs between runs although no section declares it; and these are the values each Adaptable key took. The reference `results.py` writes its text in Chinese; a project that wants another language changes `results.py`.
 
 <Aside type="note">
-rh reports what the records show. Whether the runs are still comparable is your call.
+CVSM reports what the records show. Whether the runs are still comparable is your call.
 </Aside>
 
 ## Related
 
-- [Run records](/research-harness/concepts/run-records/)
-- [Plan a study](/research-harness/guides/plan-a-study/)
-- [Issue forms](/research-harness/reference/issue-forms/)
-- [results.py](/research-harness/reference/results-py/)
+- [Run records](/cvsm/concepts/run-records/)
+- [Plan a study](/cvsm/guides/plan-a-study/)
+- [Issue forms](/cvsm/reference/issue-forms/)
+- [results.py](/cvsm/reference/results-py/)

@@ -1,25 +1,25 @@
 ---
 title: License
-description: rh is licensed under the Apache License 2.0; what that asks of a repo that copies its files.
+description: CVSM is licensed under the Apache License 2.0; what that asks of a repo that copies its files.
 sidebar:
   order: 3
 ---
 
-rh is licensed under the Apache License, Version 2.0. The full text is in [`LICENSE`](https://github.com/doem97/research-harness/blob/main/LICENSE) at the root of the repository.
+CVSM is licensed under the Apache License, Version 2.0. The full text is in [`LICENSE`](https://github.com/doem97/cvsm/blob/main/LICENSE) at the root of the repository.
 
 ## Adopting repos
 
-The adoption copy command copies rh's files into your repo but leaves out rh's `LICENSE`. Apache-2.0 §4(a) asks anyone who redistributes the files to give recipients a copy of the licence.
+The adoption copy command copies CVSM's files into your repo but leaves out CVSM's `LICENSE`. Apache-2.0 §4(a) asks anyone who redistributes the files to give recipients a copy of the licence.
 
-So if your repo is published or shared, keep a copy of rh's licence with the copied files, for example as `.github/RH-LICENSE`:
+So if your repo is published or shared, keep a copy of CVSM's licence with the copied files, for example as `.github/CVSM-LICENSE`:
 
 ```sh
-cp <rh clone>/LICENSE <your repo>/.github/RH-LICENSE
+cp <cvsm clone>/LICENSE <your repo>/.github/CVSM-LICENSE
 ```
 
 That name doesn't clash with your project's own `LICENSE`, and `.github/**` is already in guard's `layout`. Your project keeps its own licence.
 
 ## Related
 
-- [Status](/research-harness/project/status/)
-- [Adopt rh](/research-harness/guides/adopt/)
+- [Status](/cvsm/project/status/)
+- [Adopt CVSM](/cvsm/guides/adopt/)

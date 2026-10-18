@@ -1,13 +1,13 @@
 ---
 title: Interfaces that stay fixed
-description: The shapes the skills, guard, merge.py and the results comment depend on, which adopters keep when they adapt rh.
+description: The shapes the skills, guard, merge.py and the results comment depend on, which adopters keep when they adapt CVSM.
 sidebar:
   order: 8
 ---
 
-The skills, guard, `merge.py` and the results comment depend on the interfaces below. When you adapt rh to your environment, change the implementations, not these shapes.
+The skills, guard, `merge.py` and the results comment depend on the interfaces below. When you adapt CVSM to your environment, change the implementations, not these shapes.
 
-Everything else is your project's to decide, through its own issues: the scheduler (e.g. a Run command that submits to SLURM and still writes run records), cluster and GPU allocation, data and artifact storage, the tracking backend (e.g. `MLFLOW_TRACKING_URI` pointing at a team MLflow server), the allow-list and protected paths in `guard.toml`, and CI dependencies. See [Adapt rh to your environment](/research-harness/guides/adapt-your-environment/).
+Everything else is your project's to decide, through its own issues: the scheduler (e.g. a Run command that submits to SLURM and still writes run records), cluster and GPU allocation, data and artifact storage, the tracking backend (e.g. `MLFLOW_TRACKING_URI` pointing at a team MLflow server), the allow-list and protected paths in `guard.toml`, and CI dependencies. See [Adapt CVSM to your environment](/cvsm/guides/adapt-your-environment/).
 
 ## Run and results commands
 
@@ -31,12 +31,12 @@ The actual commands for both go on the `Run` line of `AGENTS.md`.
 
 ## Run records
 
-Each run is one MLflow run. The docstring at the top of `scripts/run.py` is the reference for its fields; see [run.py](/research-harness/reference/run-py/) for the details.
+Each run is one MLflow run. The docstring at the top of `scripts/run.py` is the reference for its fields; see [run.py](/cvsm/reference/run-py/) for the details.
 
-- **`rh.*` params**, which can't change once written:
-  - at creation: `rh.issue`, `rh.command`, `rh.seed` and `rh.host`;
-  - before launch: `rh.commit`, `rh.dirty`, `rh.env_lock_sha`, `rh.env_lock_missing`, `rh.data_manifest_sha` and `rh.gpus`;
-  - at the end: `rh.exit_code`.
+- **`cvsm.*` params**, which can't change once written:
+  - at creation: `cvsm.issue`, `cvsm.command`, `cvsm.seed` and `cvsm.host`;
+  - before launch: `cvsm.commit`, `cvsm.dirty`, `cvsm.env_lock_sha`, `cvsm.env_lock_missing`, `cvsm.data_manifest_sha` and `cvsm.gpus`;
+  - at the end: `cvsm.exit_code`.
 
   Missing values are empty strings, and lists are comma-joined.
 - **`cfg.*` params**: logged once, as soon as the `$RUN_DIR/config.json` the command writes parses as a JSON object.
@@ -79,10 +79,10 @@ A `规格核对` section follows, quoting the spec. It lists facts about the sel
 - arms missing values of an `in` line (counting only running or successful, undeleted runs);
 - keys in no section whose values differ (`未声明的差异`);
 - arms with no run;
-- spec lines it can't read;
+- problems of the spec itself: unreadable lines, Controlled lines without a reason, a missing Arms or Controlled section, and keys in several sections;
 - each Adaptable key's values per arm.
 
-When there is no spec or no deviation, the section says so. When all of a study's run issues close, the same table and check over all of them is posted on the study. See [results.py](/research-harness/reference/results-py/) for every line.
+When there is no spec or no deviation, the section says so. When all of a study's run issues close, the same table and check over all of them is posted on the study. See [results.py](/cvsm/reference/results-py/) for every line.
 
 ## Issue form sections
 
@@ -97,7 +97,7 @@ guard, `merge.py` and the skills read bodies by their `### ` headings, so the he
 - **`code`**: Goal, Scope, Acceptance, Budget, Merge (`human` or `agent`; default `human`).
 - **`run`**: Runs, Budget, Report.
 
-See [Issue forms](/research-harness/reference/issue-forms/).
+See [Issue forms](/cvsm/reference/issue-forms/).
 
 ## PR template, review comment and merge.py
 
@@ -114,7 +114,7 @@ See [Issue forms](/research-harness/reference/issue-forms/).
 - `python .github/scripts/merge.py <PR> --human` skips the three checks, because the human has decided.
 - Both run `gh pr merge --squash --match-head-commit <SHA>` on the current head. The commit title is `<PR title> (#<PR>)` with an empty body, and branch protection still requires the checks to pass.
 
-See [merge.py](/research-harness/reference/merge-py/).
+See [merge.py](/cvsm/reference/merge-py/).
 
 ## Comment formats
 
@@ -128,8 +128,8 @@ These lines come from `AGENTS.md`; their keywords stay in English.
 
 ## Related
 
-- [Adapt rh to your environment](/research-harness/guides/adapt-your-environment/)
-- [run.py](/research-harness/reference/run-py/)
-- [results.py](/research-harness/reference/results-py/)
-- [merge.py](/research-harness/reference/merge-py/)
-- [Issue forms](/research-harness/reference/issue-forms/)
+- [Adapt CVSM to your environment](/cvsm/guides/adapt-your-environment/)
+- [run.py](/cvsm/reference/run-py/)
+- [results.py](/cvsm/reference/results-py/)
+- [merge.py](/cvsm/reference/merge-py/)
+- [Issue forms](/cvsm/reference/issue-forms/)

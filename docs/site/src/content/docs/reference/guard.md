@@ -7,7 +7,7 @@ sidebar:
 
 guard is a required check on every PR. It reads the PR through the GitHub API, checks it against `.github/guard.toml` and the issue the PR closes, and never checks out or runs code from the PR.
 
-Sources: [`.github/guard.toml`](https://github.com/doem97/research-harness/blob/main/.github/guard.toml), [`.github/scripts/guard.py`](https://github.com/doem97/research-harness/blob/main/.github/scripts/guard.py), [`.github/workflows/guard.yml`](https://github.com/doem97/research-harness/blob/main/.github/workflows/guard.yml).
+Sources: [`.github/guard.toml`](https://github.com/doem97/cvsm/blob/main/.github/guard.toml), [`.github/scripts/guard.py`](https://github.com/doem97/cvsm/blob/main/.github/scripts/guard.py), [`.github/workflows/guard.yml`](https://github.com/doem97/cvsm/blob/main/.github/workflows/guard.yml).
 
 ## Workflow
 
@@ -28,7 +28,7 @@ Because guard runs from main, a change to `guard.toml` takes effect only after i
 
 ## guard.toml
 
-| Key | Type | rh's value | Meaning |
+| Key | Type | CVSM's value | Meaning |
 |---|---|---|---|
 | `layout` | globs | `README.md`, `AGENTS.md`, `.gitignore`, `.agents/**`, `.claude/**`, `.codex/**`, `.github/**`, `docs/**`, `scripts/**`, `tests/**` | Where files may exist. Adopters add their own directories and root files (`src/**`, `configs/**`, `pyproject.toml`, lock files, the data manifest). |
 | `markdown` | globs | `README.md`, `AGENTS.md`, `docs/**`, `.agents/skills/**`, `.github/**` | Where `.md` files may exist. |
@@ -39,7 +39,7 @@ Because guard runs from main, a change to `guard.toml` takes effect only after i
 | `test_paths` | globs | `tests/**` | Paths left out of `max_diff_lines`. |
 | `max_diff_lines` | integer | unset (commented out, example `400`) | Optional. Most changed lines (additions plus deletions) outside `test_paths`. |
 
-Task #39 adds `LICENSE`, the Apache-2.0 licence at the repo root, to rh's own `layout`.
+Task #39 adds `LICENSE`, the Apache-2.0 licence at the repo root, to CVSM's own `layout`.
 
 ### Glob syntax
 
@@ -112,8 +112,8 @@ It reads `.github/guard.toml` from the current directory, so run it from a check
 
 ## Related
 
-- [AGENTS.md: Files](/research-harness/reference/agents-md/#files)
-- [merge.py](/research-harness/reference/merge-py/)
-- [Issue forms](/research-harness/reference/issue-forms/)
-- [Adopt rh](/research-harness/guides/adopt/)
-- [Merging](/research-harness/concepts/merging/)
+- [AGENTS.md: Files](/cvsm/reference/agents-md/#files)
+- [merge.py](/cvsm/reference/merge-py/)
+- [Issue forms](/cvsm/reference/issue-forms/)
+- [Adopt CVSM](/cvsm/guides/adopt/)
+- [Merging](/cvsm/concepts/merging/)

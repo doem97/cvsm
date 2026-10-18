@@ -1,6 +1,6 @@
 ---
 /**
- * Talk, don't click: a session transcript. Your words at a gate are marked orange; every agent
+ * Work in a session: a session transcript. Your words at a gate are marked orange; every agent
  * stop ends with the three report lines Done, Waiting for you and Next.
  *
  *   <Session lang="en" />           static
@@ -22,7 +22,7 @@ const split = (ln: string) => {
 };
 ---
 
-<figure class="rh-session not-content" data-session={animate ? '' : undefined}>
+<figure class="cvsm-session not-content" data-session={animate ? '' : undefined}>
 	<ol class="turns">
 		{
 			s.transcript.map((turn) =>
@@ -72,12 +72,12 @@ const split = (ln: string) => {
 {animate && <script src="../../scripts/session-type.ts"></script>}
 
 <style>
-	.rh-session {
+	.cvsm-session {
 		container-type: inline-size;
 		margin: 2rem 0;
-		color: var(--rh-text);
-		--mono: var(--rh-font-mono);
-		border-top: 1px solid var(--rh-hair-2);
+		color: var(--cvsm-text);
+		--mono: var(--cvsm-font-mono);
+		border-top: 1px solid var(--cvsm-hair-2);
 	}
 	.turns {
 		list-style: none;
@@ -96,7 +96,7 @@ const split = (ln: string) => {
 	}
 	.turn--you + .turn--agent {
 		padding-bottom: 1.1rem;
-		border-bottom: 1px solid var(--rh-hair);
+		border-bottom: 1px solid var(--cvsm-hair);
 	}
 	.turn:last-child {
 		border-bottom: 0;
@@ -104,12 +104,12 @@ const split = (ln: string) => {
 	.who {
 		font-family: var(--mono);
 		font-size: 0.6875rem;
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		color: var(--rh-muted);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		color: var(--cvsm-muted);
 	}
 	.turn--you .who {
-		color: var(--rh-accent-ink);
+		color: var(--cvsm-accent-ink);
 		font-weight: 500;
 	}
 	.say {
@@ -125,15 +125,15 @@ const split = (ln: string) => {
 		gap: 0.5rem;
 		font-family: var(--mono);
 		font-size: 0.6875rem;
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		color: var(--rh-accent-ink);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		color: var(--cvsm-accent-ink);
 		white-space: nowrap;
 	}
 	.gate i {
 		width: 9px;
 		height: 9px;
-		background: var(--rh-accent);
+		background: var(--cvsm-accent);
 	}
 	.lines {
 		grid-column: 2 / -1;
@@ -142,12 +142,12 @@ const split = (ln: string) => {
 		margin: 0;
 		font-size: clamp(0.85rem, 0.7rem + 0.5cqi, 1rem);
 		line-height: 1.65;
-		color: var(--rh-muted);
+		color: var(--cvsm-muted);
 	}
 	.key {
 		font-family: var(--mono);
 		font-size: 0.9em;
-		color: var(--rh-text);
+		color: var(--cvsm-text);
 		margin-inline-end: 0.6em;
 	}
 	.foot {
@@ -156,12 +156,12 @@ const split = (ln: string) => {
 		align-items: center;
 		gap: 0.5rem 1.25rem;
 		padding: 0.9rem 0;
-		border-top: 1px solid var(--rh-hair-2);
+		border-top: 1px solid var(--cvsm-hair-2);
 		font-family: var(--mono);
 		font-size: 0.6875rem;
-		letter-spacing: var(--rh-track-caps);
-		text-transform: var(--rh-caps);
-		color: var(--rh-muted);
+		letter-spacing: var(--cvsm-track-caps);
+		text-transform: var(--cvsm-caps);
+		color: var(--cvsm-muted);
 	}
 	.foot__keys {
 		display: inline-flex;
@@ -172,7 +172,7 @@ const split = (ln: string) => {
 		text-transform: none;
 		letter-spacing: 0;
 		font-size: 0.75rem;
-		color: var(--rh-text);
+		color: var(--cvsm-text);
 		background: none;
 		padding: 0;
 		border: 0;
@@ -182,43 +182,43 @@ const split = (ln: string) => {
 		font: inherit;
 		letter-spacing: inherit;
 		text-transform: inherit;
-		color: var(--rh-text);
+		color: var(--cvsm-text);
 		background: none;
-		border: 1px solid var(--rh-hair-2);
+		border: 1px solid var(--cvsm-hair-2);
 		padding: 0.35rem 0.7rem;
 		cursor: pointer;
 	}
 	.replay:hover {
-		border-color: var(--rh-text);
+		border-color: var(--cvsm-text);
 	}
 	.replay:focus-visible {
-		outline: 2px solid var(--rh-text);
+		outline: 2px solid var(--cvsm-text);
 		outline-offset: 2px;
 	}
 
 	/* Typing: every character keeps its place, so nothing shifts while it types. */
-	:global(.rh-session.is-typing) .typed .off,
-	:global(.rh-session.is-typing) .line:not(.on),
-	:global(.rh-session.is-typing) .turn--you:not(.on) .gate {
+	:global(.cvsm-session.is-typing) .typed .off,
+	:global(.cvsm-session.is-typing) .line:not(.on),
+	:global(.cvsm-session.is-typing) .turn--you:not(.on) .gate {
 		opacity: 0;
 	}
-	:global(.rh-session.is-typing) .line {
-		transition: opacity 280ms var(--rh-ease), transform 280ms var(--rh-ease);
+	:global(.cvsm-session.is-typing) .line {
+		transition: opacity 280ms var(--cvsm-ease), transform 280ms var(--cvsm-ease);
 	}
-	:global(.rh-session.is-typing) .line:not(.on) {
+	:global(.cvsm-session.is-typing) .line:not(.on) {
 		transform: translateY(3px);
 	}
-	:global(.rh-session.is-typing) .caret::after {
+	:global(.cvsm-session.is-typing) .caret::after {
 		content: '';
 		display: inline-block;
 		width: 0.08em;
 		height: 0.95em;
 		margin-inline-start: 0.04em;
 		vertical-align: -0.1em;
-		background: var(--rh-accent);
-		animation: rh-caret 0.9s steps(1) infinite;
+		background: var(--cvsm-accent);
+		animation: cvsm-caret 0.9s steps(1) infinite;
 	}
-	@keyframes rh-caret {
+	@keyframes cvsm-caret {
 		50% {
 			opacity: 0;
 		}

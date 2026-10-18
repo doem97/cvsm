@@ -1,6 +1,6 @@
 ---
 title: 状态
-description: rh 怎样把全部流程状态放在 GitHub 原生的 issue、PR 和检查里。
+description: CVSM 怎样把全部流程状态放在 GitHub 原生的 issue、PR 和检查里。
 sidebar:
   order: 1
 ---
@@ -8,7 +8,7 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import Loop from '~/components/figures/Loop.astro';
 
-rh 的流程状态全部放在 GitHub 上：issue、子 issue、依赖、关联分支、PR、检查和关闭状态。仓库里没有计划、进度或笔记文件，会话也不存任何东西，所以哪个会话都可以随时断，下一个会话读一遍就知道进展到哪里。
+CVSM 的流程状态全部放在 GitHub 上：issue、子 issue、依赖、关联分支、PR、检查和关闭状态。仓库里没有计划、进度或笔记文件，会话也不存任何东西，所以哪个会话都可以随时断，下一个会话读一遍就知道进展到哪里。
 
 <Loop lang="zh-cn" />
 
@@ -16,7 +16,7 @@ rh 的流程状态全部放在 GitHub 上：issue、子 issue、依赖、关联�
 
 父 issue 说明为什么做，子 issue 承载具体的活。
 
-- **`study`**：一个研究问题。正文按[研究表单](/research-harness/zh-cn/reference/issue-forms/)写，规格也在里面。
+- **`study`**：一个研究问题。正文按[研究表单](/cvsm/zh-cn/reference/issue-forms/)写，规格也在里面。
 - **`plan`**：开发工作，正文有 `### Goal` 和 `### Context`。
 - **`code`**：一次限定在固定 Scope 内的改动，一个分支、一个 PR。
 - **`run`**：一组运行，以一条结果评论收尾。运行任务没有 PR。
@@ -52,7 +52,7 @@ gh issue create --label run --title "<标题>" --parent 10 --blocked-by 11 --bod
 | 待分析 | 开着，子 issue 全部关闭 |
 | 结束 | 按人的明确指示关成 completed（附结论），或 not planned |
 
-研究下结论是[关口 04](/research-harness/zh-cn/concepts/gates-and-blockers/)。
+研究下结论是[关口 04](/cvsm/zh-cn/concepts/gates-and-blockers/)。
 
 ## 先读状态
 
@@ -79,7 +79,7 @@ gh issue develop --list 11
 
 ## 相关页面
 
-- [关口与卡点](/research-harness/zh-cn/concepts/gates-and-blockers/)
-- [说话，不点页面](/research-harness/zh-cn/start/talk-dont-click/)
-- [issue 表单](/research-harness/zh-cn/reference/issue-forms/)
-- [AGENTS.md](/research-harness/zh-cn/reference/agents-md/)
+- [关口与卡点](/cvsm/zh-cn/concepts/gates-and-blockers/)
+- [在会话里工作](/cvsm/zh-cn/start/talk-dont-click/)
+- [issue 表单](/cvsm/zh-cn/reference/issue-forms/)
+- [AGENTS.md](/cvsm/zh-cn/reference/agents-md/)

@@ -7,7 +7,7 @@ sidebar:
 
 一个 skill 写清一个角色从头到尾怎么做，最多 120 行。一共四个，Claude Code 和 Codex 读的是同一套文件。
 
-源文件：[`.agents/skills/`](https://github.com/doem97/research-harness/tree/main/.agents/skills)。
+源文件：[`.agents/skills/`](https://github.com/doem97/cvsm/tree/main/.agents/skills)。
 
 ## 共同的形状
 
@@ -64,7 +64,7 @@ sidebar:
 
    第 1 到 4 项是阻断的，其余都是 minor。除非 issue 要求，不要求防御格式错乱、伪造、外人或恶意输入。至少有一条阻断问题才给 `changes`。
 3. **贴一条评论。** 贴之前再取一次完整的 head SHA；变了就先审新的 head。第一行严格是 `Verdict: pass @ <full head SHA>` 或 `Verdict: changes @ <full head SHA>`；下面是审查工具自己格式和语言的意见，原样不改，每条指向文件和行。不批准、不打 label、不推送、不改任何东西。删掉临时 worktree。
-4. **发起审查**（给实现者看）：一个新的 Claude Code subagent、`codex exec -s danger-full-access`，或 Codex 内置的 `codex exec review`（有 `[P0]` 或 `[P1]` 就记 `changes`）。PR 前审查只拿到 issue 编号和 diff，不贴任何东西。见 [Claude Code 和 Codex](/research-harness/zh-cn/guides/claude-code-and-codex/#发起全新会话审查)。
+4. **发起审查**（给实现者看）：一个新的 Claude Code subagent、`codex exec -s danger-full-access`，或 Codex 内置的 `codex exec review`（有 `[P0]` 或 `[P1]` 就记 `changes`）。PR 前审查只拿到 issue 编号和 diff，不贴任何东西。见 [Claude Code 和 Codex](/cvsm/zh-cn/guides/claude-code-and-codex/#发起全新会话审查)。
 
 ## run
 
@@ -79,8 +79,8 @@ sidebar:
 
 ## 相关页面
 
-- [AGENTS.md](/research-harness/zh-cn/reference/agents-md/)
-- [审查](/research-harness/zh-cn/concepts/review/)
-- [计划一个研究](/research-harness/zh-cn/guides/plan-a-study/)
-- [运行实验](/research-harness/zh-cn/guides/run-experiments/)
-- [Claude Code 和 Codex](/research-harness/zh-cn/guides/claude-code-and-codex/)
+- [AGENTS.md](/cvsm/zh-cn/reference/agents-md/)
+- [审查](/cvsm/zh-cn/concepts/review/)
+- [计划一个研究](/cvsm/zh-cn/guides/plan-a-study/)
+- [运行实验](/cvsm/zh-cn/guides/run-experiments/)
+- [Claude Code 和 Codex](/cvsm/zh-cn/guides/claude-code-and-codex/)

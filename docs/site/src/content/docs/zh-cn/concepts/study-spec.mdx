@@ -8,7 +8,7 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import Contract from '~/components/figures/Contract.astro';
 
-研究规格是你发布研究时批准的那张公平对比表：各组在哪些设置上不同，每个 run 固定什么，什么可以调整。它是你能真正读懂的最后一层，所以 rh 按每个 run 自己的记录对照它核对。
+研究规格是你发布研究时批准的那张公平对比表：各组在哪些设置上不同，每个 run 固定什么，什么可以调整。它是你能真正读懂的最后一层，所以 CVSM 按每个 run 自己的记录对照它核对。
 
 <Contract lang="zh-cn" />
 
@@ -26,16 +26,16 @@ full: model.adapter=none
 lora: model.adapter=lora model.lora.rank=8
 
 ### Controlled
-data.split=val  # held-out split from data.sha256
-model.backbone=vit_b16  # paper X, Table 2
-optim.lr=3e-4  # paper X, Table 2
-train.epochs=30  # paper X, Table 2
-train.effective_batch=256  # paper X, Table 2
-seed in 1,2,3  # three seeds, as in paper X
+data.split=val  # 留出的划分，来自 data.sha256
+model.backbone=vit_b16  # 论文 X 表 2
+optim.lr=3e-4  # 论文 X 表 2
+train.epochs=30  # 论文 X 表 2
+train.effective_batch=256  # 论文 X 表 2
+seed in 1,2,3  # 同论文 X，用 3 个 seed
 
 ### Adaptable
-train.per_device_batch  # fit to GPU memory; effective batch stays 256
-train.accum  # follows per_device_batch
+train.per_device_batch  # 按显存调整，有效 batch 固定为 256
+train.accum  # 跟随 per_device_batch
 ```
 
 - **Arms**（各组）：各组之间仅有的不同。每行 `<arm>: <键>=<值> ...`。
@@ -59,7 +59,7 @@ train.accum  # follows per_device_batch
 - **implement**：规格里的每个键都经配置设置，把解析后的配置写进 `$RUN_DIR/config.json`，从不改 Controlled 设置，也不让各组的差异超出 Arms。
 - **review**：代码改动违反规格，就是阻断问题。
 - **run**：启动前确认 Runs 每行只跑一组，本 issue 跑到的每一组都跑遍每个 `in` 值。启动后马上做规格核对，停掉违反某条 Controlled `key=value`、没记录该键、或不属于任何一组或属于多组的 run。出现未声明的差异是卡点。Adaptable 设置只在规则内调整，每处调整都写下来。
-- 某个 Controlled 设置不改变对比就满足不了，是[卡点](/research-harness/zh-cn/concepts/gates-and-blockers/)：改实现、放宽规格，或放弃这个对比。
+- 某个 Controlled 设置不改变对比就满足不了，是[卡点](/cvsm/zh-cn/concepts/gates-and-blockers/)：改实现、放宽规格，或放弃这个对比。
 
 ## 规格核对
 
@@ -76,7 +76,7 @@ gh issue view 10 --json body -q .body | python scripts/results.py --issue 12 --s
 - 缺了某条 `in` 中某些值的组；
 - 不在任何一节、取值却不同的键（`未声明的差异`）；
 - 没有 run 的组；
-- 规格本身的问题，例如读不懂的行、没写理由的 Controlled 行；
+- 规格本身的问题：读不懂的行、没写理由的 Controlled 行、缺少 Arms 或 Controlled 节、同一个键出现在多节；
 - 每个 Adaptable 键在各组取过的值。
 
 没给规格或没有偏差时，这一节也会写明。
@@ -96,12 +96,12 @@ gh issue view 10 --json body -q .body | python scripts/results.py --issue 12 --s
 参考实现 `results.py` 输出的文字是中文；项目要用别的语言，就改 `results.py`。
 
 <Aside type="note">
-rh 只报告记录里有什么。这些 run 还能不能比，由你判断。
+CVSM 只报告记录里有什么。这些 run 还能不能比，由你判断。
 </Aside>
 
 ## 相关页面
 
-- [运行记录](/research-harness/zh-cn/concepts/run-records/)
-- [计划一个研究](/research-harness/zh-cn/guides/plan-a-study/)
-- [issue 表单](/research-harness/zh-cn/reference/issue-forms/)
-- [results.py](/research-harness/zh-cn/reference/results-py/)
+- [运行记录](/cvsm/zh-cn/concepts/run-records/)
+- [计划一个研究](/cvsm/zh-cn/guides/plan-a-study/)
+- [issue 表单](/cvsm/zh-cn/reference/issue-forms/)
+- [results.py](/cvsm/zh-cn/reference/results-py/)

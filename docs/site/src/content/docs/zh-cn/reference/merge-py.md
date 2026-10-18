@@ -7,7 +7,7 @@ sidebar:
 
 `merge.py` 在 PR 的当前 head 上做一次 squash 合并。不带 `--human` 时，它只合并预先批准、审查通过、且不碰受保护路径的任务；带 `--human` 时，它执行人已经做出的合并决定。
 
-源文件：[`.github/scripts/merge.py`](https://github.com/doem97/research-harness/blob/main/.github/scripts/merge.py)。
+源文件：[`.github/scripts/merge.py`](https://github.com/doem97/cvsm/blob/main/.github/scripts/merge.py)。
 
 ## 用法
 
@@ -30,7 +30,7 @@ python .github/scripts/merge.py <PR> --human   # 按人的明确指示
 
 说明：
 
-- 关闭引用的解析方式同 [guard](/research-harness/zh-cn/reference/guard/#1-关闭引用)。
+- 关闭引用的解析方式同 [guard](/cvsm/zh-cn/reference/guard/#1-关闭引用)。
 - 这里的 `protected` 按普通 glob 匹配：和 guard 不同，Scope 列出受保护路径也解锁不了它。碰了受保护路径的 PR 一律由人合并。
 - 更新的一条 `Verdict: changes`，或针对旧 head 的 pass，都会挡住合并。第一行不以 `Verdict:` 开头的评论不算，所以列出剩余 minor 的那条评论不能以它开头。
 
@@ -68,8 +68,8 @@ agent 不能运行 `gh pr merge`：`AGENTS.md` 这样规定，`.claude/settings.
 
 ## 相关页面
 
-- [合并](/research-harness/zh-cn/concepts/merging/)
-- [审查](/research-harness/zh-cn/concepts/review/)
-- [guard](/research-harness/zh-cn/reference/guard/)
-- [AGENTS.md：Gates](/research-harness/zh-cn/reference/agents-md/#gates)
-- [保持不变的接口](/research-harness/zh-cn/reference/interfaces/)
+- [合并](/cvsm/zh-cn/concepts/merging/)
+- [审查](/cvsm/zh-cn/concepts/review/)
+- [guard](/cvsm/zh-cn/reference/guard/)
+- [AGENTS.md：Gates](/cvsm/zh-cn/reference/agents-md/#gates)
+- [保持不变的接口](/cvsm/zh-cn/reference/interfaces/)

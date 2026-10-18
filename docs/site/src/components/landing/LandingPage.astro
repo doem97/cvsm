@@ -30,8 +30,7 @@ const zh = lang === 'zh-cn';
 					<span class="l2">{s.hero.line2}</span>
 				</h1>
 				<div class="hero__side">
-					<p class="hero__promise">{s.hero.promise}</p>
-					<p class="hero__body">{s.hero.body}</p>
+					<p class="hero__desc">{s.hero.desc}</p>
 					<div class="hero__cta">
 						<a class="btn btn--solid" href={url(s.links.docs)}>{s.hero.ctaDocs}<span aria-hidden="true">→</span></a>
 						<a class="btn" href={url(s.links.quick)}>{s.hero.ctaQuick}</a>
@@ -49,7 +48,7 @@ const zh = lang === 'zh-cn';
 				<span><i class="k-gate"></i>{s.harness.legend.gate}</span>
 				<span><i class="k-agent"></i>{s.harness.legend.agent}</span>
 				<span><i class="k-verify"></i>{s.harness.legend.verify}</span>
-				<span class="legend__repo">doem97/research-harness</span>
+				<span class="legend__repo">doem97/cvsm</span>
 			</div>
 		</div>
 	</section>
@@ -147,9 +146,13 @@ const zh = lang === 'zh-cn';
 		<div class="wrap">
 			<div class="rule"><i></i><i></i></div>
 			<div class="head-row">
-				<p class="index" id="facts-title">{s.facts.index}</p>
+				<p class="index">{s.facts.index}</p>
 				<p class="aside">{s.facts.aside}</p>
 			</div>
+			<h2 id="facts-title" class:list={['display sec__title reveal facts__title', { zh }]}>
+				<span class="l1">{s.facts.title[0]}</span>
+				<span class="l2">{s.facts.title[1]}</span>
+			</h2>
 			<Facts lang={lang} />
 		</div>
 	</section>
