@@ -25,7 +25,7 @@ CVSM 用它自己的流程开发。从第一个提交之后，`main` 上的每�
 1. **计划。** 人和 agent 在会话里讨论这项工作。agent 起草一个 `plan` 父 issue：写明 Goal，把设计写进 Context，下面的 `code` 子 issue 排成 Scope 互不重叠的波次。人说“发布”后，agent 建好这些 issue 并记下 Decision。
 2. **实现。** agent 用关联分支 `t/<N>-<slug>` 认领任务，在自己的 worktree 里工作，反复请新的 PR 前审查者，直到 Acceptance 通过。
 3. **审查。** 一个只拿到 PR 编号的新会话贴出 `Verdict:` 评论。一个 PR 常常要经过几轮审查才拿到最终的 pass；剩下的 minor 意见在一条评论里逐条提出后续 issue 的建议。
-4. **合并。** CVSM 的改动几乎都碰受保护路径（`AGENTS.md`、`.agents/`、`.github/` 等），所以它的任务都写 `Merge: human`。人在会话里说“合并”。从 PR #15 起，由机器账号 `doem97-bot` 运行 `merge.py --human`，并在任务上记 `Decision: 合并 PR #<PR> — ...`，写明人的原话和审查过的 SHA。
+4. **合并。** CVSM 的改动几乎都碰受保护路径（`AGENTS.md`、`.agents/`、`.github/` 等），所以它的任务都写 `Merge: human`。人在会话里说“合并”。从 PR #15 起，由机器账号 `doem1997-claude-bot` 运行 `merge.py --human`，并在任务上记 `Decision: 合并 PR #<PR> — ...`，写明人的原话和审查过的 SHA。
 5. **后续。** 批准的 minor 处理建议成为同一计划下的新任务，例如来自 PR #15 审查的 [#16](https://github.com/doem97/cvsm/issues/16)。
 
 ## 去哪里看
