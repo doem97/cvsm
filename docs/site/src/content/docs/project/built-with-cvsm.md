@@ -25,7 +25,7 @@ Project-level Decisions live on [#1](https://github.com/doem97/cvsm/issues/1): b
 1. **Plan.** The human and an agent discuss the work in a session. The agent drafts a `plan` parent with a Goal, the design in its Context, and `code` sub-issues ordered into waves with disjoint Scopes. On "publish" it creates them and records the Decision.
 2. **Implement.** An agent claims a task with a linked branch `t/<N>-<slug>`, works in its own worktree, and loops with fresh pre-PR reviewers until Acceptance passes.
 3. **Review.** A fresh session that sees only the PR number posts the `Verdict:` comment. A PR often goes through several reviews before its final pass; remaining minor findings are proposed as follow-up issues in one comment.
-4. **Merge.** CVSM's changes almost always touch protected paths (`AGENTS.md`, `.agents/`, `.github/` and so on), so its tasks say `Merge: human`. The human says "merge" in the session. Since PR #15, the machine account `doem97-bot` then runs `merge.py --human` and records `Decision: 合并 PR #<PR> — ...` on the task, with the human's words and the reviewed SHA.
+4. **Merge.** CVSM's changes almost always touch protected paths (`AGENTS.md`, `.agents/`, `.github/` and so on), so its tasks say `Merge: human`. The human says "merge" in the session. Since PR #15, the machine account `doem1997-claude-bot` then runs `merge.py --human` and records `Decision: 合并 PR #<PR> — ...` on the task, with the human's words and the reviewed SHA.
 5. **Follow up.** Approved minor proposals become new tasks under the same plan, e.g. [#16](https://github.com/doem97/cvsm/issues/16) from the review of PR #15.
 
 ## Where to look
