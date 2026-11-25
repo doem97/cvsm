@@ -11,7 +11,7 @@ CVSM 是一组复制进研究仓库就能用的文件，不是一个服务。状
 
 ![状态：预发布](https://img.shields.io/badge/%E7%8A%B6%E6%80%81-%E9%A2%84%E5%8F%91%E5%B8%83-5C616B?style=flat-square&labelColor=0B0C0F) ![agent：Claude Code 和 Codex](https://img.shields.io/badge/agent-Claude_Code_%C2%B7_Codex-5C616B?style=flat-square&labelColor=0B0C0F) ![许可证：Apache-2.0](https://img.shields.io/badge/%E8%AE%B8%E5%8F%AF%E8%AF%81-Apache--2.0-5C616B?style=flat-square&labelColor=0B0C0F)
 
-[English](../README.md) · [文档](https://doem97.github.io/cvsm/zh-cn/) · [快速开始](https://doem97.github.io/cvsm/zh-cn/start/quick-start/)
+[English](../README.md) · [官网](https://doem97.github.io/cvsm/zh-cn/) · [文档](https://doem97.github.io/cvsm/zh-cn/start/overview/) · [快速开始](https://doem97.github.io/cvsm/zh-cn/start/quick-start/)
 
 ## 每个 run 都对照研究规格核对
 

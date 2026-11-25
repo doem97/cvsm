@@ -11,7 +11,7 @@ CVSM is a set of files you copy into a research repo, not a service. GitHub issu
 
 ![status: pre-release](https://img.shields.io/badge/status-pre--release-5C616B?style=flat-square&labelColor=0B0C0F) ![agents: Claude Code and Codex](https://img.shields.io/badge/agents-Claude_Code_%C2%B7_Codex-5C616B?style=flat-square&labelColor=0B0C0F) ![license: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-5C616B?style=flat-square&labelColor=0B0C0F)
 
-[中文](docs/README.zh-CN.md) · [Docs](https://doem97.github.io/cvsm/) · [Quick start](https://doem97.github.io/cvsm/start/quick-start/)
+[中文](docs/README.zh-CN.md) · [Website](https://doem97.github.io/cvsm/) · [Docs](https://doem97.github.io/cvsm/start/overview/) · [Quick start](https://doem97.github.io/cvsm/start/quick-start/)
 
 ## Every run is checked against the study spec
 
